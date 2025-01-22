@@ -1,0 +1,165 @@
+.můjúčet-view {
+  padding: 2px;
+  box-sizing: border-box;
+  display: block;
+  position: relative;
+  height: 100%;
+  overflow-y: auto;
+  --cv-blue: 212 96% 54%;
+  --cv-purple: 259 97% 66%;
+  --cv-dropzone-border-color: hsl(var(--cv-blue) / 0.5);
+  --cv-dropzone-bg-color: hsl(var(--cv-blue) / 0.2);
+  --cv-droptarget-border-color: hsl(var(--cv-purple) / 1);
+  --cv-droptarget-bg-color: hsl(var(--cv-purple) / 0.4);
+  --cv-stripe-width: 1.5px;
+  --cv-stripe-gap: 9px;
+  --cv-stripe-color: hsl(var(--cv-blue) / 0.2);
+  --cv-layout-border-color: var(--lumo-contrast-40pct);
+  --cv-checkerboard-color1: hsl(0 0% 0% / 0.05);
+  --cv-checkerboard-color2: hsl(0 0% 100% / 0.05);
+  --cv-checkerboard-size: 16px;
+}
+
+.můjúčet-view[dragging] {
+  --cv-checkerboard-color1: hsl(var(--cv-blue) / 0.2);
+  --cv-checkerboard-color2: hsl(var(--cv-blue) / 0.1);
+  --cv-layout-border-color: var(--cv-dropzone-border-color);
+}
+
+.můjúčet-view .preview-container {
+  display: contents;
+}
+
+/* The root layout is not necessarily inside a flex box so width/height needs to be used */
+.můjúčet-view .preview-container > .layout[style*='align-self: stretch'] {
+  width: 100%;
+}
+.můjúčet-view .preview-container > .layout[style*='flex-grow: 1'] {
+  height: 100%;
+}
+
+/* Apply some default gap and padding to layouts that don't have inline styles for them while dragging. */
+.můjúčet-view[dragging] .layout:not([style*='gap:']) {
+  gap: 8px;
+}
+
+.můjúčet-view[dragging] .layout:not([style*='padding:'], [empty]) {
+  padding: 8px;
+}
+
+.můjúčet-view .cover-overlay {
+  position: absolute;
+  border-radius: 1px;
+}
+
+.můjúčet-view:not([starting-drag]) .cover-overlay.editable-hovering {
+  outline: 2px solid hsl(var(--cv-blue) / 1);
+  outline-offset: -1px;
+}
+
+.můjúčet-view:not([starting-drag]) .cover-overlay.editable-editing {
+  outline: 1px solid hsl(var(--cv-blue) / 1);
+  outline-offset: -1px;
+  box-shadow: inset 0 0 0 2px var(--lumo-base-color);
+}
+
+.můjúčet-view .overlays,
+.můjúčet-view .drop-zones {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+}
+
+.můjúčet-view:not([dragging]) .drop-zones {
+  pointer-events: none;
+}
+
+.můjúčet-view .drop-zone {
+  position: absolute;
+  box-sizing: border-box;
+  border-radius: 1px;
+  min-height: 10px;
+  min-width: 10px;
+}
+
+.můjúčet-view[dragging] .drop-zone:not([empty-layout]) {
+  outline: 1px dashed var(--cv-dropzone-border-color);
+  outline-offset: -2px;
+  background-color: var(--cv-dropzone-bg-color);
+}
+
+.můjúčet-view .drop-zone[remaining-space] {
+  background: repeating-linear-gradient(
+    -45deg,
+    var(--cv-stripe-color),
+    var(--cv-stripe-color) var(--cv-stripe-width),
+    transparent var(--cv-stripe-width),
+    transparent var(--cv-stripe-gap)
+  );
+}
+
+.můjúčet-view[dragging] .drop-zone[drag-over] {
+  background: var(--cv-droptarget-bg-color);
+  outline: 1px solid var(--cv-droptarget-border-color);
+  outline-offset: -1px;
+  box-shadow: inset 0 0 0 2px var(--lumo-base-color);
+}
+
+.drop-zone[empty-layout] {
+  z-index: -1;
+}
+
+.můjúčet-view:not([readonly]) .layout[empty],
+vaadin-form-layout[empty] {
+  border-radius: 1px;
+  background: repeating-conic-gradient(var(--cv-checkerboard-color1) 0% 25%, var(--cv-checkerboard-color2) 0% 50%) 50% /
+    var(--cv-checkerboard-size) var(--cv-checkerboard-size);
+  background-clip: content-box;
+  outline: 1px dashed var(--cv-layout-border-color);
+  outline-offset: -2px;
+}
+.můjúčet-view[dragging]:not([readonly]) vaadin-form-layout[empty] {
+  background: transparent;
+}
+
+.můjúčet-view .layout[empty]::before {
+  content: '';
+  display: block;
+  min-width: 64px;
+  min-height: 32px;
+}
+
+.můjúčet-view[readonly] .drop-zones,
+.můjúčet-view[readonly] .overlays {
+  display: none;
+}
+
+.můjúčet-view[inline-editing] .drop-zones,
+.můjúčet-view[inline-editing] .overlays {
+  display: none;
+}
+.můjúčet-view .content-wrapper[contenteditable='true'] {
+  display: inline-block;
+  overflow: hidden;
+  width: 100%;
+}
+
+.můjúčet-view[dragging] vaadin-form-layout {
+  padding: 8px;
+}
+.můjúčet-view vaadin-form-layout[empty]::before {
+  content: '';
+  display: block;
+  min-width: 64px;
+  min-height: 32px;
+}
+
+.můjúčet-view[dragging] vaadin-form-layout:not([empty])::after {
+  content: '';
+  display: block;
+  min-width: 64px;
+  min-height: 32px;
+}
