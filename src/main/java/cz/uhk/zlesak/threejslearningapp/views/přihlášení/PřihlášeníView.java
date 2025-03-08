@@ -19,7 +19,6 @@ public class PřihlášeníView extends Composite<VerticalLayout> {
         getContent().setWidth("100%");
         getContent().getStyle().set("flex-grow", "1");
         getContent().setAlignSelf(FlexComponent.Alignment.CENTER, loginForm);
-        loginForm.setWidth("min-content");
         getContent().add(loginForm);
     }
 }

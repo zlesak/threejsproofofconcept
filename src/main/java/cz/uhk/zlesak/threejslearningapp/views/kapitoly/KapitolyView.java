@@ -63,6 +63,6 @@ public class KapitolyView extends Composite<VerticalLayout> {
         content.setPadding(false);
         details.setSummaryText("Contact information");
         details.setOpened(true);
-        details.setContent(content);
+        details.add(content);
     }
 }

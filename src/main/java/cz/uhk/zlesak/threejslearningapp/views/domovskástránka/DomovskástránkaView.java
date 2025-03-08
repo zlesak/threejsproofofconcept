@@ -50,14 +50,8 @@ public class DomovskástránkaView extends Composite<VerticalLayout> {
         layoutRow.setAlignItems(Alignment.CENTER);
         layoutRow.setJustifyContentMode(JustifyContentMode.CENTER);
         icon.setIcon("lumo:user");
-        icon.setWidth("100%");
-        icon.setHeight("100%");
         icon2.setIcon("lumo:user");
-        icon2.setWidth("100%");
-        icon2.setHeight("100%");
         icon3.setIcon("lumo:user");
-        icon3.setWidth("100%");
-        icon3.setHeight("100%");
         getContent().add(h1);
         getContent().add(hr);
         getContent().add(textSmall);
