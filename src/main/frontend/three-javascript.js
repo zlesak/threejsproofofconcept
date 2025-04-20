@@ -2,109 +2,303 @@ import * as THREE from "three";
 import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
 import {OrbitControls} from "three/addons";
 
-
-let element, camera, scene, renderer, controls, model,tt;
-
 class ThreeTest {
-  init = (e) => {
-//element to draw to (some form of canvas to draw on)
-    element = e;
-    camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.25, 50);
-    camera.position.set( - 1.8, 0.6, 2.7 );
-//scene
-    scene = new THREE.Scene();
-//renderer
-    renderer = new THREE.WebGLRenderer({antialias: true, canvas: element});
-    renderer.setAnimationLoop(this.animate);
-//ambient light
-    const ambientLight = new THREE.AmbientLight(0xffffff, 1); // Soft light
-    scene.add(ambientLight);
-//skybox
-    scene.background = new THREE.CubeTextureLoader()
-        .setPath( 'skybox/' )
-        .load(['px.bmp','nx.bmp','py.bmp','ny.bmp','pz.bmp','nz.bmp']);
-//model loader
-//     const manager = new THREE.LoadingManager();
-//     manager.onProgress = (url, loaded, total)=>{
-//       console.log((loaded/total));
-//     };
-//     manager.onLoad = ()=>{
-//     };
-    const loader = new GLTFLoader();
-    loader.load("models/model-cast-mozku/textura_4k/1mil_faces/1mil_faces.glb", async (gltf) => {
-      model = gltf.scene;
-      model.children[0].geometry.center();
-      await renderer.compileAsync(model, camera, scene);
-      scene.add(model);
-      this.animate();
-    }, (xhr) => {
-//progress bar
-      document.getElementById("chapter-container").$server.updateProgress(xhr.loaded/xhr.total);
-      console.log(xhr.loaded/xhr.total);
-      if(xhr.loaded === xhr.total){
+    constructor() {
+        this.element = null;
+        this.camera = null;
+        this.scene = null;
+        this.renderer = null;
+        this.controls = null;
+        this.model = null;
+        this.animationId = null;
+        this.isAnimating = false;
+        this.ambientLight = null;
+    }
+
+    init = (element) => {
+        this.element = element;
+
+        // Camera
+        this.camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.25, 50);
+        this.camera.position.set(-1.8, 0.6, 2.7);
+
+        // Scene
+        this.scene = new THREE.Scene();
+
+        // Renderer
+        this.renderer = new THREE.WebGLRenderer({
+            antialias: true,
+            canvas: this.element,
+            powerPreference: "low-power" // Important for integrated GPUs
+        });
+
+        // Ambient Light
+        this.ambientLight = new THREE.AmbientLight(0xffffff, 1);
+        this.scene.add(this.ambientLight);
+
+        // Skybox
+        this.scene.background = new THREE.CubeTextureLoader()
+            .setPath('skybox/')
+            .load(['px.bmp', 'nx.bmp', 'py.bmp', 'ny.bmp', 'pz.bmp', 'nz.bmp']);
+
+        // Controls
+        this.controls = new OrbitControls(this.camera, this.renderer.domElement);
+        this.configureControls();
+
+        // Event listeners
+        window.addEventListener('resize', this.onWindowResize);
+
+        // Initial setup
         this.onWindowResize();
-        document.getElementById("chapter-container").$server.hideProgressBar();
-      }
-    }, (error) => {
-      console.error(error);
-    });
+        this.startAnimation();
+    }
 
-//controls
-    controls = new OrbitControls( camera, renderer.domElement );
-    controls.addEventListener( 'change', this.render ); // use if there is no animation loop
-    controls.enabled = true;
-    controls.minDistance = 2;
-    controls.maxDistance = 10;
-    controls.autoRotate = true;
-    controls.enableZoom = true;
-    controls.zoomToCursor = true;
+    configureControls = () => {
+        this.controls.enabled = true;
+        this.controls.minDistance = 2;
+        this.controls.maxDistance = 10;
+        this.controls.autoRotate = true;
+        this.controls.enableZoom = true;
+        this.controls.zoomToCursor = true;
+        this.controls.target.set(0, 0, -0.2);
+        this.controls.autoRotateSpeed = 1.0;
+        this.controls.enableDamping = true;
+        this.controls.dampingFactor = 0.2;
+        this.controls.update();
+    }
 
-    controls.target.set(0,0,-0.2);
+    render = () => {
+        if (this.renderer && this.scene && this.camera) {
+            this.renderer.render(this.scene, this.camera);
+        }
+    }
 
-    controls.autoRotate = true;
-    controls.autoRotateSpeed = 1.0;
+    animate = () => {
+        if (!this.isAnimating) return;
 
-    controls.enableDamping = true;
-    controls.dampingFactor = 0.2;
-    controls.update()
+        if (this.controls) {
+            this.controls.update();
+        }
 
-//event listeners
-    window.addEventListener('resize', this.onWindowResize);
-//apply changes and raw through animation
-  }
+        this.render();
+        this.animationId = requestAnimationFrame(this.animate);
+    }
 
-  render = ()=> {
-    renderer.render(scene, camera);
-  }
-  rotate = ()=>{
-      model.rotation.x += 0.01;
-      model.rotation.y += 0.01;
-  }
-  animate = () => {
-    // this.rotate();
-    controls.update();
-    this.render();
-  }
-  onWindowResize = () => {
-    let canvasElement = (document.getElementsByTagName("canvas"))[0];
-    canvasElement.width = canvasElement.parentElement.clientWidth;
-    let padding =  window.getComputedStyle(canvasElement.parentElement).getPropertyValue("padding-top");
-    padding = padding.substring(0,padding.indexOf("p"));
-    canvasElement.height = window.innerHeight - document.getElementsByTagName("header")[0].offsetHeight - 4*padding;
-    camera.aspect = window.innerWidth / window.innerHeight;
-    camera.updateProjectionMatrix();
-    renderer.setSize(canvasElement.width, canvasElement.height);
-    this.render();
-  }
+    startAnimation = () => {
+        if (this.isAnimating) return;
+        this.isAnimating = true;
+        this.animate();
+    }
+
+    stopAnimation = () => {
+        this.isAnimating = false;
+        if (this.animationId) {
+            cancelAnimationFrame(this.animationId);
+            this.animationId = null;
+        }
+        if (this.renderer) {
+            this.renderer.setAnimationLoop(null);
+        }
+    }
+
+    onWindowResize = () => {
+        if (!this.element || !this.renderer || !this.camera) return;
+
+        const canvasElement = this.element;
+        const parent = canvasElement.parentElement;
+
+        if (!parent) return;
+
+        canvasElement.width = parent.clientWidth;
+
+        const padding = window.getComputedStyle(parent)
+            .getPropertyValue("padding-top")
+            .replace('px', '');
+
+        const headerHeight = document.getElementsByTagName("header")[0]?.offsetHeight || 0;
+        canvasElement.height = window.innerHeight - headerHeight - 4 * parseFloat(padding);
+
+        this.camera.aspect = canvasElement.width / canvasElement.height;
+        this.camera.updateProjectionMatrix();
+        this.renderer.setSize(canvasElement.width, canvasElement.height);
+        this.render();
+    }
+
+    loadModel = (modelUrl) => {
+        if (!this.scene) return;
+
+        // Clean up previous model
+        if (this.model) {
+            this.disposeObject(this.model);
+            this.scene.remove(this.model);
+            this.model = null;
+        }
+
+        const loader = new GLTFLoader();
+        loader.load(modelUrl,
+            (gltf) => {
+                this.model = gltf.scene;
+
+                // Center geometry if it exists
+                if (this.model.children[0]?.geometry) {
+                    this.model.children[0].geometry.center();
+                }
+
+                this.scene.add(this.model);
+
+                // Center camera on model
+                const box = new THREE.Box3().setFromObject(this.model);
+                const center = box.getCenter(new THREE.Vector3());
+                const size = box.getSize(new THREE.Vector3());
+
+                this.camera.position.copy(center);
+                this.camera.position.x += size.length();
+                this.camera.position.y += size.length() * 0.5;
+                this.camera.position.z += size.length();
+                this.camera.lookAt(center);
+
+                this.controls.target.copy(center);
+                this.controls.update();
+                this.onWindowResize();
+            },
+            (xhr) => {
+                const progress = xhr.loaded / xhr.total;
+                document.getElementById("chapter-container")?.$server?.updateProgress(progress);
+            },
+            (error) => {
+                console.error('Error loading model:', error);
+            }
+        );
+    };
+
+    dispose = () => {
+        this.stopAnimation();
+        if (this.renderer) {
+            this.renderer.setAnimationLoop(null);
+            this.renderer.forceContextLoss();
+        }
+        this.renderer.dispose();
+        const canvas = this.renderer?.domElement;
+        if (canvas) {
+            const contexts = ['webgl', 'experimental-webgl', 'webgl2'];
+            contexts.forEach(ctx => {
+                const gl = canvas.getContext(ctx);
+                if (gl?.getExtension('WEBGL_lose_context')) {
+                    gl.getExtension('WEBGL_lose_context').loseContext();
+                    gl.getExtension('WEBGL_lose_context').restoreContext();
+                    gl.getExtension('WEBGL_lose_context').loseContext();
+                }
+            });
+            canvas.width = 1;
+            canvas.height = 1;
+        }
+
+        this.scene?.traverse(obj => {
+            if (obj.material) {
+                if (Array.isArray(obj.material)) {
+                    obj.material.forEach(m => {
+                        m.dispose();
+                        m.needsUpdate = true;
+                    });
+                } else {
+                    obj.material.dispose();
+                    obj.material.needsUpdate = true;
+                }
+            }
+            if (obj.geometry) {
+                obj.geometry.dispose();
+                obj.geometry = null;
+            }
+        });
+
+        // Chrome only
+        if (window.gc) {
+            window.gc();
+        }
+
+        // console.log("GPU memory:", this.renderer?.info.memory);
+    };
+
+    disposeObject = (object) => {
+        if (!object) return;
+
+        // Geometry
+        if (object.geometry) {
+            object.geometry.dispose();
+        }
+
+        // Material
+        if (object.material) {
+            if (Array.isArray(object.material)) {
+                object.material.forEach(material => this.disposeMaterial(material));
+            } else {
+                this.disposeMaterial(object.material);
+            }
+        }
+
+        // Custom dispose method
+        if (object.dispose) {
+            object.dispose();
+        }
+
+        // Children
+        if (object.children) {
+            object.children.forEach(child => this.disposeObject(child));
+        }
+    };
+
+    disposeMaterial = (material) => {
+        if (!material) return;
+
+        material.dispose();
+
+        // Dispose textures
+        for (const prop in material) {
+            const value = material[prop];
+            if (value && value.isTexture) {
+                value.dispose();
+            }
+        }
+    };
 }
 
-window.initThree = function(element) {
-  tt = new ThreeTest();
-  tt.init(element);
-  tt.render()
+// Global interface
+let tt = null;
+
+window.loadModel = function (modelUrl) {
+    if (tt) {
+        tt.loadModel(modelUrl);
+    }
 };
 
-window.addEventListener('load', ()=>{
-  renderer.setSize(element.parentElement.clientWidth, element.parentElement.clientHeight);
-  tt.onWindowResize();
+window.initThree = function (element) {
+    if (tt) {
+        tt.dispose();
+    }
+    tt = new ThreeTest();
+    tt.init(element);
+};
+
+window.disposeThree = function () {
+    return new Promise((resolve) => {
+        if (tt) {
+            tt.dispose();
+            setTimeout(() => {
+                tt = null;
+                resolve();
+            }, 100);
+        } else {
+            resolve();
+        }
+    });
+};
+
+window.addEventListener('load', () => {
+    if (tt && tt.element) {
+        tt.onWindowResize();
+    }
+});
+
+window.addEventListener('beforeunload', () => {
+    window.disposeThree();
 });

@@ -28,24 +28,11 @@ import com.vaadin.flow.theme.lumo.LumoUtility.Padding;
 import com.vaadin.flow.theme.lumo.LumoUtility.TextColor;
 import com.vaadin.flow.theme.lumo.LumoUtility.Whitespace;
 import com.vaadin.flow.theme.lumo.LumoUtility.Width;
-import cz.uhk.zlesak.threejslearningapp.views.domovskástránka.DomovskástránkaView;
-import cz.uhk.zlesak.threejslearningapp.views.kapitolaxyz.KapitolaXYZView;
-import cz.uhk.zlesak.threejslearningapp.views.kapitoly.KapitolyView;
-import cz.uhk.zlesak.threejslearningapp.views.můjúčet.MůjúčetView;
-import cz.uhk.zlesak.threejslearningapp.views.odhlášení.OdhlášeníView;
-import cz.uhk.zlesak.threejslearningapp.views.přihlášení.PřihlášeníView;
 import org.vaadin.lineawesome.LineAwesomeIcon;
 
-/**
- * The main view is a top-level placeholder for other views.
- */
 @Layout
 @AnonymousAllowed
 public class MainLayout extends AppLayout {
-
-    /**
-     * A simple navigation item component, based on ListItem element.
-     */
     public static class MenuItemInfo extends ListItem {
 
         private final Class<? extends Component> view;
@@ -53,26 +40,19 @@ public class MainLayout extends AppLayout {
         public MenuItemInfo(String menuTitle, Component icon, Class<? extends Component> view) {
             this.view = view;
             RouterLink link = new RouterLink();
-            // Use Lumo classnames for various styling
-            link.addClassNames(Display.FLEX, Gap.XSMALL, Height.MEDIUM, AlignItems.CENTER, Padding.Horizontal.SMALL,
-                    TextColor.BODY);
+            link.addClassNames(Display.FLEX, Gap.XSMALL, Height.MEDIUM, AlignItems.CENTER, Padding.Horizontal.SMALL, TextColor.BODY);
             link.setRoute(view);
-
             Span text = new Span(menuTitle);
-            // Use Lumo classnames for various styling
             text.addClassNames(FontWeight.MEDIUM, FontSize.MEDIUM, Whitespace.NOWRAP);
-
             if (icon != null) {
                 link.add(icon);
             }
             link.add(text);
             add(link);
         }
-
         public Class<?> getView() {
             return view;
         }
-
     }
 
     public MainLayout() {
@@ -109,19 +89,8 @@ public class MainLayout extends AppLayout {
 
     private MenuItemInfo[] createMenuItems() {
         return new MenuItemInfo[]{ //
-                new MenuItemInfo("Domovská stránka", LineAwesomeIcon.HOME_SOLID.create(), DomovskástránkaView.class), //
-
-                new MenuItemInfo("Kapitoly", LineAwesomeIcon.BOOK_SOLID.create(), KapitolyView.class), //
-
-                new MenuItemInfo("Kapitola - XYZ", LineAwesomeIcon.BOOK_OPEN_SOLID.create(), KapitolaXYZView.class), //
-
-                new MenuItemInfo("Přihlášení", LineAwesomeIcon.SIGN_IN_ALT_SOLID.create(), PřihlášeníView.class), //
-
-                new MenuItemInfo("Můj účet", LineAwesomeIcon.USER.create(), MůjúčetView.class), //
-
-                new MenuItemInfo("Odhlášení", LineAwesomeIcon.SIGN_OUT_ALT_SOLID.create(), OdhlášeníView.class), //
-
+                new MenuItemInfo("Domovská stránka", LineAwesomeIcon.HOME_SOLID.create(), MainPageView.class),
+                new MenuItemInfo("Vytvořit kapitolu", LineAwesomeIcon.FILE.create(), CreateChapterView.class)
         };
     }
-
 }
