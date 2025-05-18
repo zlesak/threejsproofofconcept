@@ -4,7 +4,6 @@ import com.vaadin.flow.component.*;
 import com.vaadin.flow.component.Composite;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.H2;
-import com.vaadin.flow.component.html.Paragraph;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.FlexComponent.Alignment;
@@ -19,6 +18,7 @@ import cz.uhk.zlesak.threejslearningapp.controlers.ChapterApiClient;
 import cz.uhk.zlesak.threejslearningapp.models.ChapterEntity;
 import cz.uhk.zlesak.threejslearningapp.threejsdraw.Three;
 import org.springframework.core.io.Resource;
+import org.vaadin.pekka.WysiwygE;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -33,20 +33,20 @@ public class ChapterView extends Composite<VerticalLayout> implements HasUrlPara
     private final ChapterApiClient chapterApiClient;
 
     H2 h2 = new H2();
-    Paragraph textMedium = new Paragraph();
+    WysiwygE textMedium = new WysiwygE();
 
     public ChapterView(ChapterApiClient chapterApiClient) {
         this.chapterApiClient = chapterApiClient;
-//set the id
+///set the id
         getContent().setId("chapter-container");
-//definition
+///definition
         HorizontalLayout layoutRow = new HorizontalLayout();
         VerticalLayout layoutColumn3 = new VerticalLayout();
         Icon icon = new Icon();
         VerticalLayout layoutColumn4 = new VerticalLayout();
         Div div = new Div();
 
-//styling
+///styling
         getContent().setWidth("100%");
         getContent().getStyle().set("flex-grow", "1");
         layoutRow.addClassName(Gap.MEDIUM);
@@ -57,18 +57,16 @@ public class ChapterView extends Composite<VerticalLayout> implements HasUrlPara
         layoutColumn3.setWidth("100%");
         layoutColumn3.getStyle().set("flex-grow", "1");
         renderer.getStyle().set("width", "100%");
-        renderer.getStyle().set("height", "100%");
+        renderer.getStyle().set("height", "100vh");
         icon.setIcon("lumo:user");
         icon.getStyle().set("flex-grow", "1");
         layoutColumn4.addClassName(Gap.SMALL);
         layoutColumn4.setJustifyContentMode(JustifyContentMode.CENTER);
         layoutColumn4.setAlignItems(Alignment.START);
         h2.setWidth("100%");
-        textMedium.setWidth("100%");
-        textMedium.getStyle().set("font-size", "var(--lumo-font-size-m)");
-//placing elements
+///placing elements
         getContent().add(layoutRow);
-//renderer
+///renderer
         layoutRow.add(layoutColumn3);
         div.add(progressBar, renderer);
         div.setSizeFull();
@@ -80,7 +78,7 @@ public class ChapterView extends Composite<VerticalLayout> implements HasUrlPara
                 .set("transform", "translate(-50%, -50%)")
                 .set("z-index", "10");
         div.getStyle().set("position", "relative");
-//study text
+///study text
         layoutRow.add(layoutColumn4);
         layoutColumn4.add(h2);
         layoutColumn4.add(textMedium);
@@ -94,7 +92,8 @@ public class ChapterView extends Composite<VerticalLayout> implements HasUrlPara
 
     private void updateUIWithChapterData(ChapterEntity chapter, Resource resource) {
         h2.setText(chapter.getHeader());
-        textMedium.setText(chapter.getContent());
+        textMedium.setValue(chapter.getContent());
+        textMedium.setReadOnly(true);
 
         if (resource != null) {
             try {

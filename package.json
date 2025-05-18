@@ -17,7 +17,8 @@
     "react": "18.3.1",
     "react-dom": "18.3.1",
     "react-router-dom": "6.28.0",
-    "three": "^0.172.0"
+    "three": "^0.172.0",
+    "wysiwyg-e-fork": "3.0.10"
   },
   "devDependencies": {
     "@babel/preset-react": "7.26.3",
@@ -34,7 +35,7 @@
     "strip-css-comments": "5.0.0",
     "transform-ast": "2.4.4",
     "typescript": "5.7.3",
-    "vite": "6.0.6",
+    "vite": "6.3.4",
     "vite-plugin-checker": "0.8.0",
     "workbox-build": "7.3.0",
     "workbox-core": "7.3.0",
@@ -58,7 +59,8 @@
       "react": "18.3.1",
       "react-dom": "18.3.1",
       "react-router-dom": "6.28.0",
-      "three": "0.172.0"
+      "three": "0.172.0",
+      "wysiwyg-e-fork": "3.0.10"
     },
     "devDependencies": {
       "@babel/preset-react": "7.26.3",
@@ -81,7 +83,7 @@
       "workbox-core": "7.3.0",
       "workbox-precaching": "7.3.0"
     },
-    "hash": "8c8f4599214fccb027526157080b768c774461dc506316159bf4cdd9cce483b0"
+    "hash": "4097b7192699054f087e67c7b385baa65bab4ebeb1ab88a0760f6d5b36980df0"
   },
   "type": "module",
   "overrides": {
@@ -102,6 +104,7 @@
     "@vaadin/vaadin-themable-mixin": "$@vaadin/vaadin-themable-mixin",
     "@vaadin/vaadin-lumo-styles": "$@vaadin/vaadin-lumo-styles",
     "@vaadin/vaadin-material-styles": "$@vaadin/vaadin-material-styles",
-    "progressbar.js": "$progressbar.js"
+    "progressbar.js": "$progressbar.js",
+    "wysiwyg-e-fork": "$wysiwyg-e-fork"
   }
 }

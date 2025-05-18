@@ -9,7 +9,6 @@ import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
-import com.vaadin.flow.component.textfield.TextArea;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.component.upload.Upload;
 import com.vaadin.flow.component.upload.receivers.MultiFileMemoryBuffer;
@@ -22,6 +21,8 @@ import cz.uhk.zlesak.threejslearningapp.models.InputStreamMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
 import org.vaadin.lineawesome.LineAwesomeIconUrl;
 import com.vaadin.flow.component.button.Button;
+import org.vaadin.pekka.WysiwygE;
+
 import java.io.InputStream;
 
 @PageTitle("Vytvořit kapitolu")
@@ -31,19 +32,26 @@ import java.io.InputStream;
 public class CreateChapterView extends Composite<VerticalLayout> {
 /// model input stream variable for potential object model
     private InputStream inputStream = null;
+    private String fileName = null;
 
     public CreateChapterView(ChapterApiClient chapterApiClient) {
 /// header text field
         TextField header = new TextField("Název kapitoly");
         header.setMaxLength(255);
+        header.setRequired(true);
+        header.setRequiredIndicatorVisible(true);
+        header.setWidthFull();
 /// content field
-        TextArea content = new TextArea("Obsah");
-        content.setMaxLength(2048);
+        WysiwygE content = new WysiwygE();
+        content.setAllToolsVisible(true);
+        content.setToolsInvisible(WysiwygE.Tool.IMAGE, WysiwygE.Tool.VIDEO, WysiwygE.Tool.AUDIO);
+        content.setWidthFull();
 /// model upload
         Upload upload = getUpload();
 /// create button
         Button button = new Button("Vytvořit kapitolu");
         button.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        button.setWidthFull();
 
         button.addClickListener(e -> {
             String name = header.getValue().trim();
@@ -61,10 +69,14 @@ public class CreateChapterView extends Composite<VerticalLayout> {
                     .build();
             ChapterEntity created;
             try {
+                if (inputStream == null || fileName == null || !fileName.toLowerCase().endsWith(".glb")) {
+                    Notification.show("Musíte nahrát minimálně JEDEN 3D model s příponou .glb.");
+                    return;
+                }
                 created = chapterApiClient.createChapter(chapter);
                 header.clear();
                 content.clear();
-                if(inputStream != null && created != null) {
+                if(created != null) {
                     try{
                         MultipartFile multipartFile = new InputStreamMultipartFile(inputStream, "model.gltf", inputStream.available());
                         chapterApiClient.uploadModel(multipartFile, created.getId());
@@ -83,16 +95,17 @@ public class CreateChapterView extends Composite<VerticalLayout> {
 /// layout setup
         HorizontalLayout layoutRow = new HorizontalLayout();
         VerticalLayout layoutColumn1 = new VerticalLayout();
+        layoutColumn1.setWidth("80vw");
 
-        getContent().setWidth("100%");
-        getContent().getStyle().set("flex-grow", "1");
-        getContent().setJustifyContentMode(FlexComponent.JustifyContentMode.START);
-        getContent().setAlignItems(FlexComponent.Alignment.CENTER);
-        getContent().setFlexGrow(1.0, layoutRow);
-
-        layoutColumn1.setWidth("100%");
         layoutRow.add(layoutColumn1);
         layoutColumn1.add(header, content, upload, button);
+
+        getContent().getStyle().set("flex-grow", "1");
+        getContent().setSizeFull();
+        getContent().setJustifyContentMode(FlexComponent.JustifyContentMode.CENTER);
+        getContent().setAlignItems(FlexComponent.Alignment.CENTER);
+
+        getContent().setFlexGrow(1.0, layoutRow);
 
         getContent().add(layoutRow);
     }
@@ -101,9 +114,10 @@ public class CreateChapterView extends Composite<VerticalLayout> {
         MultiFileMemoryBuffer buffer = new MultiFileMemoryBuffer();
         Upload upload = new Upload(buffer);
         upload.setMaxFileSize(50 * 1024 * 1024);
+        upload.setAcceptedFileTypes(".glb");
 
         upload.addSucceededListener(event -> {
-            String fileName = event.getFileName();
+            this.fileName = event.getFileName();
             this.inputStream = buffer.getInputStream(fileName);
         });
 
