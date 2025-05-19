@@ -215,8 +215,6 @@ class ThreeTest {
         if (window.gc) {
             window.gc();
         }
-
-        // console.log("GPU memory:", this.renderer?.info.memory);
     };
 
     disposeObject = (object) => {
@@ -260,6 +258,10 @@ class ThreeTest {
             }
         }
     };
+
+    changeSpeed = (speed) => {
+        this.controls.autoRotateSpeed += speed;
+    };
 }
 
 // Global interface
@@ -302,3 +304,8 @@ window.addEventListener('load', () => {
 window.addEventListener('beforeunload', () => {
     window.disposeThree();
 });
+
+window.doAction = function(href) {
+    console.log("doAction called from WysiwygE link:", href); //TODO: Remove after debugging phase
+    tt.changeSpeed(0.3); //TODO: Change to certain logic when available, now for channel testing speed up setting
+};

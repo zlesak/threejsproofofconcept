@@ -92,8 +92,31 @@ public class ChapterView extends Composite<VerticalLayout> implements HasUrlPara
 
     private void updateUIWithChapterData(ChapterEntity chapter, Resource resource) {
         h2.setText(chapter.getHeader());
-        textMedium.setValue(chapter.getContent());
+        String content = chapter.getContent();
+        textMedium.setValue(content);
         textMedium.setReadOnly(true);
+
+        textMedium.getElement().executeJs("""
+    const shadowRoot = this.shadowRoot;
+    if (!shadowRoot) {
+        return;
+    }
+    
+    const editableDiv = shadowRoot.getElementById('editable');
+    if (!editableDiv) {
+        return;
+    }
+    editableDiv.addEventListener('click', function(e) {
+        const anchor = e.target.closest('a');
+        
+        if (anchor) {
+            e.preventDefault();
+            e.stopPropagation();
+            const href = anchor.getAttribute('href');
+            $0.$server.doAction(href);
+        }
+    });
+""", renderer.getElement());
 
         if (resource != null) {
             try {

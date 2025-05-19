@@ -33,4 +33,17 @@ public class Three extends Component{
             this.onDisposedCallback.run();
         }
     }
+
+    @ClientCallable
+    public void doAction(String href) { //TODO: Change method to appropriate method, or use switching for different actions when defined and available
+        getElement().executeJs("""
+        try {
+            if (typeof window.doAction === 'function') {
+                window.doAction($0);
+            }
+        } catch (e) {
+            console.error('[JS] Error in doAction:', e);
+        }
+        """, href);
+    }
 }
