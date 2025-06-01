@@ -10,7 +10,7 @@
     "jsx": "react-jsx",
     "inlineSources": true,
     "module": "esNext",
-    "target": "es2020",
+    "target": "es2022",
     "moduleResolution": "bundler",
     "strict": true,
     "skipLibCheck": true,
@@ -27,7 +27,8 @@
       "@vaadin/flow-frontend": ["generated/jar-resources"],
       "@vaadin/flow-frontend/*": ["generated/jar-resources/*"],
       "Frontend/*": ["*"]
-    }
+    },
+    "typeRoots": ["./node_modules/@types", "./src/main/frontend/types"]
   },
   "include": [
     "src/main/frontend/**/*",

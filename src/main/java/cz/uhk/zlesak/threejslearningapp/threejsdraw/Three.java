@@ -7,7 +7,7 @@ import com.vaadin.flow.component.dependency.JsModule;
 import com.vaadin.flow.component.dependency.NpmPackage;
 import com.vaadin.flow.function.SerializableRunnable;
 
-@JsModule("./three-javascript.js")
+@JsModule("./js/three-javascript.js")
 @NpmPackage(value = "three", version = "0.172.0")
 @Tag("canvas")
 public class Three extends Component{
