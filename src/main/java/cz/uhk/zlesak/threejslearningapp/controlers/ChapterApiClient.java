@@ -16,10 +16,20 @@ import org.springframework.web.multipart.MultipartFile;
 public class ChapterApiClient {
 
     private final RestTemplate restTemplate;
-    private final String baseUrl = "http://kotlin-backend:8080/api/chapter"; // Adjust this to your API URL
+    private final String baseUrl;
 
     public ChapterApiClient(RestTemplate restTemplate) {
         this.restTemplate = restTemplate;
+        // Detekce Hotswap Agent podle argumentů JVM
+        boolean isHotswap = java.lang.management.ManagementFactory.getRuntimeMXBean()
+                .getInputArguments().stream()
+                .anyMatch(arg -> arg.contains("hotswap-agent.jar"));
+        if (isHotswap) {
+            System.out.println("Hotswap Agent detected, using local base URL");
+            this.baseUrl = "http://localhost:8080/api/chapter";
+        } else {
+            this.baseUrl = "http://kotlin-backend:8080/api/chapter";
+        }
     }
 
     public ChapterEntity createChapter(ChapterEntity chapter) {

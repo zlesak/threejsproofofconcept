@@ -12,6 +12,8 @@ import Quote from '@editorjs/quote';
 import Table from '@editorjs/table';
 import Hyperlink from 'editorjs-hyperlink';
 import Strikethrough from '@sotaproject/strikethrough';
+import uploader from '@ajite/editorjs-image-base64';
+import ImageTool from '@editorjs/image';
 
 @customElement('editor-js')
 export class EditorJs extends LitElement {
@@ -49,20 +51,39 @@ export class EditorJs extends LitElement {
 
     async firstUpdated() {
         await this.initializeEditor();
+///this style is hero to move the toolbar to the left to overcome the issue with it not being displayed correctly in the editor
+        const style = document.createElement('style');
+        style.textContent = `
+.ce-block {
+  position: relative;
+}
+
+.ce-toolbar {
+  left: auto !important;
+  right: 0 !important;
+  flex-direction: row-reverse !important;
+}
+
+.ce-toolbar__plus {
+  margin-left: 8px;
+  margin-right: 0;
+}
+`;
+        this.appendChild(style);
     }
 
-    async initializeContainer(){
+    async initializeContainer() {
         let container = document.createElement('div');
         container.id = "editorjs";
         container.style.width = '100%';
-        container.style.minHeight = '300px';
+        container.style.height = '100%';
+        container.style.overflowY = 'auto';
         this.appendChild(container);
         return container;
     }
 
     private async initializeEditor() {
         let container = await this.initializeContainer();
-
         try {
             this.editor = new EditorJS({
                 holder: container,
@@ -99,6 +120,12 @@ export class EditorJs extends LitElement {
                             availableRels: ['author', 'noreferrer'],
                             validate: false,
                         }
+                    },
+                    image: {
+                        class: ImageTool,
+                        config: {
+                            uploader
+                        }
                     }
                 },
                 i18n: {
@@ -122,9 +149,10 @@ export class EditorJs extends LitElement {
                 },
                 onReady: () => {
                     this.resolveEditorReadyPromise();
-                    this.dispatchEvent(new CustomEvent('editor-js-ready', { bubbles: true, composed: true }));
+                    this.dispatchEvent(new CustomEvent('editor-js-ready', {bubbles: true, composed: true}));
+                    container.style.maxHeight = container.offsetHeight.toString() + 'px';
                 },
-                onChange: (api, event) => {}
+                onChange: () => {}
             });
         } catch (error) {
             console.error('initializeEditor: Error creating EditorJS instance:', error);
@@ -167,14 +195,13 @@ export class EditorJs extends LitElement {
 
             if (!this.editor || !this.editor.blocks) {
                 console.error('setData: Editor or editor.blocks not fully initialized even after promise resolved.');
-                throw new Error('Editor or editor.blocks not fully initialized');
+                return; // místo throw, pouze logujeme a ukončíme
             }
 
             await this.editor.blocks.clear(); // This seems to work if no error is thrown here
             await this.editor.blocks.render(data); // <--- This is the critical line that might be failing silently
 
-            const editorContentAfterSet = await this.editor.save();
-
+            // const editorContentAfterSet = await this.editor.save(); // odstraněno, nebylo použito
         } catch (error) {
             console.error('Error setting editor data:', error);
             throw error;
@@ -186,7 +213,7 @@ export class EditorJs extends LitElement {
         if (!this.editor) {
             throw new Error('Editor not initialized in toggleReadOnlyMode');
         }
-        if(readOnly == null) {
+        if (readOnly == null) {
             readOnly = !this.editor.readOnly.isEnabled;
         }
         await this.editor.readOnly.toggle(readOnly);
@@ -219,12 +246,10 @@ export class EditorJs extends LitElement {
             if (filteredBlocks.length === 0) {
             }
 
-            const subchapters = filteredBlocks.map(block => ({
+            return filteredBlocks.map(block => ({
                 id: block.id || `fallback-${Math.random().toString(36).substring(2, 9)}`,
                 text: block.data.text
             }));
-
-            return subchapters;
         } catch (error) {
             console.error('Error getting subchapter names:', error);
             throw error;

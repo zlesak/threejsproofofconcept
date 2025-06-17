@@ -105,3 +105,8 @@ declare module '@editorjs/paragraph' {
 
     export default Paragraph;
 }
+
+declare module '@ajite/editorjs-image-base64' {
+    const uploader: any;
+    export default uploader;
+}

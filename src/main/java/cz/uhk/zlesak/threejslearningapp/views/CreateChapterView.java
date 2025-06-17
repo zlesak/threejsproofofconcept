@@ -49,7 +49,7 @@ public class CreateChapterView extends Composite<VerticalLayout> {
         Button createChapterButton = new Button("Vytvořit kapitolu");
         createChapterButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         createChapterButton.setWidthFull();
-
+///  createChapterButton button listener to submit the chapter with validations
         createChapterButton.addClickListener(e -> {
             String name = header.getValue().trim();
 
@@ -94,7 +94,7 @@ public class CreateChapterView extends Composite<VerticalLayout> {
                 }
             });
         });
-/// layout setup
+/// Layout setup
         HorizontalLayout layoutRow = new HorizontalLayout();
         VerticalLayout layoutColumn1 = new VerticalLayout();
         layoutColumn1.setWidth("80vw");
@@ -112,6 +112,7 @@ public class CreateChapterView extends Composite<VerticalLayout> {
         getContent().add(layoutRow);
     }
 
+    /// Method to get the upload component with file validation and maximum file size of 50 MB
     private Upload getUpload() {
         MultiFileMemoryBuffer buffer = new MultiFileMemoryBuffer();
         Upload upload = new Upload(buffer);
