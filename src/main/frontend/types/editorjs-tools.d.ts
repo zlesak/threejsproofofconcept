@@ -105,6 +105,23 @@ declare module '@editorjs/paragraph' {
 
     export default Paragraph;
 }
+declare module '@editorjs/header' {
+    class Header {
+        static get toolbox(): {
+            title: string;
+            icon: string;
+        };
+
+        constructor(config: any);
+
+        render(): HTMLElement;
+        save(blockContent: HTMLElement): any;
+        validate(savedData: any): boolean;
+        renderSettings?(): HTMLElement;
+    }
+
+    export default Paragraph;
+}
 
 declare module '@ajite/editorjs-image-base64' {
     const uploader: any;

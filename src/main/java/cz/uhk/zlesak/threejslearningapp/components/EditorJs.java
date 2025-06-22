@@ -37,13 +37,15 @@ public class EditorJs extends Component implements HasSize, HasStyle {
     public void toggleReadOnlyMode(boolean readOnly) {
         getElement().callJsFunction("toggleReadOnlyMode", readOnly);
     }
+
     public void clear() {
         getElement().callJsFunction("clear");
     }
 
-    public CompletableFuture<JsonValue> getSubChaptersNames(){
-        return getElement().callJsFunction("getSubChaptersNames")
-                .toCompletableFuture();
-
+    public CompletableFuture<JsonValue> getSubChaptersNames() {
+        return getElement().callJsFunction("getSubChaptersNames").toCompletableFuture();
+    }
+    public CompletableFuture<JsonValue> getSubchaptersContent() {
+        return getElement().callJsFunction("getSubchaptersContent").toCompletableFuture();
     }
 }

@@ -8,7 +8,7 @@ import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
-import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.component.orderedlayout.Scroller;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.component.upload.Upload;
@@ -30,12 +30,12 @@ import java.io.InputStream;
 @Menu(order = 1, icon = LineAwesomeIconUrl.BOOK_OPEN_SOLID)
 @Tag("create-chapter")
 public class CreateChapterView extends Composite<VerticalLayout> {
-    /// model input stream variable for potential object model
+/// model input stream variable for potential object model
     private InputStream inputStream = null;
     private String fileName = null;
 
     public CreateChapterView(ChapterApiClient chapterApiClient) {
-/// header text field
+/// chapter name text field
         TextField header = new TextField("Název kapitoly");
         header.setMaxLength(255);
         header.setRequired(true);
@@ -95,21 +95,24 @@ public class CreateChapterView extends Composite<VerticalLayout> {
             });
         });
 /// Layout setup
-        HorizontalLayout layoutRow = new HorizontalLayout();
         VerticalLayout layoutColumn1 = new VerticalLayout();
         layoutColumn1.setWidth("80vw");
-
-        layoutRow.add(layoutColumn1);
+        layoutColumn1.setDefaultHorizontalComponentAlignment(FlexComponent.Alignment.STRETCH);
         layoutColumn1.add(header, editorJs, upload, createChapterButton);
 
-        getContent().getStyle().set("flex-grow", "1");
+        VerticalLayout centerWrapper = new VerticalLayout();
+        centerWrapper.setWidthFull();
+        centerWrapper.setHeightFull();
+        centerWrapper.setAlignItems(FlexComponent.Alignment.CENTER);
+        centerWrapper.add(layoutColumn1);
+    /// scroller for dynamic addition of chapter components added by user, that resolve in dynamic height of the page
+        Scroller scroller = new Scroller(centerWrapper);
+        scroller.setSizeFull();
+
         getContent().setSizeFull();
-        getContent().setJustifyContentMode(FlexComponent.JustifyContentMode.CENTER);
-        getContent().setAlignItems(FlexComponent.Alignment.CENTER);
+        getContent().removeAll();
+        getContent().add(scroller);
 
-        getContent().setFlexGrow(1.0, layoutRow);
-
-        getContent().add(layoutRow);
     }
 
     /// Method to get the upload component with file validation and maximum file size of 50 MB

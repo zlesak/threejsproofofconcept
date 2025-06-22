@@ -7,6 +7,9 @@ import lombok.NoArgsConstructor;
 
 import java.util.List;
 
+/**
+ * Chapter entity data class - holds data about chapter on frontend side or when communicating with backend API endpoints.
+ */
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
