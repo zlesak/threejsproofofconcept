@@ -91,6 +91,7 @@ public class CreateChapterView extends Composite<VerticalLayout> {
                     }
                 } catch (Exception ex) {
                     Notification.show("Chyba při vytváření kapitoly: " + ex.getMessage(), 5000, Notification.Position.MIDDLE);
+                    //TODO add logger to get the API client
                 }
             });
         });

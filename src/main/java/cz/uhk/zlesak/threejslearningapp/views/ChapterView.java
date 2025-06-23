@@ -29,8 +29,9 @@ import cz.uhk.zlesak.threejslearningapp.threejsdraw.Three;
 import elemental.json.JsonArray;
 import elemental.json.JsonObject;
 import elemental.json.JsonValue;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.core.io.Resource;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -47,6 +48,7 @@ import java.util.List;
 @Tag("chapter-view")
 public class ChapterView extends Composite<VerticalLayout> implements HasUrlParameter<String>, BeforeLeaveObserver {
     private final ChapterApiClient chapterApiClient;
+    private static final Logger logger = LoggerFactory.getLogger(ChapterView.class);
 
     /// Chapter elements that needs to be accessible around this class
     TextField searchInChapterTextField = new TextField();
@@ -175,7 +177,6 @@ public class ChapterView extends Composite<VerticalLayout> implements HasUrlPara
 
         if (!subChapterList.isEmpty()) {
             comboBox.setValue(subChapterList.getFirst());
-            Notification.show(subChapterList.getFirst().id());
         }
 
         chapterSelectionComboBox.addValueChangeListener(event -> {
@@ -265,6 +266,7 @@ public class ChapterView extends Composite<VerticalLayout> implements HasUrlPara
                     editorjs.getSubChaptersNames().whenComplete((subChapters, error) -> {
                         if (error != null) {
                             Notification.show("Chyba při získávání podkapitol: " + error.getMessage());
+                            logger.error("Chyba při získávání podkapitol", error);
                         } else {
                             initializeChapterSelectionComboBox(chapterSelectionComboBox, subChapters);
                             editorjs.toggleReadOnlyMode(true);
@@ -273,13 +275,15 @@ public class ChapterView extends Composite<VerticalLayout> implements HasUrlPara
                     editorjs.getSubchaptersContent().whenComplete((subchapterContent, error) -> {
                         if (error != null) {
                             Notification.show("Chyba při získávání obsahu podkapitol: " + error.getMessage());
+                            logger.error("Chyba při získávání obsahu podkapitol", error);
                         } else {
                             initializeSubChapterData(navigationContentLayout, subchapterContent);
                         }
                     });
                 })
                 .exceptionally(error -> {
-                    Notification.show("Error loading content: " + error.getMessage());
+                    Notification.show("Chyba při získávání kapitoly: " + error.getMessage());
+                    logger.error("Chyba při získávání kapitoly", error);
                     return null;
                 });
 
@@ -295,8 +299,9 @@ public class ChapterView extends Composite<VerticalLayout> implements HasUrlPara
                         "data:application/octet-stream;base64," + base64Model);
 
             } catch (IOException e) {
-                Notification.show("Error loading model: " + e.getMessage(),
+                Notification.show("Chyba při načítání modelu: " + e.getMessage(),
                         5000, Notification.Position.BOTTOM_CENTER);
+                logger.error("Chyba při načítání modelu", e);
             }
         }
     }
@@ -318,11 +323,13 @@ public class ChapterView extends Composite<VerticalLayout> implements HasUrlPara
                     initializeUIWithChapterData(chapter, resource);
                     progressBar.setValue(1.0);
                 } catch (Exception e) {
-                    Notification.show("Error loading model: " + e.getMessage(), 5000, Notification.Position.BOTTOM_CENTER);
+                    Notification.show(e.getMessage(), 5000, Notification.Position.BOTTOM_CENTER);
+                    logger.error("{} {}", e.getMessage(), e, e);
                 }
             }
         } catch (Exception e) {
-            Notification.show("Error loading chapter: " + e.getMessage(), 5000, Notification.Position.BOTTOM_CENTER);
+            Notification.show(e.getMessage(), 5000, Notification.Position.BOTTOM_CENTER);
+            logger.error("{} {}", e.getMessage(), e, e);
         } finally {
             hideProgressBar();
         }
@@ -342,6 +349,7 @@ public class ChapterView extends Composite<VerticalLayout> implements HasUrlPara
             loadChapterData(chapterId);
         } else {
             Notification.show("Nelze načíst kapitolu bez ID", 3000, Notification.Position.MIDDLE);
+            logger.error("Nelze načíst kapitolu bez ID");
             UI.getCurrent().navigate(ChapterListView.class);
         }
     }
