@@ -4,12 +4,12 @@ import com.vaadin.flow.component.ClientCallable;
 import com.vaadin.flow.component.Composite;
 import com.vaadin.flow.component.Tag;
 import com.vaadin.flow.component.UI;
-import com.vaadin.flow.component.accordion.Accordion;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.dependency.JavaScript;
 import com.vaadin.flow.component.html.Anchor;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.H1;
+import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
@@ -51,7 +51,7 @@ public class ChapterView extends Composite<VerticalLayout> implements HasUrlPara
     /// Chapter elements that needs to be accessible around this class
     TextField searchInChapterTextField = new TextField();
     ComboBox<SubChapterForComboBox> chapterSelectionComboBox = new ComboBox<>();
-    Accordion subChapterContentAccordion = new Accordion();
+    VerticalLayout navigationContentLayout = new VerticalLayout();
     ProgressBar progressBar = new ProgressBar();
     EditorJs editorjs = new EditorJs();
     Three renderer = new Three();
@@ -74,7 +74,7 @@ public class ChapterView extends Composite<VerticalLayout> implements HasUrlPara
         VerticalLayout chapterModel = new VerticalLayout();
 
         /// Scrollers for overflowing content elements + DIV for renderer
-        Scroller chapterNavigationScroller = new Scroller(subChapterContentAccordion, Scroller.ScrollDirection.VERTICAL);
+        Scroller chapterNavigationScroller = new Scroller(navigationContentLayout, Scroller.ScrollDirection.VERTICAL);
         Scroller chapterContentScroller = new Scroller(editorjs, Scroller.ScrollDirection.VERTICAL);
         Div modelDiv = new Div(progressBar, renderer);
         modelDiv.setId("modelDiv");
@@ -109,8 +109,11 @@ public class ChapterView extends Composite<VerticalLayout> implements HasUrlPara
         chapterModel.addClassName(Gap.MEDIUM);
         chapterModel.setPadding(false);
 
+        navigationContentLayout.setPadding(false);
+        navigationContentLayout.setSpacing(false);
+        navigationContentLayout.getThemeList().add("spacing-s");
 
-        /// Elements size requirements ion the layout
+        /// Elements size requirements on the layout
         chapterNavigationScroller.setMaxHeight("85vh");
         chapterContentScroller.setMaxHeight("85vh");
         modelDiv.setMaxHeight("85vh");
@@ -120,7 +123,6 @@ public class ChapterView extends Composite<VerticalLayout> implements HasUrlPara
         searchInChapterTextField.setPlaceholder("Vyhledat v textu kapitoly (NEIMPLEMENTOVÁNO)");
         searchInChapterTextField.setMinWidth("450px");
         chapterSelectionComboBox.setMinWidth("10vw");
-
 
         /// Layout assembly
         secondaryNavigationBar.add(chapterSelectionComboBox, header, searchInChapterTextField);
@@ -134,24 +136,20 @@ public class ChapterView extends Composite<VerticalLayout> implements HasUrlPara
         getContent().setWidth("100%");
         getContent().getStyle().set("flex-grow", "1");
 
-        /// on change functions
-        //TODO Implement logic for subchapter selection
-        //        chapterSelectionComboBox.addValueChangeListener(event -> {
-        //            SubChapterForComboBox newSelectedSubchapter = event.getValue();
-        //
-        //            if (newSelectedSubchapter != null) {
-        //                Notification.show(String.valueOf(newSelectedSubchapter.text()));
-        //            } else {
-        //
-        //            }
-        //        });
-
         // TODO implement searchInChapterTextField.addValueChangeListener
     }
-// TODO implement
-//    private void setSubChapterDataAfterComboboxSelect() {
-//
-//    }
+    private void hideSubchapterNavigationContent(String subchapterId) {
+        UI.getCurrent().getPage().executeJs(
+            "const el = document.getElementById($0); if (el) { el.style.display = 'none'; }",
+                subchapterId
+        );
+    }
+    private void showSubchapterNavigationContent(String subchapterId) {
+        UI.getCurrent().getPage().executeJs(
+            "const el = document.getElementById($0); if (el) { el.style.display = 'block'; }",
+                subchapterId
+        );
+    }
 
     /**
      * Function to initialize chapter selection ComboBox after chapter has been loaded.
@@ -177,46 +175,79 @@ public class ChapterView extends Composite<VerticalLayout> implements HasUrlPara
 
         if (!subChapterList.isEmpty()) {
             comboBox.setValue(subChapterList.getFirst());
+            Notification.show(subChapterList.getFirst().id());
         }
+
+        chapterSelectionComboBox.addValueChangeListener(event -> {
+            SubChapterForComboBox oldSelectedSubchapter = event.getOldValue();
+            SubChapterForComboBox newSelectedSubchapter = event.getValue();
+            if (oldSelectedSubchapter != null && newSelectedSubchapter != null) {
+                hideSubchapterNavigationContent(oldSelectedSubchapter.id());
+            }
+            if (newSelectedSubchapter != null) {
+                showSubchapterNavigationContent(newSelectedSubchapter.id());
+            }
+        });
     }
 
     /**
      * Fucntion to initialize subchapter data accordion after chapter has been loaded.
      * Provides user the option of fast navigation between topics via links, that moves user in DOM to the selected topic.
      *
-     * @param accordion          Accordion to set the subchapter data to
+     * @param navigationContentLayout Layout with initialized data as anchors leading to points in the EditorJs
      * @param subChaptersContent Subchapter content that is places in the accordion (has to be got in advance via EditorJs instance)
      */
-    private void initializeSubChapterData(Accordion accordion, JsonValue subChaptersContent) {
+    private void initializeSubChapterData(VerticalLayout navigationContentLayout, JsonValue subChaptersContent) {
         DomEventListener scrollClickListener = event -> {
             String dataIdToScroll = event.getSource().getAttribute("data-target-id");
             UI.getCurrent().getPage().executeJs("window.scrollToDataId($0)", dataIdToScroll);
         };
+        Span contentNavigationText = new Span("Podkapitoly");
+        navigationContentLayout.add(contentNavigationText);
 
         if (subChaptersContent instanceof JsonArray jsonArray) {
             for (int i = 0; i < jsonArray.length(); i++) {
                 JsonObject obj = jsonArray.getObject(i);
-                JsonObject h1 = obj.get("h1");
+                JsonObject h1 = obj.getObject("h1");
                 JsonArray content = obj.getArray("content");
 
                 VerticalLayout contentLayout = new VerticalLayout();
+                contentLayout.setPadding(false);
+                contentLayout.setId(h1.getString("id"));
+                Anchor mainHeadingAnchor = getAnchor(h1.getObject("data"), h1.getString("id"), scrollClickListener);
+                contentLayout.add(mainHeadingAnchor);
 
                 for (int j = 0; j < content.length(); j++) {
                     JsonObject contentBlock = content.getObject(j);
                     JsonObject contentData = contentBlock.getObject("data");
                     String contentDataId = contentBlock.getString("id");
-                    Notification.show(contentDataId);
-                    Anchor contentLocationAnchor = new Anchor("#", contentData.getString("text"));
-                    contentLocationAnchor.getElement().setAttribute("data-target-id", contentDataId);
-                    contentLocationAnchor.getElement().addEventListener("click", scrollClickListener)
-                            .addEventData("event.preventDefault()");
-
+                    Anchor contentLocationAnchor = getAnchor(contentData, contentDataId, scrollClickListener);
+                    contentLocationAnchor.setId(contentDataId);
                     contentLayout.add(contentLocationAnchor);
                 }
-
-                accordion.add(h1.getObject("data").getString("text"), contentLayout);
+                if(i > 0){
+                    hideSubchapterNavigationContent(h1.getString("id"));
+                }
+                navigationContentLayout.add(contentLayout);
             }
         }
+    }
+
+    /**
+     * Function returning Anchor that is pointing to the chapter content in its main chapter body
+     * @param contentData ContentData of all main chapter subchapters
+     * @param contentDataId ContentDataId of main chapter that all teh subchapters belong to
+     * @param scrollClickListener ScrollClickListener to watch for the click on the Anchor item action
+     * @return Returning Anchor item with described attributes and functionality
+     */
+    private static Anchor getAnchor(JsonObject contentData, String contentDataId, DomEventListener scrollClickListener) {
+        Anchor contentLocationAnchor = new Anchor("#", contentData.getString("text"));
+        contentLocationAnchor.setWidthFull();
+        contentLocationAnchor.getStyle().set("display", "block");
+        contentLocationAnchor.getElement().setAttribute("data-target-id", contentDataId);
+        contentLocationAnchor.getElement().addEventListener("click", scrollClickListener)
+                .addEventData("event.preventDefault()");
+        return contentLocationAnchor;
     }
 
     /**
@@ -243,7 +274,7 @@ public class ChapterView extends Composite<VerticalLayout> implements HasUrlPara
                         if (error != null) {
                             Notification.show("Chyba při získávání obsahu podkapitol: " + error.getMessage());
                         } else {
-                            initializeSubChapterData(subChapterContentAccordion, subchapterContent);
+                            initializeSubChapterData(navigationContentLayout, subchapterContent);
                         }
                     });
                 })

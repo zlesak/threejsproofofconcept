@@ -18,7 +18,7 @@ export class EditorJs extends LitElement {
     @state()
     private editor: EditorJS | undefined;
 
-    private editorReadyPromise: Promise<void>;
+    readonly editorReadyPromise: Promise<void>;
     private resolveEditorReadyPromise!: () => void;
 
     constructor() {
@@ -222,9 +222,7 @@ export class EditorJs extends LitElement {
         }
         try {
             const data = await this.editor.save();
-            const jsonData = JSON.stringify(data);
-            console.log(jsonData); //TODO Remove after proper implementation or after final b´debug stage
-            return jsonData;
+            return JSON.stringify(data);
         } catch (error) {
             console.error('Error saving editor data as string in getDataAsString:', error);
             throw error;
@@ -356,7 +354,6 @@ export class EditorJs extends LitElement {
                     }
                 }
             });
-            console.log(JSON.stringify(result));
             return result;
         } catch (error) {
             console.error('Error getting subchapters content:', error);
