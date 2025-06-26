@@ -1,11 +1,15 @@
 package cz.uhk.zlesak.threejslearningapp.views;
 
 import com.vaadin.flow.component.Component;
+import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.applayout.AppLayout;
 import com.vaadin.flow.component.avatar.Avatar;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.html.*;
+import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.orderedlayout.FlexComponent;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.dom.ThemeList;
 import com.vaadin.flow.router.Layout;
 import com.vaadin.flow.router.RouterLink;
@@ -75,11 +79,30 @@ public class MainLayout extends AppLayout {
         /// Light or dark mode toggle switch with default of light mode
         Button buttonPrimary = new Button();
         buttonPrimary.addClassNames(Display.FLEX, Gap.MEDIUM, Margin.MEDIUM, Padding.MEDIUM);
-        buttonPrimary.setText("🌑");
-        buttonPrimary.addClickListener(e -> changeMode(buttonPrimary));
         buttonPrimary.setWidth("20px");
         buttonPrimary.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         layout.add(buttonPrimary);
+
+        UI.getCurrent().getPage().executeJs(
+                "const match = document.cookie.match('(^|;) ?themeMode=([^;]*)(;|$)'); return match ? match[2] : null;"
+        ).then(String.class, value -> {
+            if ("dark".equals(value)) {
+                getElement().getThemeList().add(Lumo.DARK);
+                buttonPrimary.setText("☀️");
+            } else {
+                buttonPrimary.setText("🌑");
+            }
+        });
+
+        buttonPrimary.addClickListener(e -> changeMode(buttonPrimary));
+
+        UI.getCurrent().getPage().executeJs(
+                "const match = document.cookie.match('(^|;) ?cookieConsent=([^;]*)(;|$)'); return match ? match[2] : null;"
+        ).then(String.class, value -> {
+            if (!"accepted".equals(value)) {
+                showCookieNotification();
+            }
+        });
 
         /// Login user basic information avatar item TODO in phase where ogin is implemented via BE API react to these changes and change accordingly to use the appropriate APIs
         AvatarItem avatarItem = new AvatarItem("Aria Bailey", "Endocrinologist", new Avatar("Aria Bailey"));
@@ -100,12 +123,41 @@ public class MainLayout extends AppLayout {
     /// Dark theme or light theme change function
     private void changeMode(Button button) {
         ThemeList themeList = getElement().getThemeList();
+        String mode;
         if (themeList.contains(Lumo.DARK)) {
             themeList.remove(Lumo.DARK);
             button.setText("🌑");
+            mode = "light";
         } else {
             themeList.add(Lumo.DARK);
             button.setText("☀️");
+            mode = "dark";
         }
+
+        UI.getCurrent().getPage().executeJs(
+                "document.cookie = 'themeMode=' + $0 + '; path=/; max-age=31536000';", mode);
     }
+
+    private void showCookieNotification() {
+        Span message = new Span("Tato stránka používá cookies pro uložení zvoleného režimu zobrazení.");
+
+        Notification notification = new Notification();
+        notification.setPosition(Notification.Position.BOTTOM_CENTER);
+        notification.setDuration(0);
+
+        Button acceptButton = new Button("Rozumím", e -> {
+            UI.getCurrent().getPage().executeJs(
+                    "document.cookie = 'cookieConsent=accepted; path=/; max-age=31536000';"
+            );
+            notification.close();
+        });
+
+        HorizontalLayout layout = new HorizontalLayout(message, acceptButton);
+        layout.setAlignItems(FlexComponent.Alignment.CENTER);
+        layout.setSpacing(true);
+
+        notification.add(layout);
+        notification.open();
+    }
+
 }

@@ -37,13 +37,43 @@ public class EditorJs extends Component implements HasSize, HasStyle {
     public void toggleReadOnlyMode(boolean readOnly) {
         getElement().callJsFunction("toggleReadOnlyMode", readOnly);
     }
+
     public void clear() {
         getElement().callJsFunction("clear");
     }
 
-    public CompletableFuture<JsonValue> getSubChaptersNames(){
-        return getElement().callJsFunction("getSubChaptersNames")
-                .toCompletableFuture();
+    public CompletableFuture<JsonValue> getSubChaptersNames() {
+        return getElement().callJsFunction("getSubChaptersNames").toCompletableFuture();
+    }
 
+    public CompletableFuture<JsonValue> getSubchaptersContent() {
+        return getElement().callJsFunction("getSubchaptersContent").toCompletableFuture();
+    }
+
+    public CompletableFuture<String> getChapterContentData() {
+        return getElement()
+                .callJsFunction("getChapterContentData")
+                .toCompletableFuture()
+                .thenApply(JsonValue::asString);
+    }
+
+    public CompletableFuture<Void> setChapterContentData(String jsonData) {
+        return getElement()
+                .callJsFunction("setChapterContentData", jsonData)
+                .toCompletableFuture()
+                .exceptionally(error -> {
+                    throw new RuntimeException("Chyba při nastavování chapterContentData: " + error.getMessage());
+                })
+                .thenApply(ignore -> null);
+    }
+
+    public CompletableFuture<Void> selectedSubChapterContentSet(String id) {
+        return getElement()
+                .callJsFunction("selectedSubChapterContentSet", id)
+                .toCompletableFuture()
+                .exceptionally(error -> {
+                    throw new RuntimeException("Chyba při nastavování selectedSubChapterContentSet: " + error.getMessage());
+                })
+                .thenApply(ignore -> null);
     }
 }

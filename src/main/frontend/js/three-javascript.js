@@ -111,12 +111,9 @@ class ThreeTest {
 
         canvasElement.width = parent.clientWidth;
 
-        const padding = window.getComputedStyle(parent)
-            .getPropertyValue("padding-top")
-            .replace('px', '');
-
-        const headerHeight = document.getElementsByTagName("header")[0]?.offsetHeight || 0;
-        canvasElement.height = window.innerHeight - headerHeight - 4 * parseFloat(padding);
+        const modelDiv = document.getElementById("modelDiv").offsetHeight;
+        console.log(modelDiv);
+        canvasElement.height = modelDiv;
 
         this.camera.aspect = canvasElement.width / canvasElement.height;
         this.camera.updateProjectionMatrix();
