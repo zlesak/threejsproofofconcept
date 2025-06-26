@@ -20,6 +20,25 @@ export class EditorJs extends LitElement {
 
     readonly editorReadyPromise: Promise<void>;
     private resolveEditorReadyPromise!: () => void;
+    private _chapterContentData: OutputData = { time: Date.now(), blocks: [], version: '' };
+    private _currentSubChapterContentData: OutputData = { time: Date.now(), blocks: [], version: '' };
+
+
+    public getChapterContentData(): OutputData {
+        return this._chapterContentData;
+    }
+
+    public setChapterContentData(value: string) {
+        this._chapterContentData = JSON.parse(value) as OutputData;
+    }
+
+    public getCurrentSubChapterContentData(): OutputData {
+        return this._chapterContentData;
+    }
+
+    public setCurrentSubChapterContentData(value: string) {
+        this._chapterContentData = JSON.parse(value) as OutputData;
+    }
 
     constructor() {
         super();
@@ -229,19 +248,15 @@ export class EditorJs extends LitElement {
         }
     }
 
-    async setData(jsonData: string): Promise<void> {
+    async setData(jsonData: OutputData): Promise<void> {
         await this.editorReadyPromise;
-
+        if (!this.editor || !this.editor.blocks) {
+            console.error('setData: Editor or editor.blocks not fully initialized even after promise resolved.');
+            return;
+        }
         try {
-            const data = JSON.parse(jsonData) as OutputData;
-
-            if (!this.editor || !this.editor.blocks) {
-                console.error('setData: Editor or editor.blocks not fully initialized even after promise resolved.');
-                return;
-            }
-
             await this.editor.blocks.clear();
-            await this.editor.blocks.render(data);
+            await this.editor.blocks.render(jsonData);
 
         } catch (error) {
             console.error('Error setting editor data:', error);
@@ -274,14 +289,16 @@ export class EditorJs extends LitElement {
             throw new Error('Editor not initialized in getSubChaptersNames');
         }
         try {
-            const data = await this.getData();
-            if (!data || !data.blocks) {
+            if (!this._chapterContentData || !this._chapterContentData.blocks) {
                 console.warn('getSubChaptersNames: No data or blocks found when attempting to get subchapters.');
                 return [];
             }
 
-            const filteredBlocks = data.blocks
-                .filter(block => block.type === 'header' && block.data.level === 1);
+            const filteredBlocks = [
+                { id: '', data: { text: 'Vyberte podkapitolu' } },
+                ...this._chapterContentData.blocks
+                    .filter(block => block.type === 'header' && block.data.level === 1)
+            ];
 
             return filteredBlocks.map(block => ({
                 id: block.id || `fallback-${Math.random().toString(36).substring(2, 9)}`,
@@ -295,14 +312,12 @@ export class EditorJs extends LitElement {
 
     public async getSubchaptersContent(): Promise<{ h1: OutputBlockData, content: OutputBlockData[] }[]> {
         await this.editorReadyPromise;
-
         if (!this.editor) {
             throw new Error('Editor not initialized in getSubchaptersContent');
         }
 
         try {
-            const data = await this.getData();
-            if (!data || !data.blocks) {
+            if (!this._chapterContentData || !this._chapterContentData.blocks) {
                 console.warn('getSubchaptersContent: No data or blocks found when attempting to get subchapters content.');
                 return [];
             }
@@ -312,7 +327,7 @@ export class EditorJs extends LitElement {
             let currentH1Text: OutputBlockData | null = null;
             let subchapterData: OutputBlockData[] = [];
 
-            data.blocks.forEach((block, index) => {
+            this._chapterContentData.blocks.forEach((block, index) => {
                 if (block.type === "header" && block.data.level === 1) {
                     oldH1Text = currentH1Text;
                     currentH1Text = block
@@ -342,7 +357,7 @@ export class EditorJs extends LitElement {
                     }
                     subchapterData = [];
 
-                    if(index == data.blocks.length - 1) {
+                    if(index == this._chapterContentData.blocks.length - 1) {
                         result.push({
                             h1: currentH1Text,
                             content: []
@@ -357,6 +372,53 @@ export class EditorJs extends LitElement {
             return result;
         } catch (error) {
             console.error('Error getting subchapters content:', error);
+            throw error;
+        }
+    }
+
+    public async selectedSubChapterContentSet(id: string): Promise<void> {
+        await this.editorReadyPromise;
+        if (!this.editor) {
+            throw new Error('Editor not initialized in getSubchaptersContent');
+        }
+
+        try {
+            if (!this._chapterContentData || !this._chapterContentData.blocks) {
+                console.warn('getSubchaptersContent: No data or blocks found when attempting to get subchapters content.');
+            }
+
+            const headerExists = this._chapterContentData.blocks.some(
+                block => block.type === "header" && block.data.level === 1 && block.id === id
+            );
+            if (!headerExists) {
+                return this.setData(this._chapterContentData);
+            }
+
+            const blocks = this._chapterContentData.blocks;
+
+            let found = false;
+            const content: OutputBlockData[] = [];
+
+            for (let i = 0; i < blocks.length; i++) {
+                const block = blocks[i];
+                if (!found) {
+                    if (block.type === "header" && block.data.level === 1 && block.id === id) {
+                        found = true;
+                        content.push(block);
+                    }
+                } else {
+                    if (block.type === "header" && block.data.level === 1) {
+                        break;
+                    }
+                    content.push(block);
+                }
+            }
+
+            const finalSubCHapterDataOutputData : OutputData = structuredClone(this._chapterContentData);
+            finalSubCHapterDataOutputData.blocks = content;
+            return this.setData(finalSubCHapterDataOutputData);
+        } catch (error) {
+            console.error('Error getting subchapters content all:', error);
             throw error;
         }
     }

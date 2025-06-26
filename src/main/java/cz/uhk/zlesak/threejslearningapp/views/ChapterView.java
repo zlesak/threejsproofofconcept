@@ -49,7 +49,6 @@ import java.util.List;
 public class ChapterView extends Composite<VerticalLayout> implements HasUrlParameter<String>, BeforeLeaveObserver {
     private final ChapterApiClient chapterApiClient;
     private static final Logger logger = LoggerFactory.getLogger(ChapterView.class);
-
     /// Chapter elements that needs to be accessible around this class
     TextField searchInChapterTextField = new TextField();
     ComboBox<SubChapterForComboBox> chapterSelectionComboBox = new ComboBox<>();
@@ -187,6 +186,7 @@ public class ChapterView extends Composite<VerticalLayout> implements HasUrlPara
             }
             if (newSelectedSubchapter != null) {
                 showSubchapterNavigationContent(newSelectedSubchapter.id());
+                editorjs.selectedSubChapterContentSet(newSelectedSubchapter.id());
             }
         });
     }
@@ -226,9 +226,7 @@ public class ChapterView extends Composite<VerticalLayout> implements HasUrlPara
                     contentLocationAnchor.setId(contentDataId);
                     contentLayout.add(contentLocationAnchor);
                 }
-                if(i > 0){
-                    hideSubchapterNavigationContent(h1.getString("id"));
-                }
+                hideSubchapterNavigationContent(h1.getString("id"));
                 navigationContentLayout.add(contentLayout);
             }
         }
@@ -259,17 +257,18 @@ public class ChapterView extends Composite<VerticalLayout> implements HasUrlPara
      */
     private void initializeUIWithChapterData(ChapterEntity chapter, Resource resource) {
         header.setText(chapter.getHeader());
-        String content = chapter.getContent();
+        Notification.show(chapter.getContent());
 
-        editorjs.setData(content)
+        editorjs.setChapterContentData(chapter.getContent())
                 .thenRun(() -> {
                     editorjs.getSubChaptersNames().whenComplete((subChapters, error) -> {
                         if (error != null) {
                             Notification.show("Chyba při získávání podkapitol: " + error.getMessage());
                             logger.error("Chyba při získávání podkapitol", error);
                         } else {
+                            Notification.show(subChapters.toJson());
                             initializeChapterSelectionComboBox(chapterSelectionComboBox, subChapters);
-                            editorjs.toggleReadOnlyMode(true);
+                            editorjs.selectedSubChapterContentSet("").thenRun(()-> editorjs.toggleReadOnlyMode(true));
                         }
                     });
                     editorjs.getSubchaptersContent().whenComplete((subchapterContent, error) -> {
