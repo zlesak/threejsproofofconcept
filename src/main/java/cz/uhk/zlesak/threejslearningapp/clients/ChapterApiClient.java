@@ -1,4 +1,4 @@
-package cz.uhk.zlesak.threejslearningapp.controlers;
+package cz.uhk.zlesak.threejslearningapp.clients;
 
 import cz.uhk.zlesak.threejslearningapp.data.ApiCallException;
 import cz.uhk.zlesak.threejslearningapp.models.ChapterEntity;
@@ -14,7 +14,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.List;
 
 @Service
-public class ChapterApiClient {
+public class ChapterApiClient implements IChapterApiClient {
     private final RestTemplate restTemplate;
     private final String baseUrl;
 
@@ -132,13 +132,12 @@ public class ChapterApiClient {
         headers.setAccept(List.of(MediaType.APPLICATION_JSON));
         HttpEntity<Void> requestEntity = new HttpEntity<>(headers);
         try {
-            ResponseEntity<Resource> response = restTemplate.exchange(
+            return restTemplate.exchange(
                     url,
                     HttpMethod.GET,
                     requestEntity,
                     Resource.class
-            );
-            return response.getBody();
+            ).getBody();
         } catch (HttpStatusCodeException ex) {
             throw new ApiCallException("Chyba při získávání modelu pro kapitolu", chapterId, ex.getStatusCode(), ex.getResponseBodyAsString(), ex);
         } catch (Exception e) {

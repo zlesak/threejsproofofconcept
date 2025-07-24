@@ -1,24 +1,27 @@
 package cz.uhk.zlesak.threejslearningapp.models;
 
+import lombok.SneakyThrows;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.web.multipart.MultipartFile;
-import java.io.InputStream;
+
+import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 
 public class InputStreamMultipartFile implements MultipartFile {
 
     private final InputStream inputStream;
     private final String fileName;
-    private final long size;
 
-    public InputStreamMultipartFile(InputStream inputStream, String fileName, long size) {
+    public InputStreamMultipartFile(InputStream inputStream, String fileName) {
         this.inputStream = inputStream;
         this.fileName = fileName;
-        this.size = size;
     }
 
+    @NotNull
     @Override
     public String getName() {
-        return "file";
+        return fileName;
     }
 
     @Override
@@ -31,29 +34,33 @@ public class InputStreamMultipartFile implements MultipartFile {
         return "application/octet-stream";
     }
 
+    @SneakyThrows
     @Override
     public boolean isEmpty() {
-        return size == 0;
+        return inputStream.available() == 0;
     }
 
+    @SneakyThrows
     @Override
     public long getSize() {
-        return size;
+        return inputStream.available();
     }
 
+    @NotNull
     @Override
     public byte[] getBytes() throws IOException {
         return inputStream.readAllBytes();
     }
 
+    @NotNull
     @Override
-    public InputStream getInputStream(){
+    public InputStream getInputStream() {
         return inputStream;
     }
 
     @Override
-    public void transferTo(java.io.File dest) throws IllegalStateException {
-        throw new UnsupportedOperationException("Not supported yet.");
+    public void transferTo(@NotNull File dest) throws IllegalStateException {
+        throw new UnsupportedOperationException("Not supported.");
     }
 }
 

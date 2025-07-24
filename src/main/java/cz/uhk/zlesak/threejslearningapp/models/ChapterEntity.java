@@ -3,7 +3,6 @@ package cz.uhk.zlesak.threejslearningapp.models;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 import java.util.List;
 
@@ -12,12 +11,15 @@ import java.util.List;
  */
 @Data
 @AllArgsConstructor
-@NoArgsConstructor
 @Builder
-public class ChapterEntity{
-        String id;
-        String header;
-        String content;
-        String modelPath;
-        List<ChapterEntity> childChapter;
+public class ChapterEntity {
+    String ChapterEntityId;
+    String ChapterEntityName;
+    String ChapterEntityCreator;
+    String ChapterEntityCreationDate;
+    String ChapterEntityLastUpdateDate;
+    String ChapterEntityContent; //when using file as a way to save the chapter content, remove
+    List<String> ChapterEntityModelEntities;
+    String ChapterEntityMetadata;
+//    InputStreamMultipartFile ModelFile; will may not be needed if the chapter will not be saved as a JSON file
 }
