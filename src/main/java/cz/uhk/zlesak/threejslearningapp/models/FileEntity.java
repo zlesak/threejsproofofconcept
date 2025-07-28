@@ -9,12 +9,11 @@ import lombok.experimental.SuperBuilder;
 @NoArgsConstructor
 @AllArgsConstructor
 @SuperBuilder
-public abstract class FileEntity implements IFileEntity {
+public abstract class FileEntity {
     String Id;
     String Name;
     String Creator;
     String CreationDate;
     String LastUpdateDate;
-    String Metadata;
     InputStreamMultipartFile File;
 }

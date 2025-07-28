@@ -16,8 +16,7 @@ import com.vaadin.flow.component.upload.receivers.MultiFileMemoryBuffer;
 import com.vaadin.flow.router.Menu;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
-import cz.uhk.zlesak.threejslearningapp.clients.TextureApiClient;
-import cz.uhk.zlesak.threejslearningapp.models.IFileEntity;
+import cz.uhk.zlesak.threejslearningapp.models.FileEntity;
 import cz.uhk.zlesak.threejslearningapp.models.InputStreamMultipartFile;
 import cz.uhk.zlesak.threejslearningapp.models.TextureEntity;
 import org.springframework.web.multipart.MultipartFile;
@@ -34,7 +33,6 @@ public class UploadTextureView extends Composite<VerticalLayout> {
     private String fileName = null;
 
     public UploadTextureView() {
-        TextureApiClient textureApiClient = new TextureApiClient();
         TextField header = new TextField("Název textury");
         header.setMaxLength(255);
         header.setRequired(true);
@@ -56,7 +54,7 @@ public class UploadTextureView extends Composite<VerticalLayout> {
             }
             try {
                 MultipartFile multipartFile = new InputStreamMultipartFile(inputStream, fileName); //TODO FINISH
-                    IFileEntity fileEntity = TextureEntity.builder()
+                    FileEntity fileEntity = TextureEntity.builder()
 //                        .Name()
 //                        .Creator()
 //                        .CreationDate()
@@ -65,7 +63,7 @@ public class UploadTextureView extends Composite<VerticalLayout> {
 //                        .File()
 //                        .CSV()
                         .build();
-                textureApiClient.createFileEntity(fileEntity);
+//                textureApiClient.createFileEntity(fileEntity);
                 // Zde by se případně volalo API pro upload samotného souboru
                 upload.clearFileList();
                 inputStream = null;

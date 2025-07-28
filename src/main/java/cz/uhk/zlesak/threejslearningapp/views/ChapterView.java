@@ -4,7 +4,6 @@ import com.vaadin.flow.component.ClientCallable;
 import com.vaadin.flow.component.Composite;
 import com.vaadin.flow.component.Tag;
 import com.vaadin.flow.component.UI;
-import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.dependency.JavaScript;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.H1;
@@ -18,23 +17,17 @@ import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.function.SerializableRunnable;
 import com.vaadin.flow.router.*;
 import com.vaadin.flow.theme.lumo.LumoUtility.Gap;
-import cz.uhk.zlesak.threejslearningapp.clients.ChapterApiClient;
 import cz.uhk.zlesak.threejslearningapp.components.ChapterSelectionCombobox;
 import cz.uhk.zlesak.threejslearningapp.components.EditorJs;
-import cz.uhk.zlesak.threejslearningapp.clients.IChapterApiClient;
 import cz.uhk.zlesak.threejslearningapp.components.NavigationContentComponent;
 import cz.uhk.zlesak.threejslearningapp.controllers.ChapterController;
 import cz.uhk.zlesak.threejslearningapp.data.SubChapterForComboBox;
-import cz.uhk.zlesak.threejslearningapp.models.ChapterEntity;
+import cz.uhk.zlesak.threejslearningapp.models.ModelEntity;
 import cz.uhk.zlesak.threejslearningapp.threejsdraw.Three;
-import elemental.json.JsonArray;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.loader.ast.spi.AfterLoadAction;
 import org.hibernate.metamodel.mapping.EntityMappingType;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.core.io.Resource;
-import java.io.InputStream;
+import org.springframework.beans.factory.annotation.Autowired;
+
 import java.util.List;
 
 /**
@@ -45,11 +38,9 @@ import java.util.List;
 @Route("chapter/:chapterId?")
 @JavaScript("./js/scroll-to-element-data-id.js")
 @Tag("chapter-view")
-public class ChapterView extends Composite<VerticalLayout> implements HasUrlParameter<String>, BeforeLeaveObserver, AfterLoadAction {
+public class ChapterView extends Composite<VerticalLayout> implements IView {
     private String chapterId;
-    private ChapterController chapterController;
-    private final IChapterApiClient chapterApiClient;
-    private static final Logger logger = LoggerFactory.getLogger(ChapterView.class);
+    private final ChapterController chapterController;
 
     /// Chapter elements that needs to be accessible around this class
     TextField searchInChapterTextField = new TextField();
@@ -63,10 +54,9 @@ public class ChapterView extends Composite<VerticalLayout> implements HasUrlPara
     /**
      * ChapterView constructor - creates instance of chapter view instance that then accomplishes the goal of getting
      * and serving the user the requested chapter from proper backend API endpoint via chapterApiClient.
-     * @param chapterApiClient ChapterApiClient that is able to communicating with backend API endpoints in means of chapter context
      */
-    public ChapterView(IChapterApiClient chapterApiClient, ChapterController chapterController) {
-        this.chapterApiClient = chapterApiClient;
+    @Autowired
+    public ChapterView(ChapterController chapterController) {
         this.chapterController = chapterController;
 
         /// Chapter page layout elements
@@ -142,22 +132,6 @@ public class ChapterView extends Composite<VerticalLayout> implements HasUrlPara
     }
 
     /**
-     * Overridden setParameter function to fulfill the need of getting the chapterId provided in the URL field parameter.
-     *
-     * @param event     After view opened
-     * @param parameter URL parameter
-     */
-    @Override
-    public void setParameter(BeforeEvent event, @OptionalParameter String parameter) {
-        chapterId = event.getRouteParameters().get("chapterId").orElse(null);
-        if (chapterId == null) {
-            Notification.show("Nelze načíst kapitolu bez ID", 3000, Notification.Position.MIDDLE);
-            logger.error("Nelze načíst kapitolu bez ID");
-            UI.getCurrent().navigate(ChapterListView.class);
-        }
-    }
-
-    /**
      * Overridden beforeLeave function to proper disposal of the model renderer to free the used RAM memory immediately.
      *
      * @param event BeforeLeave
@@ -190,11 +164,30 @@ public class ChapterView extends Composite<VerticalLayout> implements HasUrlPara
     }
 
     @Override
-    public void afterLoad(Object entity, EntityMappingType entityMappingType, SharedSessionContractImplementor session) {
+    public void beforeEnter(BeforeEnterEvent event) {
+        RouteParameters parameters = event.getRouteParameters();
+        if (parameters.getParameterNames().isEmpty()){
+            event.forwardTo(ChapterListView.class);
+        }
+        chapterId = event.getRouteParameters().get("chapterId").orElse(null);
+        if (chapterId == null) {
+            Notification.show("Nelze načíst kapitolu bez ID", 3000, Notification.Position.MIDDLE);
+            logger.error("Nelze načíst kapitolu bez ID");
+            UI.getCurrent().navigate(ChapterListView.class);
+        }
+
         try {
+            chapterController.getChapter(chapterId);
             header.setText(chapterController.getChapterName());
-            renderer.getElement().executeJs("window.loadModel($0)",
-                    "data:application/octet-stream;base64," + chapterController.getChapterModel());
+            ModelEntity modelFile = chapterController.getChapterModel();
+            try{
+                String base64Model =  modelFile.getBase64File();
+                renderer.loadModel(base64Model);
+            }catch (Exception e){
+                logger.error(e.getMessage());
+                Notification.show("Nepovedlo se načíst model: " + e.getMessage(), 5000, Notification.Position.MIDDLE);
+                throw e;
+            }
             progressBar = new ProgressBar();
             List<SubChapterForComboBox> subChapterNames = chapterController.getSubChaptersNames();
             chapterSelectionComboBox.setItems(subChapterNames);
@@ -211,6 +204,5 @@ public class ChapterView extends Composite<VerticalLayout> implements HasUrlPara
             logger.error("Chyba při načítání kapitoly", e);
             UI.getCurrent().navigate(ChapterListView.class);
         }
-
     }
 }

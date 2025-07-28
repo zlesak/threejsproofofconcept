@@ -46,4 +46,17 @@ public class Three extends Component{
         }
         """, href);
     }
+
+    @ClientCallable
+    public void loadModel(String base64Model) {
+        getElement().executeJs("""
+            try {
+                if (typeof window.loadModel === 'function') {
+                    window.loadModel($0);
+                }
+            } catch (e) {
+                console.error('[JS] Error in loadModel:', e);
+            }
+            """, "data:application/octet-stream;base64," + base64Model);
+    }
 }

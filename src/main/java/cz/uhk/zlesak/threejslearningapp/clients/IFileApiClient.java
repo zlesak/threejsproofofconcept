@@ -1,13 +1,15 @@
 package cz.uhk.zlesak.threejslearningapp.clients;
 
-import cz.uhk.zlesak.threejslearningapp.models.IFileEntity;
+import cz.uhk.zlesak.threejslearningapp.models.FileEntity;
+import cz.uhk.zlesak.threejslearningapp.models.InputStreamMultipartFile;
 
 import java.util.List;
 
-public interface IFileApiClient {
-    void createFileEntity(IFileEntity fileEntity) throws Exception;
-    IFileEntity getFileEntityById(String modelId) throws Exception;
-    List<IFileEntity> getFileEntitiesByAuthor(String authorId) throws Exception;
-    void uploadFileEntity(IFileEntity fileEntity) throws Exception;
+public interface IFileApiClient extends IApiClient {
+    void createFileEntity(FileEntity fileEntity) throws Exception;
+    FileEntity getFileEntityById(String fileEntityId) throws Exception;
+    List<FileEntity> getFileEntitiesByAuthor(String authorId) throws Exception;
+    String uploadFileEntity(InputStreamMultipartFile inputStream, FileEntity fileEntity) throws Exception;
+    FileEntity downloadFileEntityById(String fileEntityId) throws Exception;
     void deleteFileEntity(String modelId) throws Exception;
 }

@@ -1,56 +1,59 @@
 package cz.uhk.zlesak.threejslearningapp.controllers;
 
-import com.vaadin.flow.component.html.Anchor;
-import com.vaadin.flow.dom.DomEventListener;
-import cz.uhk.zlesak.threejslearningapp.clients.IChapterApiClient;
+import cz.uhk.zlesak.threejslearningapp.clients.ChapterApiClient;
+import cz.uhk.zlesak.threejslearningapp.clients.ModelApiClient;
 import cz.uhk.zlesak.threejslearningapp.data.SubChapterForComboBox;
 import cz.uhk.zlesak.threejslearningapp.models.ChapterEntity;
+import cz.uhk.zlesak.threejslearningapp.models.ModelEntity;
 import elemental.json.Json;
 import elemental.json.JsonArray;
 import elemental.json.JsonObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.context.ApplicationContextException;
-import org.springframework.core.io.Resource;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
 @Component
 public class ChapterController {
-    private String chapterId;
-    private final IChapterApiClient chapterApiClient;
-    private ChapterEntity chapterEntity = null;
     private static final Logger logger = LoggerFactory.getLogger(ChapterController.class);
+    private final ChapterApiClient chapterApiClient;
+    private final ModelApiClient modelApiClient;
+    private ChapterEntity chapterEntity = null;
 
-    public ChapterController(IChapterApiClient chapterApiClient, String chapterId) {
+    @Autowired
+    public ChapterController(ChapterApiClient chapterApiClient, ModelApiClient modelApiClient) {
         this.chapterApiClient = chapterApiClient;
-        this.chapterId = chapterId;
+        this.modelApiClient = modelApiClient;
     }
 
-    public static Anchor getAnchor(JsonObject contentData, String contentDataId, DomEventListener scrollClickListener) {
-        Anchor contentLocationAnchor = new Anchor("#", contentData.getString("text"));
-        contentLocationAnchor.setWidthFull();
-        contentLocationAnchor.getStyle().set("display", "block");
-        contentLocationAnchor.getElement().setAttribute("data-target-id", contentDataId);
-        contentLocationAnchor.getElement().addEventListener("click", scrollClickListener)
-                .addEventData("event.preventDefault()");
-        return contentLocationAnchor;
+    public ChapterEntity createChapter(String name, String content) throws Exception {
+        ChapterEntity chapter = ChapterEntity.builder()
+                .ChapterEntityName(name)
+                .ChapterEntityContent(content)
+                .build();
+        try {
+            return chapterApiClient.createChapter(chapter);
+        } catch (Exception e) {
+            logger.error("Chyba při vytváření kapitoly: {}", e.getMessage(), e);
+            throw e;
+        }
     }
 
     public String getChapterName() throws Exception {
-        return this.getChapter().getChapterEntityName();
+        return chapterEntity.getChapterEntityName();
     }
+
     public String getChapterEntityContent() throws Exception {
-        return this.getChapter().getChapterEntityContent();
+        return chapterEntity.getChapterEntityContent();
     }
 
     public List<SubChapterForComboBox> getSubChaptersNames() throws Exception {
         List<SubChapterForComboBox> subChapters = new ArrayList<>();
         try {
-            JsonArray blocks = Json.parse(this.getChapter().getChapterEntityContent()).getArray("blocks");
+            JsonArray blocks = Json.parse(chapterEntity.getChapterEntityContent()).getArray("blocks");
 
             subChapters.add(new SubChapterForComboBox("", "Vyberte podkapitolu"));
             for (int i = 0; i < blocks.length(); i++) {
@@ -70,7 +73,7 @@ public class ChapterController {
 
     public JsonArray getSubChaptersContent() throws Exception {
         try {
-            JsonArray blocks = Json.parse(this.getChapter().getChapterEntityContent()).getArray("blocks");
+            JsonArray blocks = Json.parse(chapterEntity.getChapterEntityContent()).getArray("blocks");
             JsonArray result = Json.createArray();
             JsonObject oldH1Text = null;
             JsonObject currentH1Text = null;
@@ -125,7 +128,7 @@ public class ChapterController {
     }
 
     public String getSelectedSubChapterContent(String id) throws Exception {
-        JsonArray blocks = Json.parse(this.getChapter().getChapterEntityContent()).getArray("blocks");
+        JsonArray blocks = Json.parse(chapterEntity.getChapterEntityContent()).getArray("blocks");
 
         boolean headerExists = false;
         for (int i = 0; i < blocks.length(); i++) {
@@ -158,35 +161,23 @@ public class ChapterController {
         return content.toJson();
     }
 
-    private ChapterEntity getChapter() throws Exception {
+    public void getChapter(String chapterId) throws Exception {
         if (chapterEntity == null) {
-            try{
+            try {
                 chapterEntity = chapterApiClient.getChapter(chapterId);
-            }catch(Exception e){
+            } catch (Exception e) {
                 logger.error("Chyba při získávání kapitoly: {}", e.getMessage(), e);
                 throw new Exception("Chyba při získávání kapitoly: " + e.getMessage());
             }
         }
-        return chapterEntity;
     }
-    public String getChapterModel() throws Exception {
+
+    public ModelEntity getChapterModel() throws Exception {
         try{
-            Resource modelResource =  chapterApiClient.downloadModel(chapterId);
-            if (modelResource != null) {
-                InputStream inputStream = modelResource.getInputStream();
-                byte[] bytes = inputStream.readAllBytes();
-                return java.util.Base64.getEncoder().encodeToString(bytes);
-            }else{
-                throw new ApplicationContextException("Model resource is null for chapter ID: " + chapterId);
-            }
-        }catch (ApplicationContextException e) {
-            logger.error("Chyba při získávání modelu kapitoly: {}", e.getMessage(), e);
-            throw new Exception("Chyba při získávání modelu kapitoly: " + e.getMessage());
+            return (ModelEntity) modelApiClient.downloadFileEntityById(chapterEntity.getChapterEntityModelEntities().getFirst()); //TODO apply to the main model instead of the first one
         } catch (Exception e) {
             logger.error("Chyba při čtení dat modelu kapitoly: {}", e.getMessage(), e);
             throw new Exception("Chyba při čtení dat modelu kapitoly: " + e.getMessage());
         }
     }
-
-    // TODO implement searchInChapterTextField.addValueChangeListener
 }

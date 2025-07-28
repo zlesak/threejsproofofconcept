@@ -9,8 +9,6 @@ import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.dom.DomEventListener;
 
-import static cz.uhk.zlesak.threejslearningapp.controllers.ChapterController.getAnchor;
-
 public class NavigationContentComponent extends VerticalLayout {
 
     public void initializeSubChapterData(JsonValue subChaptersContent) {
@@ -30,14 +28,14 @@ public class NavigationContentComponent extends VerticalLayout {
                 VerticalLayout contentLayout = new VerticalLayout();
                 contentLayout.setPadding(false);
                 contentLayout.setId(h1.getString("id"));
-                Anchor mainHeadingAnchor = getAnchor(h1.getObject("data"), h1.getString("id"), scrollClickListener);
+                Anchor mainHeadingAnchor = new LocatorAnchor(h1.getObject("data"), h1.getString("id"), scrollClickListener);
                 contentLayout.add(mainHeadingAnchor);
 
                 for (int j = 0; j < content.length(); j++) {
                     JsonObject contentBlock = content.getObject(j);
                     JsonObject contentData = contentBlock.getObject("data");
                     String contentDataId = contentBlock.getString("id");
-                    Anchor contentLocationAnchor = getAnchor(contentData, contentDataId, scrollClickListener);
+                    Anchor contentLocationAnchor = new LocatorAnchor(contentData, contentDataId, scrollClickListener);
                     contentLocationAnchor.setId(contentDataId);
                     contentLayout.add(contentLocationAnchor);
                 }

@@ -1,16 +1,16 @@
 package cz.uhk.zlesak.threejslearningapp.clients;
 
 import cz.uhk.zlesak.threejslearningapp.models.ChapterEntity;
-import org.springframework.core.io.Resource;
-import org.springframework.web.multipart.MultipartFile;
 
-public interface IChapterApiClient {
-    ChapterEntity createChapter(ChapterEntity chapter) throws Exception;
+import java.util.List;
+
+public interface IChapterApiClient extends IApiClient {
+    ChapterEntity createChapter(ChapterEntity chapterEntity) throws Exception;
+    void updateChapter(String chapterId, ChapterEntity chapterEntity) throws Exception;
+    void deleteChapter(String chapterId) throws Exception;
+    ChapterEntity getChapterById(String chapterId) throws Exception;
+    List<String> getChaptersByAuthor(String authorId) throws Exception;
+    List<String> getAllChapters() throws Exception;
 
     ChapterEntity getChapter(String chapterId) throws Exception;
-
-    //    List<ChapterListingEntity> getChapters() throws Exception; TODO implement based on the API on the BE
-    void uploadModel(MultipartFile file, String chapterId) throws Exception;
-    Resource downloadModel(String modelId) throws Exception;
 }
-

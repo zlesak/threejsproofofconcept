@@ -1,6 +1,6 @@
 import {LitElement} from 'lit';
 import {customElement, state} from 'lit/decorators.js';
-import EditorJS, {OutputBlockData, OutputData} from '@editorjs/editorjs';
+import EditorJS, {OutputData} from '@editorjs/editorjs';
 import Header from '@editorjs/header';
 import List from '@editorjs/list';
 import LinkTool from '@editorjs/link';
@@ -21,22 +21,12 @@ export class EditorJs extends LitElement {
     readonly editorReadyPromise: Promise<void>;
     private resolveEditorReadyPromise!: () => void;
     private _chapterContentData: OutputData = { time: Date.now(), blocks: [], version: '' };
-    private _currentSubChapterContentData: OutputData = { time: Date.now(), blocks: [], version: '' };
-
 
     public getChapterContentData(): OutputData {
         return this._chapterContentData;
     }
 
     public setChapterContentData(value: string) {
-        this._chapterContentData = JSON.parse(value) as OutputData;
-    }
-
-    public getCurrentSubChapterContentData(): OutputData {
-        return this._chapterContentData;
-    }
-
-    public setCurrentSubChapterContentData(value: string) {
         this._chapterContentData = JSON.parse(value) as OutputData;
     }
 

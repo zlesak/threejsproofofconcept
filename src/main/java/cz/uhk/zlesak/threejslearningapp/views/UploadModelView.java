@@ -12,33 +12,23 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.progressbar.ProgressBar;
 import com.vaadin.flow.component.textfield.TextField;
-import com.vaadin.flow.component.upload.Upload;
 import com.vaadin.flow.component.upload.receivers.MultiFileMemoryBuffer;
-import com.vaadin.flow.router.Menu;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
-import cz.uhk.zlesak.threejslearningapp.clients.ModelApiClient;
 import cz.uhk.zlesak.threejslearningapp.components.UploadComponent;
-import cz.uhk.zlesak.threejslearningapp.controllers.UploadModelController;
+import cz.uhk.zlesak.threejslearningapp.controllers.ModelController;
 import cz.uhk.zlesak.threejslearningapp.models.InputStreamMultipartFile;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.vaadin.lineawesome.LineAwesomeIconUrl;
 
-import java.io.InputStream;
 import java.util.List;
 
 @PageTitle("Nahrát 3D model")
 @Route("uploadModel")
-@Menu(order = 2, icon = LineAwesomeIconUrl.CUBE_SOLID)
 @Tag("upload-model")
 public class UploadModelView extends Composite<VerticalLayout> {
-    private final UploadModelController uploadModelController;
-    private InputStream inputStream = null;
 
     @Autowired
-    public UploadModelView(UploadModelController uploadModelController) {
-        this.uploadModelController = uploadModelController;
-        ModelApiClient modelApiClient = new ModelApiClient();
+    public UploadModelView(ModelController modelController) {
         ProgressBar progressBar = new ProgressBar();
         progressBar.setVisible(false);
 
@@ -87,6 +77,7 @@ public class UploadModelView extends Composite<VerticalLayout> {
 
                 InputStreamMultipartFile multipartFile = new InputStreamMultipartFile(upload.getInputStream(), upload.getFileName());
 
+//                Notification.show(multipartFile.getName() + multipartFile.getSize() + " " + multipartFile.getInputStream());
                 if (name.isEmpty()) {
                     Notification.show("Vyplňte název modelu.");
                     return;
@@ -95,13 +86,12 @@ public class UploadModelView extends Composite<VerticalLayout> {
                     Notification.show("Nahrajte soubor");
                     return;
                 }
-                uploadModelController.uploadModel(name, multipartFile);
+                String modelId = modelController.uploadModel(name, multipartFile);
 
                 upload.clearFileList();
-                inputStream = null;
                 nameField.clear();
                 Notification.show("Model úspěšně nahrán.", 3000, Notification.Position.MIDDLE);
-                UI.getCurrent().navigate("models");
+                UI.getCurrent().navigate("model/" + modelId);
             } catch (Exception ex) {
                 Notification.show("Chyba při nahrávání modelu: " + ex.getMessage(), 5000, Notification.Position.MIDDLE);
             }

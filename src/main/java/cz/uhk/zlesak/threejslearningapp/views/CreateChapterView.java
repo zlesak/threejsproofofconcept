@@ -10,20 +10,17 @@ import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.Scroller;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
-import com.vaadin.flow.component.upload.Upload;
 import com.vaadin.flow.component.upload.receivers.MultiFileMemoryBuffer;
 import com.vaadin.flow.router.Menu;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import cz.uhk.zlesak.threejslearningapp.components.EditorJs;
 import cz.uhk.zlesak.threejslearningapp.components.UploadComponent;
-import cz.uhk.zlesak.threejslearningapp.clients.IChapterApiClient;
+import cz.uhk.zlesak.threejslearningapp.controllers.ChapterController;
 import cz.uhk.zlesak.threejslearningapp.models.ChapterEntity;
-import cz.uhk.zlesak.threejslearningapp.models.InputStreamMultipartFile;
-import org.springframework.web.multipart.MultipartFile;
+import org.springframework.context.ApplicationContextException;
 import org.vaadin.lineawesome.LineAwesomeIconUrl;
 
-import java.io.InputStream;
 import java.util.List;
 
 @PageTitle("Vytvořit kapitolu")
@@ -31,11 +28,8 @@ import java.util.List;
 @Menu(order = 1, icon = LineAwesomeIconUrl.BOOK_OPEN_SOLID)
 @Tag("create-chapter")
 public class CreateChapterView extends Composite<VerticalLayout> {
-/// model input stream variable for potential object model
-    private InputStream inputStream = null;
-    private String fileName = null;
 
-    public CreateChapterView(IChapterApiClient chapterApiClient) {
+    public CreateChapterView(ChapterController chapterController) {
 /// chapter name text field
         TextField header = new TextField("Název kapitoly");
         header.setMaxLength(255);
@@ -54,44 +48,32 @@ public class CreateChapterView extends Composite<VerticalLayout> {
         createChapterButton.addClickListener(e -> {
             String name = header.getValue().trim();
 
+            if (name.isEmpty()) {
+                Notification.show("Vyplňte název kapitoly.");
+                return;
+            }
+
             editorJs.getData().whenComplete((body, error) -> {
                 if (error != null) {
                     Notification.show("Chyba při získávání obsahu: " + error.getMessage());
                     return;
                 }
 
-                if (name.isEmpty() || body.isEmpty()) {
-                    Notification.show("Vyplňte název i obsah kapitoly.");
+                if (body.isEmpty()) {
+                    Notification.show("Přidejte nějaký obsah kapitoly.");
                     return;
                 }
 
-                ChapterEntity chapter = ChapterEntity.builder()
-                        .ChapterEntityName(name)
-                        .ChapterEntityContent(body)
-                        .build();
-                ChapterEntity created;
                 try {
-                    if (inputStream == null || fileName == null || !fileName.toLowerCase().endsWith(".glb")) {
-                        Notification.show("Musíte nahrát minimálně JEDEN 3D model s příponou .glb.");
-                        return;
-                    }
-                    created = chapterApiClient.createChapter(chapter);
-                    header.clear();
-                    editorJs.clear();
+                    ChapterEntity created = chapterController.createChapter(name, body);
                     if (created != null) {
-                        try {
-                            MultipartFile multipartFile = new InputStreamMultipartFile(inputStream, upload.getFileName());
-                            chapterApiClient.uploadModel(multipartFile, created.getChapterEntityId());
-                            upload.clearFileList();
-                            inputStream = null;
-                        } catch (Exception ex) {
-                            Notification.show("Chyba při nahrávání modelu: " + ex.getMessage(), 5000, Notification.Position.MIDDLE);
-                        }
+
                         UI.getCurrent().navigate("chapter/" + created.getChapterEntityId());
+                    } else {
+                        throw new ApplicationContextException("Kapitola nebyla uložena, zkuste to znovu později.");
                     }
                 } catch (Exception ex) {
                     Notification.show("Chyba při vytváření kapitoly: " + ex.getMessage(), 5000, Notification.Position.MIDDLE);
-                    //TODO add logger to get the API client
                 }
             });
         });
@@ -106,7 +88,7 @@ public class CreateChapterView extends Composite<VerticalLayout> {
         centerWrapper.setHeightFull();
         centerWrapper.setAlignItems(FlexComponent.Alignment.CENTER);
         centerWrapper.add(layoutColumn1);
-    /// scroller for dynamic addition of chapter components added by user, that resolve in dynamic height of the page
+        /// scroller for dynamic addition of chapter components added by user, that resolve in dynamic height of the page
         Scroller scroller = new Scroller(centerWrapper);
         scroller.setSizeFull();
 
