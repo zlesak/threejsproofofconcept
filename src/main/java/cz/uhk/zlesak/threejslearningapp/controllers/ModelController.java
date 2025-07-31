@@ -1,85 +1,57 @@
 package cz.uhk.zlesak.threejslearningapp.controllers;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import cz.uhk.zlesak.threejslearningapp.clients.ModelApiClient;
-import cz.uhk.zlesak.threejslearningapp.models.FileEntity;
+import cz.uhk.zlesak.threejslearningapp.models.entities.Entity;
 import cz.uhk.zlesak.threejslearningapp.models.InputStreamMultipartFile;
-import cz.uhk.zlesak.threejslearningapp.models.ModelEntity;
+import cz.uhk.zlesak.threejslearningapp.models.entities.ModelEntity;
+import cz.uhk.zlesak.threejslearningapp.models.entities.quickEntities.QuickModelEntity;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContextException;
+import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
+@Slf4j
 @Component
+@Scope("prototype")
 public class ModelController {
     private final ModelApiClient modelApiClient;
+    private final ObjectMapper objectMapper;
 
     @Autowired
-    public ModelController(ModelApiClient modelApiClient) {
+    public ModelController(ModelApiClient modelApiClient, ObjectMapper objectMapper) {
         this.modelApiClient = modelApiClient;
+        this.objectMapper = objectMapper;
     }
 
-    public String uploadModel(String modelName, InputStreamMultipartFile inputStream) {
+    public QuickModelEntity uploadModel(String modelName, InputStreamMultipartFile inputStream) throws ApplicationContextException {
+
+        if (modelName.isEmpty()) {
+            throw new ApplicationContextException("Název modelu nesmí být prázdný.");
+        }
+        if (inputStream.isEmpty()) {
+            throw new ApplicationContextException("Soubor pro nahrání modelu nesmí být prázdný.");
+        }
+
         try {
-            FileEntity fileEntity = ModelEntity.builder()
+            Entity entity = ModelEntity.builder()
                     .Name(modelName)
-//                        .Creator()
-//                        .Metadata()
-//                        .MainTextureEntity()
-//                        .TextureEntities()
                     .build();
-            return modelApiClient.uploadFileEntity(inputStream, fileEntity);
+            String response = modelApiClient.uploadFileEntity(inputStream,entity);
+            return objectMapper.readValue(response, QuickModelEntity.class);
         } catch (Exception e) {
             throw new RuntimeException("Chyba při nahrávání modelu: " + e.getMessage(), e);
         }
     }
 
     public ModelEntity getModel(String modelId) {
-
         try {
             return modelApiClient.getFileEntityById(modelId);
         } catch (Exception e) {
+            log.error("Chyba při získávání modelu: {}", e.getMessage(), e);
             throw new RuntimeException("Chyba při získávání modelu: " + e.getMessage(), e);
         }
     }
-
-
-//    public void uploadModel(MultipartFile file, String chapterId) throws Exception {
-//        String url = baseUrl + "upload";
-//        HttpHeaders headers = new HttpHeaders();
-//        headers.setContentType(MediaType.MULTIPART_FORM_DATA);
-//
-//        MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
-//        body.add("model", file.getResource());
-//        body.add("chapterId", chapterId);
-//
-//        HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
-//        try {
-//            restTemplate.exchange(
-//                    url,
-//                    HttpMethod.POST,
-//                    requestEntity,
-//                    String.class
-//            );
-//        } catch (HttpStatusCodeException ex) {
-//            throw new ApiCallException("Chyba při nahrávání modelu pro kapitolu", chapterId, ex.getStatusCode(), ex.getResponseBodyAsString(), ex);
-//        } catch (Exception e) {
-//            throw new Exception("Neočekávaná chyba při volání API pro upload modelu: " + e.getMessage(), e);
-//        }
-//    }
-//public Resource downloadModel(String chapterId) throws Exception {
-//    String url = baseUrl + "download/" + chapterId;
-//    HttpHeaders headers = new HttpHeaders();
-//    headers.setAccept(List.of(MediaType.APPLICATION_JSON));
-//    HttpEntity<Void> requestEntity = new HttpEntity<>(headers);
-//    try {
-//        return restTemplate.exchange(
-//                url,
-//                HttpMethod.GET,
-//                requestEntity,
-//                Resource.class
-//        ).getBody();
-//    } catch (HttpStatusCodeException ex) {
-//        throw new ApiCallException("Chyba při získávání modelu pro kapitolu", chapterId, ex.getStatusCode(), ex.getResponseBodyAsString(), ex);
-//    } catch (Exception e) {
-//        throw new Exception("Neočekávaná chyba při volání API pro stažení modelu: " + e.getMessage(), e);
-//    }
-//}
 }
+

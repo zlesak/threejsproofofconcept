@@ -11,11 +11,13 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.Menu;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
+import org.springframework.context.annotation.Scope;
 import org.vaadin.lineawesome.LineAwesomeIconUrl;
 
 @PageTitle("Domovská stránka")
 @Route("")
 @Menu(order = 0, icon = LineAwesomeIconUrl.HOME_SOLID)
+@Scope("prototype")
 public class MainPageView extends Composite<VerticalLayout> {
 
     public MainPageView() {

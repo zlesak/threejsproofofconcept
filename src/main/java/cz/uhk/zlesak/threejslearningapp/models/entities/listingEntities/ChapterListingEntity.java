@@ -1,4 +1,4 @@
-package cz.uhk.zlesak.threejslearningapp.models;
+package cz.uhk.zlesak.threejslearningapp.models.entities.listingEntities;
 
 import lombok.Data;
 import lombok.AllArgsConstructor;

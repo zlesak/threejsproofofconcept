@@ -1,4 +1,4 @@
-package cz.uhk.zlesak.threejslearningapp.models;
+package cz.uhk.zlesak.threejslearningapp.models.entities;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -12,6 +12,6 @@ import lombok.experimental.SuperBuilder;
 @EqualsAndHashCode(callSuper = true)
 @AllArgsConstructor
 @SuperBuilder
-public class TextureEntity extends FileEntity{
+public class TextureEntity extends Entity {
     String CSV;
 }

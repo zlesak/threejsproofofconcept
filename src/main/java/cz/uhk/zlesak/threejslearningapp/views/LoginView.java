@@ -4,14 +4,13 @@ import com.vaadin.flow.component.Composite;
 import com.vaadin.flow.component.login.LoginForm;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
-import com.vaadin.flow.router.Menu;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
-import org.vaadin.lineawesome.LineAwesomeIconUrl;
+import org.springframework.context.annotation.Scope;
 
 @PageTitle("Přihlášení")
 @Route("login")
-//@Menu(order = 3, icon = LineAwesomeIconUrl.SIGN_IN_ALT_SOLID)
+@Scope("prototype")
 public class LoginView extends Composite<VerticalLayout> {
 
     public LoginView() {

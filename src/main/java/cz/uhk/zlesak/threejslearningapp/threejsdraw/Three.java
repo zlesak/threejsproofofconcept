@@ -6,16 +6,32 @@ import com.vaadin.flow.component.Tag;
 import com.vaadin.flow.component.dependency.JsModule;
 import com.vaadin.flow.component.dependency.NpmPackage;
 import com.vaadin.flow.function.SerializableRunnable;
+import cz.uhk.zlesak.threejslearningapp.events.ModelLoadedEvent;
+import com.vaadin.flow.component.ComponentEventListener;
+import org.springframework.context.annotation.Scope;
 
 @JsModule("./js/three-javascript.js")
 @NpmPackage(value = "three", version = "0.172.0")
 @Tag("canvas")
+@Scope("prototype")
 public class Three extends Component{
 
     private Runnable onDisposedCallback;
 
     public Three() {
-        getElement().executeJs("window.initThree($0)", this);
+        init();
+    }
+
+    public void init() {
+        getElement().executeJs("""
+            try {
+                if (typeof window.initThree === 'function') {
+                    window.initThree($0);
+                }
+            } catch (e) {
+                console.error('[JS] Error in initThree:', e);
+            }
+            """, this);
     }
 
     public void dispose(SerializableRunnable onDisposed) {
@@ -34,7 +50,6 @@ public class Three extends Component{
         }
     }
 
-    @ClientCallable
     public void doAction(String href) { //TODO: Change method to appropriate method, or use switching for different actions when defined and available
         getElement().executeJs("""
         try {
@@ -47,7 +62,6 @@ public class Three extends Component{
         """, href);
     }
 
-    @ClientCallable
     public void loadModel(String base64Model) {
         getElement().executeJs("""
             try {
@@ -58,5 +72,14 @@ public class Three extends Component{
                 console.error('[JS] Error in loadModel:', e);
             }
             """, "data:application/octet-stream;base64," + base64Model);
+    }
+
+    @ClientCallable
+    public void modelLoadedEvent() {
+        fireEvent(new ModelLoadedEvent(this));
+    }
+
+    public void addModelLoadedEventListener(ComponentEventListener<ModelLoadedEvent> listener) {
+        addListener(ModelLoadedEvent.class, listener);
     }
 }

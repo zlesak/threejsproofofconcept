@@ -8,7 +8,11 @@ import com.vaadin.flow.component.html.Anchor;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.dom.DomEventListener;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.Scope;
 
+@Slf4j
+@Scope("prototype")
 public class NavigationContentComponent extends VerticalLayout {
 
     public void initializeSubChapterData(JsonValue subChaptersContent) {
@@ -28,14 +32,14 @@ public class NavigationContentComponent extends VerticalLayout {
                 VerticalLayout contentLayout = new VerticalLayout();
                 contentLayout.setPadding(false);
                 contentLayout.setId(h1.getString("id"));
-                Anchor mainHeadingAnchor = new LocatorAnchor(h1.getObject("data"), h1.getString("id"), scrollClickListener);
+                Anchor mainHeadingAnchor = new LocatorAnchorComponent(h1.getObject("data"), h1.getString("id"), scrollClickListener);
                 contentLayout.add(mainHeadingAnchor);
 
                 for (int j = 0; j < content.length(); j++) {
                     JsonObject contentBlock = content.getObject(j);
                     JsonObject contentData = contentBlock.getObject("data");
                     String contentDataId = contentBlock.getString("id");
-                    Anchor contentLocationAnchor = new LocatorAnchor(contentData, contentDataId, scrollClickListener);
+                    Anchor contentLocationAnchor = new LocatorAnchorComponent(contentData, contentDataId, scrollClickListener);
                     contentLocationAnchor.setId(contentDataId);
                     contentLayout.add(contentLocationAnchor);
                 }

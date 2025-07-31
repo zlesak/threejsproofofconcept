@@ -1,4 +1,4 @@
-package cz.uhk.zlesak.threejslearningapp.models;
+package cz.uhk.zlesak.threejslearningapp.models.entities;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -17,7 +17,7 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = true)
 @AllArgsConstructor
 @SuperBuilder
-public class ModelEntity extends FileEntity {
+public class ModelEntity extends Entity {
     String MainTextureEntity;
     List<String> TextureEntities;
 

@@ -7,14 +7,16 @@ import com.vaadin.flow.component.Tag;
 import com.vaadin.flow.component.dependency.JsModule;
 import com.vaadin.flow.component.dependency.NpmPackage;
 import elemental.json.JsonValue;
+import org.springframework.context.annotation.Scope;
 
 import java.util.concurrent.CompletableFuture;
 
 @Tag("editor-js")
 @JsModule("./js/editor-js.ts")
 @NpmPackage(value = "@editorjs/editorjs", version = "2.30.8")
-public class EditorJs extends Component implements HasSize, HasStyle {
-    public EditorJs() {
+@Scope("prototype")
+public class EditorJsComponent extends Component implements HasSize, HasStyle {
+    public EditorJsComponent() {
     }
 
     public CompletableFuture<String> getData() {
@@ -28,18 +30,16 @@ public class EditorJs extends Component implements HasSize, HasStyle {
         getElement().callJsFunction("toggleReadOnlyMode", readOnly);
     }
 
-    public void clear() {
-        getElement().callJsFunction("clear");
-    }
-
-
-    public CompletableFuture<Void> setChapterContentData(String jsonData) {
-        return getElement()
+    public void setChapterContentData(String jsonData) {
+        getElement()
                 .callJsFunction("setChapterContentData", jsonData)
                 .toCompletableFuture()
                 .exceptionally(error -> {
                     throw new RuntimeException("Chyba při nastavování chapterContentData: " + error.getMessage());
                 })
                 .thenApply(ignore -> null);
+    }
+    public void setSelectedSubchapterData(String jsonData) {
+        getElement().callJsFunction("setSelectedSubchapterData", jsonData);
     }
 }

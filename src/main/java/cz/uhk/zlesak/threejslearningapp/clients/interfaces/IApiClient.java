@@ -1,4 +1,4 @@
-package cz.uhk.zlesak.threejslearningapp.clients;
+package cz.uhk.zlesak.threejslearningapp.clients.interfaces;
 
 public interface IApiClient {
     static String getBaseUrl() {

@@ -157,6 +157,11 @@ class ThreeTest {
                 this.controls.target.copy(center);
                 this.controls.update();
                 this.onWindowResize();
+
+                if (this.element && this.element.$server && typeof this.element.$server.modelLoadedEvent === 'function') {
+                    // console.info('Model loaded successfully');
+                    this.element.$server.modelLoadedEvent();
+                }
             },
             (xhr) => {
                 const progress = xhr.loaded / xhr.total;

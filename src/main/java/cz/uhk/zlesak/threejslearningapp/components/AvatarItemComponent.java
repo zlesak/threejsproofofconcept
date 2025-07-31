@@ -8,13 +8,13 @@ import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 
-public class AvatarItem extends Composite<HorizontalLayout> implements HasSize {
+public class AvatarItemComponent extends Composite<HorizontalLayout> implements HasSize {
 
     private final Span heading = new Span();
 
     private final Span description = new Span();
 
-    public AvatarItem(String head, String desc, Avatar av) {
+    public AvatarItemComponent(String head, String desc, Avatar av) {
         getContent().setAlignItems(FlexComponent.Alignment.CENTER);
 
         description.getStyle().set("color", "var(--lumo-secondary-text-color)").set("font-size",

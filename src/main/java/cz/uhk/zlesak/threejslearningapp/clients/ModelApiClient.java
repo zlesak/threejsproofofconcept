@@ -1,11 +1,15 @@
 package cz.uhk.zlesak.threejslearningapp.clients;
 
-import cz.uhk.zlesak.threejslearningapp.data.ApiCallException;
-import cz.uhk.zlesak.threejslearningapp.models.FileEntity;
-import cz.uhk.zlesak.threejslearningapp.models.InputStreamMultipartFile;
-import cz.uhk.zlesak.threejslearningapp.models.ModelEntity;
-import cz.uhk.zlesak.threejslearningapp.models.TextureEntity;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import cz.uhk.zlesak.threejslearningapp.clients.interfaces.IApiClient;
+import cz.uhk.zlesak.threejslearningapp.clients.interfaces.IFileApiClient;
+import cz.uhk.zlesak.threejslearningapp.data.ApiCallException;
+import cz.uhk.zlesak.threejslearningapp.models.IEntity;
+import cz.uhk.zlesak.threejslearningapp.models.InputStreamMultipartFile;
+import cz.uhk.zlesak.threejslearningapp.models.entities.Entity;
+import cz.uhk.zlesak.threejslearningapp.models.entities.ModelEntity;
+import cz.uhk.zlesak.threejslearningapp.models.entities.TextureEntity;
+import org.apache.commons.lang3.NotImplementedException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
@@ -31,8 +35,8 @@ public class ModelApiClient implements IFileApiClient {
     }
 
     @Override
-    public void createFileEntity(FileEntity fileEntity) throws Exception {
-
+    public void createFileEntity(Entity entity) throws NotImplementedException {
+        throw new NotImplementedException("Tato metoda není implementována pro modely.");
     }
 
     @Override
@@ -40,10 +44,10 @@ public class ModelApiClient implements IFileApiClient {
         String url = baseUrl + "download/" + fileEntityId;
         try {
             ResponseEntity<byte[]> response = restTemplate.exchange(
-                url,
-                HttpMethod.POST,
-                null,
-                byte[].class
+                    url,
+                    HttpMethod.POST,
+                    null,
+                    byte[].class
             );
             if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
                 String contentDisposition = response.getHeaders().getFirst(HttpHeaders.CONTENT_DISPOSITION);
@@ -53,13 +57,13 @@ public class ModelApiClient implements IFileApiClient {
                 }
                 InputStreamMultipartFile file = new InputStreamMultipartFile(new ByteArrayInputStream(response.getBody()), filename);
                 return ModelEntity.builder()
-                    .Name(filename)
-                    .MainTextureEntity(null)
-                    .TextureEntities(List.of())
-                    .File(file)
-                    .build();
+                        .Name(filename)
+                        .MainTextureEntity(null)
+                        .TextureEntities(List.of())
+                        .File(file)
+                        .build();
             } else {
-                throw new Exception("Model nalezen nebo chybě při stahování.");
+                throw new Exception("Model nenalezen nebo chyba při stahování.");
             }
         } catch (HttpStatusCodeException ex) {
             throw new ApiCallException("Chyba při stahování modelu", null, ex.getStatusCode(), ex.getResponseBodyAsString(), ex);
@@ -67,12 +71,12 @@ public class ModelApiClient implements IFileApiClient {
     }
 
     @Override
-    public List<FileEntity> getFileEntitiesByAuthor(String authorId) throws Exception {
-        return List.of();
+    public List<Entity> getFileEntitiesByAuthor(String authorId) throws NotImplementedException {
+        throw new NotImplementedException("Tato metoda není implementována pro modely.");
     }
 
     @Override
-    public String uploadFileEntity(InputStreamMultipartFile inputStreamMultipartFile, FileEntity fileEntity) throws Exception {
+    public String uploadFileEntity(InputStreamMultipartFile inputStreamMultipartFile, IEntity fileEntity) throws Exception {
         String url = baseUrl + "upload";
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.MULTIPART_FORM_DATA);
@@ -96,7 +100,7 @@ public class ModelApiClient implements IFileApiClient {
             );
             if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
                 return response.getBody();
-            }else{
+            } else {
                 throw new ApiCallException("Chyba při nahrávání modelu", null, response.getStatusCode(), response.getBody(), null);
             }
 
@@ -106,7 +110,7 @@ public class ModelApiClient implements IFileApiClient {
     }
 
     @Override
-    public FileEntity downloadFileEntityById(String fileEntityId) throws Exception {
+    public Entity downloadFileEntityById(String fileEntityId) throws Exception {
         String url = baseUrl + "download/" + fileEntityId;
         try {
             ResponseEntity<byte[]> response = restTemplate.exchange(
@@ -132,7 +136,7 @@ public class ModelApiClient implements IFileApiClient {
     }
 
     @Override
-    public void deleteFileEntity(String modelId) throws Exception {
-
+    public void deleteFileEntity(String modelId) throws NotImplementedException {
+        throw new NotImplementedException("Metoda deleteFileEntity není implementována pro ModelApiClient.");
     }
 }

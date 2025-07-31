@@ -16,11 +16,16 @@ import com.vaadin.flow.router.RouterLink;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
 import com.vaadin.flow.theme.lumo.Lumo;
 import com.vaadin.flow.theme.lumo.LumoUtility.*;
-import cz.uhk.zlesak.threejslearningapp.components.AvatarItem;
+import cz.uhk.zlesak.threejslearningapp.components.AvatarItemComponent;
+import cz.uhk.zlesak.threejslearningapp.views.creating.CreateChapterView;
+import cz.uhk.zlesak.threejslearningapp.views.creating.CreateModelView;
+import cz.uhk.zlesak.threejslearningapp.views.creating.CreateTextureView;
+import org.springframework.context.annotation.Scope;
 import org.vaadin.lineawesome.LineAwesomeIcon;
 
 @Layout
 @AnonymousAllowed
+@Scope("prototype")
 public class MainLayout extends AppLayout {
     public static class MenuItemInfo extends ListItem {
 
@@ -105,7 +110,7 @@ public class MainLayout extends AppLayout {
         });
 
         /// Login user basic information avatar item TODO in phase where ogin is implemented via BE API react to these changes and change accordingly to use the appropriate APIs
-        AvatarItem avatarItem = new AvatarItem("Aria Bailey", "Endocrinologist", new Avatar("Aria Bailey"));
+        AvatarItemComponent avatarItem = new AvatarItemComponent("Aria Bailey", "Endocrinologist", new Avatar("Aria Bailey"));
         layout.add(avatarItem);
 
         header.add(layout);
@@ -116,7 +121,9 @@ public class MainLayout extends AppLayout {
     private MenuItemInfo[] createMenuItems() {
         return new MenuItemInfo[]{ //
                 new MenuItemInfo("Domovská stránka", LineAwesomeIcon.HOME_SOLID.create(), MainPageView.class),
-                new MenuItemInfo("Vytvořit kapitolu", LineAwesomeIcon.FILE.create(), CreateChapterView.class)
+                new MenuItemInfo("Vytvořit kapitolu", LineAwesomeIcon.PEN_ALT_SOLID.create(), CreateChapterView.class),
+                new MenuItemInfo("Nahrát model", LineAwesomeIcon.OBJECT_GROUP.create(), CreateModelView.class),
+                new MenuItemInfo("Nahrát texturu", LineAwesomeIcon.PAINT_ROLLER_SOLID.create(), CreateTextureView.class)
         };
     }
 

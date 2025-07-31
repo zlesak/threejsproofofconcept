@@ -1,22 +1,29 @@
 package cz.uhk.zlesak.threejslearningapp.clients;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import cz.uhk.zlesak.threejslearningapp.clients.interfaces.IApiClient;
+import cz.uhk.zlesak.threejslearningapp.clients.interfaces.IChapterApiClient;
 import cz.uhk.zlesak.threejslearningapp.data.ApiCallException;
-import cz.uhk.zlesak.threejslearningapp.models.ChapterEntity;
+import cz.uhk.zlesak.threejslearningapp.models.entities.ChapterEntity;
+import org.apache.commons.lang3.NotImplementedException;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @Service
 public class ChapterApiClient implements IChapterApiClient {
     private final RestTemplate restTemplate;
+    private final ObjectMapper objectMapper;
     private final String baseUrl;
 
-    public ChapterApiClient(RestTemplate restTemplate) {
+    @Autowired
+    public ChapterApiClient(RestTemplate restTemplate, ObjectMapper objectMapper) {
         this.restTemplate = restTemplate;
+        this.objectMapper = objectMapper;
         this.baseUrl = IApiClient.getBaseUrl() + "chapter/";
     }
 
@@ -39,7 +46,7 @@ public class ChapterApiClient implements IChapterApiClient {
                     HttpMethod.POST,
                     request,
                     ChapterEntity.class);
-            return response.getBody();
+            return objectMapper.readValue(objectMapper.writeValueAsString(response.getBody()), ChapterEntity.class);
         }catch (HttpStatusCodeException ex) {
             throw new ApiCallException("Chyba při nahrávání kapitoly", null, ex.getStatusCode(), ex.getResponseBodyAsString(), ex);
 
@@ -49,13 +56,13 @@ public class ChapterApiClient implements IChapterApiClient {
     }
 
     @Override
-    public void updateChapter(String chapterId, ChapterEntity chapterEntity) throws Exception {
-
+    public void updateChapter(String chapterId, ChapterEntity chapterEntity) throws NotImplementedException {
+        throw new NotImplementedException("Update chapter method is not implemented yet.");
     }
 
     @Override
-    public void deleteChapter(String chapterId) throws Exception {
-
+    public void deleteChapter(String chapterId) throws NotImplementedException {
+        throw new NotImplementedException("Delete chapter method is not implemented yet.");
     }
 
     @Override
@@ -72,8 +79,7 @@ public class ChapterApiClient implements IChapterApiClient {
                     requestEntity,
                     ChapterEntity.class
             );
-            return response.getBody();
-
+            return objectMapper.readValue(objectMapper.writeValueAsString(response.getBody()), ChapterEntity.class);
         } catch (HttpStatusCodeException ex) {
             throw new ApiCallException("Chyba při získávání kapitoly dle jejího ID", chapterId, ex.getStatusCode(), ex.getResponseBodyAsString(), ex);
 
@@ -83,82 +89,12 @@ public class ChapterApiClient implements IChapterApiClient {
     }
 
     @Override
-    public List<String> getChaptersByAuthor(String authorId) throws Exception {
-        return new ArrayList<>();
-
+    public List<String> getChaptersByAuthor(String authorId) throws NotImplementedException {
+        throw new NotImplementedException("Get chapters by author method is not implemented yet.");
     }
 
     @Override
-    public List<String> getAllChapters() throws Exception {
-        return List.of();
+    public List<String> getAllChapters() throws NotImplementedException {
+        throw new NotImplementedException("Get all chapters method is not implemented yet.");
     }
-
-    /**
-     * API call function to endpoint chapter with parameter of ID of the selected chapter
-     *
-     * @param chapterId ChapterId of wanted chapter to be requested from API
-     * @return Returns chapter data
-     * @throws Exception Throws exception when any trouble happens along the get chapter API call
-     */
-    @Override
-    public ChapterEntity getChapter(String chapterId) throws Exception {
-        return ChapterEntity.builder().build();
-    }
-
-    /**
-     * API call function to endpoint upload to upload the model for the selected chapter
-     * @param file File of the model to upload
-     * @param chapterId ChapterId of the chapter that the model belongs to
-     * @throws Exception Throws exception when anything bad happens along the uploading of the model
-     */
-//
-//    public void uploadModel(MultipartFile file, String chapterId) throws Exception {
-//        String url = baseUrl + "upload";
-//        HttpHeaders headers = new HttpHeaders();
-//        headers.setContentType(MediaType.MULTIPART_FORM_DATA);
-//
-//        MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
-//        body.add("model", file.getResource());
-//        body.add("chapterId", chapterId);
-//
-//        HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
-//        try {
-//            restTemplate.exchange(
-//                    url,
-//                    HttpMethod.POST,
-//                    requestEntity,
-//                    String.class
-//            );
-//        } catch (HttpStatusCodeException ex) {
-//            throw new ApiCallException("Chyba při nahrávání modelu pro kapitolu", chapterId, ex.getStatusCode(), ex.getResponseBodyAsString(), ex);
-//        } catch (Exception e) {
-//            throw new Exception("Neočekávaná chyba při volání API pro upload modelu: " + e.getMessage(), e);
-//        }
-//    }
-
-    /**
-     * API call function to endpoint download to download model for selected chapter
-     *
-     * @param chapterId ChapterId to get the model for
-     * @return Returns model for the chapter
-     * @throws Exception Throws exception, when any problem along the path of getting the model, has occurred
-     */
-//    public Resource downloadModel(String chapterId) throws Exception {
-//        String url = baseUrl + "download/" + chapterId;
-//        HttpHeaders headers = new HttpHeaders();
-//        headers.setAccept(List.of(MediaType.APPLICATION_JSON));
-//        HttpEntity<Void> requestEntity = new HttpEntity<>(headers);
-//        try {
-//            return restTemplate.exchange(
-//                    url,
-//                    HttpMethod.GET,
-//                    requestEntity,
-//                    Resource.class
-//            ).getBody();
-//        } catch (HttpStatusCodeException ex) {
-//            throw new ApiCallException("Chyba při získávání modelu pro kapitolu", chapterId, ex.getStatusCode(), ex.getResponseBodyAsString(), ex);
-//        } catch (Exception e) {
-//            throw new Exception("Neočekávaná chyba při volání API pro stažení modelu: " + e.getMessage(), e);
-//        }
-//    }
 }
