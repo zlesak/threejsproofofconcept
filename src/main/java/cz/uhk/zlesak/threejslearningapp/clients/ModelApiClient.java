@@ -8,7 +8,6 @@ import cz.uhk.zlesak.threejslearningapp.models.IEntity;
 import cz.uhk.zlesak.threejslearningapp.models.InputStreamMultipartFile;
 import cz.uhk.zlesak.threejslearningapp.models.entities.Entity;
 import cz.uhk.zlesak.threejslearningapp.models.entities.ModelEntity;
-import cz.uhk.zlesak.threejslearningapp.models.entities.TextureEntity;
 import org.apache.commons.lang3.NotImplementedException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
@@ -66,7 +65,7 @@ public class ModelApiClient implements IFileApiClient {
                 throw new Exception("Model nenalezen nebo chyba při stahování.");
             }
         } catch (HttpStatusCodeException ex) {
-            throw new ApiCallException("Chyba při stahování modelu", null, ex.getStatusCode(), ex.getResponseBodyAsString(), ex);
+            throw new ApiCallException("Chyba při stahování modelu", null, null, ex.getStatusCode(), ex.getResponseBodyAsString(), ex);
         }
     }
 
@@ -101,11 +100,11 @@ public class ModelApiClient implements IFileApiClient {
             if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
                 return response.getBody();
             } else {
-                throw new ApiCallException("Chyba při nahrávání modelu", null, response.getStatusCode(), response.getBody(), null);
+                throw new ApiCallException("Chyba při nahrávání modelu", null, request.toString(), response.getStatusCode(), response.getBody(), null);
             }
 
         } catch (HttpStatusCodeException ex) {
-            throw new ApiCallException("Chyba při nahrávání modelu", null, ex.getStatusCode(), ex.getResponseBodyAsString(), ex);
+            throw new ApiCallException("Chyba při nahrávání modelu", null, request.toString(), ex.getStatusCode(), ex.getResponseBodyAsString(), ex);
         }
     }
 
@@ -126,12 +125,12 @@ public class ModelApiClient implements IFileApiClient {
                 if (contentDisposition != null && contentDisposition.contains("filename=")) {
                     filename = contentDisposition.substring(contentDisposition.indexOf("filename=") + 9).replace("\"", "");
                 }
-                return TextureEntity.builder().Name(filename).File(new InputStreamMultipartFile(new ByteArrayInputStream(response.getBody()), filename)).build();
+                return ModelEntity.builder().Name(filename).File(new InputStreamMultipartFile(new ByteArrayInputStream(response.getBody()), filename)).build();
             } else {
                 throw new Exception("Soubor nebyl nalezen nebo došlo k chybě při stahování.");
             }
         } catch (HttpStatusCodeException ex) {
-            throw new ApiCallException("Chyba při stahování souboru", null, ex.getStatusCode(), ex.getResponseBodyAsString(), ex);
+            throw new ApiCallException("Chyba při stahování souboru", null, null, ex.getStatusCode(), ex.getResponseBodyAsString(), ex);
         }
     }
 

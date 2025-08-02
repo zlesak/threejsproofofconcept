@@ -30,7 +30,7 @@ public class CreateTextureView extends TextureScaffold {
     public CreateTextureView(TextureController textureController) {
         super(ViewTypeEnum.CREATE);
 
-        UploadComponent uploadComponent = new UploadComponent(new MultiFileMemoryBuffer(), List.of(".jpg"));
+        UploadComponent uploadComponent = new UploadComponent(new MultiFileMemoryBuffer(), List.of(".jpg"), true);
         uploadComponent.setUploadListener((fileName, inputStream) -> {
             try {
                 String name = textureName.getValue().trim();

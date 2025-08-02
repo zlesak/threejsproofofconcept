@@ -4,28 +4,23 @@ import com.vaadin.flow.component.Tag;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
+import com.vaadin.flow.component.icon.Icon;
+import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
-import com.vaadin.flow.component.textfield.TextField;
-import com.vaadin.flow.component.upload.receivers.MultiFileMemoryBuffer;
 import com.vaadin.flow.router.*;
-import cz.uhk.zlesak.threejslearningapp.components.UploadComponent;
 import cz.uhk.zlesak.threejslearningapp.controllers.ChapterController;
 import cz.uhk.zlesak.threejslearningapp.controllers.ModelController;
+import cz.uhk.zlesak.threejslearningapp.controllers.TextureController;
 import cz.uhk.zlesak.threejslearningapp.data.ViewTypeEnum;
-import cz.uhk.zlesak.threejslearningapp.models.InputStreamMultipartFile;
 import cz.uhk.zlesak.threejslearningapp.models.entities.ChapterEntity;
 import cz.uhk.zlesak.threejslearningapp.models.entities.ModelEntity;
-import cz.uhk.zlesak.threejslearningapp.models.entities.quickEntities.QuickModelEntity;
+import cz.uhk.zlesak.threejslearningapp.models.entities.TextureEntity;
 import cz.uhk.zlesak.threejslearningapp.views.scaffolds.ChapterScaffold;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContextException;
 import org.springframework.context.annotation.Scope;
 import org.vaadin.lineawesome.LineAwesomeIconUrl;
-
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 
 @Slf4j
 @PageTitle("Vytvořit kapitolu")
@@ -36,62 +31,45 @@ import java.util.List;
 public class CreateChapterView extends ChapterScaffold {
 
     @Autowired
-    public CreateChapterView(ChapterController chapterController, ModelController modelController) {
+    public CreateChapterView(ChapterController chapterController, ModelController modelController, TextureController textureController) {
         super(ViewTypeEnum.CREATE);
 
         Button createChapterButton = new Button("Vytvořit kapitolu");
         createChapterButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         createChapterButton.setWidthFull();
 
-        final List<QuickModelEntity> modelIds = new ArrayList<>();
-
-        TextField modelName = new TextField("Název modelu");
-
-        UploadComponent uploadComponent = new UploadComponent(new MultiFileMemoryBuffer(), List.of(".glb"));
-        uploadComponent.setUploadListener((fileName, inputStream) -> {
-            try {
-                String name = modelName.getValue().trim();
-                InputStreamMultipartFile multipartFile = new InputStreamMultipartFile(inputStream, fileName);
-                QuickModelEntity quickModelEntity = modelController.uploadModel(name, multipartFile);
-                modelIds.add(quickModelEntity);
-                uploadComponent.clearFileList();
-
-                Notification.show("Model úspěšně nahrán.", 3000, Notification.Position.MIDDLE);
-                modelDiv.remove(modelName, uploadComponent);
-
-            } catch (ApplicationContextException ex) {
-                Notification.show("Chyba: " + ex.getMessage(), 5000, Notification.Position.MIDDLE);
-                log.warn(ex.getMessage(), ex);
-            } catch (Exception ex) {
-                Notification.show("Chyba při nahrávání modelu: " + ex.getMessage(), 5000, Notification.Position.MIDDLE);
-                log.error(ex.getMessage(), ex);
-            }
-
-            ModelEntity modelFile = modelController.getModel(modelIds.getFirst().getModel().getId());
-            try {
-                if (modelFile == null) {
-                    throw new ApplicationContextException("Model nebyl nalezen.");
-                }
-                String base64Model = modelFile.getBase64File();
-                showProgressBar(true);
-                showRenderer(true);
-                renderer.loadModel(base64Model);
-            } catch (IOException e) {
-                log.error(e.getMessage());
-                Notification.show("Nepovedlo se načíst model: " + e.getMessage(), 5000, Notification.Position.MIDDLE);
-            } catch (Exception e) {
-                log.error("Neočekávaná chyba při načítání modelu: {}", e.getMessage(), e);
-                Notification.show("Neočekávaná chyba při načítání modelu: " + e.getMessage(), 5000, Notification.Position.MIDDLE);
-            }
+        CreateModelDialog dialog = new CreateModelDialog(modelController);
+        Button createModelButton = new Button("Vytvořit model");
+        createModelButton.addClickListener(e -> {
+            dialog.open();
         });
 
+        dialog.setModelCreatedListener(entity -> {
+            chapterController.setUploadedModel(entity);
+            createModelButton.setText("Model přidán: " + entity.getModel().getName());
+            createModelButton.setIcon(new Icon(VaadinIcon.CHECK));
+            createModelButton.setEnabled(false);
+
+            String base64ModelFile = modelController.getModelBase64(entity.getModel().getId());
+            if(dialog.isAdvanced()) {
+                String textureFileEntity = textureController.getTextureBase64(entity.getMainTexture().getId());
+                renderer.loadAdvancedModel(base64ModelFile, textureFileEntity);
+                log.info("Pokročilý model s texturou byl načten.");
+            }else{
+                renderer.loadModel(base64ModelFile);
+                log.info("Jednoduchý model byl načten.");
+            }
+            showRenderer(true);
+        });
+
+        secondaryNavigationBar.add(createModelButton);
 
         createChapterButton.addClickListener(e -> editorjs.getData().whenComplete((body, error) -> {
             try {
                 if (error != null) {
                     throw new ApplicationContextException("Chyba při získávání obsahu: ", error);
                 }
-                ChapterEntity created = chapterController.createChapter(chapterNameTextField.getValue().trim(), body, modelIds);
+                ChapterEntity created = chapterController.createChapter(chapterNameTextField.getValue().trim(), body);
                 if (created != null) {
                     UI.getCurrent().navigate("chapter/" + created.getId());
                 } else {
@@ -106,8 +84,6 @@ public class CreateChapterView extends ChapterScaffold {
             }
         }));
 
-
-        modelDiv.add(modelName, uploadComponent);
         chapterContent.add(createChapterButton);
     }
 

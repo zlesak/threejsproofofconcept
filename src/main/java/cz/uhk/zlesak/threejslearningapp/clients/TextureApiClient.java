@@ -62,8 +62,8 @@ public class TextureApiClient implements IFileApiClient {
             } else {
                 throw new Exception("Textura nalezena nebo chyba při stahování.");
             }
-        }catch(HttpStatusCodeException ex){
-            throw new ApiCallException("Nepodařilo se stáhnout texturu", null, ex.getStatusCode(), ex.getResponseBodyAsString(), ex);
+        } catch (HttpStatusCodeException ex) {
+            throw new ApiCallException("Nepodařilo se stáhnout texturu", null, null, ex.getStatusCode(), ex.getResponseBodyAsString(), ex);
         }
     }
 
@@ -98,7 +98,7 @@ public class TextureApiClient implements IFileApiClient {
             );
             return response.getBody();
         } catch (HttpStatusCodeException ex) {
-            throw new ApiCallException("Chyba při nahrávání textury", null, ex.getStatusCode(), ex.getResponseBodyAsString(), ex);
+            throw new ApiCallException("Chyba při nahrávání textury", null, request.toString(), ex.getStatusCode(), ex.getResponseBodyAsString(), ex);
         }
     }
 
@@ -124,7 +124,7 @@ public class TextureApiClient implements IFileApiClient {
                 throw new Exception("Soubor nebyl nalezen nebo došlo k chybě při stahování.");
             }
         } catch (HttpStatusCodeException ex) {
-            throw new ApiCallException("Chyba při stahování souboru", null, ex.getStatusCode(), ex.getResponseBodyAsString(), ex);
+            throw new ApiCallException("Chyba při stahování souboru", null, null, ex.getStatusCode(), ex.getResponseBodyAsString(), ex);
         }
     }
 

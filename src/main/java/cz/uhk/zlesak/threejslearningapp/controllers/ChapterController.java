@@ -7,6 +7,7 @@ import cz.uhk.zlesak.threejslearningapp.models.entities.quickEntities.QuickModel
 import elemental.json.Json;
 import elemental.json.JsonArray;
 import elemental.json.JsonObject;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContextException;
@@ -22,29 +23,37 @@ import java.util.List;
 public class ChapterController {
     private final ChapterApiClient chapterApiClient;
     private ChapterEntity chapterEntity = null;
+    @Setter
+    private QuickModelEntity uploadedModel = null;
 
     @Autowired
     public ChapterController(ChapterApiClient chapterApiClient) {
         this.chapterApiClient = chapterApiClient;
     }
 
-    public ChapterEntity createChapter(String name, String content, List<QuickModelEntity> models) throws Exception {
+    public ChapterEntity createChapter(String name, String content) throws Exception {
 
         if (name == null || name.isEmpty()) {
+            log.debug("Název kapitoly je prázdný.");
             throw new ApplicationContextException("Název kapitoly nesmí být prázdný.");
         }
         if (content == null || content.isEmpty()) {
+            log.debug("Obsah kapitoly je prázdný.");
             throw new ApplicationContextException("Obsah kapitoly nesmí být prázdný.");
         }
-        if (models.isEmpty()) {
+        if (uploadedModel == null) {
+            log.debug("Kapitola nemá přiřazen žádný model.");
             throw new ApplicationContextException("Kapitola musí mít alespoň jeden model.");
         }
 
         ChapterEntity chapter = ChapterEntity.builder()
                 .Name(name)
                 .Content(content)
-                .Models(models)
+                .Models(List.of(uploadedModel))
                 .build();
+        log.info("Vytváření kapitoly s názvem: {}", chapter.getName());
+        log.info("Obsah kapitoly: {}", chapter.getContent());
+        log.info("Přiřazený model: {}", chapter.getModels().getFirst().getModel().getName());
         try {
             return chapterApiClient.createChapter(chapter);
         } catch (Exception e) {

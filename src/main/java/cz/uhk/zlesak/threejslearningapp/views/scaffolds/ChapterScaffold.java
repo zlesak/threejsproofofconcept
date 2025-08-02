@@ -36,13 +36,13 @@ public abstract class ChapterScaffold extends Composite<VerticalLayout> implemen
     protected final Three renderer = new Three();
     protected final TextField chapterNameTextField = new TextField();
     protected final Div modelDiv = new Div(progressBar, renderer);
+    protected final HorizontalLayout secondaryNavigationBar = new HorizontalLayout();
 
     protected final VerticalLayout chapterContent = new VerticalLayout();
     protected final VerticalLayout chapterModel = new VerticalLayout();
 
     public ChapterScaffold(ViewTypeEnum viewType) {
         // Main layout components
-        HorizontalLayout secondaryNavigationBar = new HorizontalLayout();
         HorizontalLayout chapterPageLayout = new HorizontalLayout();
         VerticalLayout chapterNavigation = new VerticalLayout();
 
@@ -59,6 +59,7 @@ public abstract class ChapterScaffold extends Composite<VerticalLayout> implemen
         switch (viewType) {
             case CREATE -> {
                 chapterSelectionComboBox.setVisible(false);
+                searchInChapterTextField.setVisible(false);
                 chapterNameTextField.setPlaceholder("Název kapitoly");
                 chapterNavigation.setVisible(false);
                 editorjs.toggleReadOnlyMode(false);

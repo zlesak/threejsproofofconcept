@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
-import {OrbitControls} from "three/addons";
+import { OBJLoader, OrbitControls } from 'three/addons';
 
 class ThreeTest {
     constructor() {
@@ -164,14 +164,51 @@ class ThreeTest {
                 }
             },
             (xhr) => {
-                const progress = xhr.loaded / xhr.total;
-                document.getElementById("chapter-container")?.$server?.updateProgress(progress);
             },
             (error) => {
                 console.error('Error loading model:', error);
             }
         );
     };
+
+    loadAdvancedModel = (objUrl, textureUrl) => {
+        const textureLoader = new THREE.TextureLoader();
+        const texture = textureLoader.load(textureUrl);
+        const objLoader = new OBJLoader();
+        objLoader.load(objUrl, (obj) => {
+            obj.traverse((child) => {
+                if (child.isMesh) {
+                    child.material = new THREE.MeshStandardMaterial({ map: texture });
+                }
+            });
+            this.model = obj;
+            this.scene.add(this.model);
+
+            // Center camera on model
+            const box = new THREE.Box3().setFromObject(this.model);
+            const center = box.getCenter(new THREE.Vector3());
+            const size = box.getSize(new THREE.Vector3());
+
+            this.camera.position.copy(center);
+            this.camera.position.x += size.length();
+            this.camera.position.y += size.length() * 0.5;
+            this.camera.position.z += size.length();
+            this.camera.lookAt(center);
+
+            this.controls.target.copy(center);
+            this.controls.update();
+            this.onWindowResize();
+
+            if (this.element && this.element.$server && typeof this.element.$server.modelLoadedEvent === 'function') {
+                console.info('Advanced model loaded successfully');
+                this.element.$server.modelLoadedEvent();
+            }
+        },(xhr) => {
+
+        }, (error) => {
+            console.error('Error loading advanced model:', error);
+        });
+    }
 
     dispose = () => {
         this.stopAnimation();
@@ -264,6 +301,28 @@ class ThreeTest {
     changeSpeed = (speed) => {
         this.controls.autoRotateSpeed += speed;
     };
+
+    clear = () => {
+        if (this.scene) {
+            this.scene.traverse((obj) => {
+                if (obj !== this.ambientLight && obj.type !== 'Scene' && obj.type !== 'CubeTexture') {
+                    if (obj.material) {
+                        this.disposeMaterial(obj.material);
+                    }
+                    if (obj.geometry) {
+                        obj.geometry.dispose();
+                    }
+                    this.scene.remove(obj);
+                }
+            });
+            if (this.model) {
+                this.disposeObject(this.model);
+                this.scene.remove(this.model);
+                this.model = null;
+            }
+        }
+        this.render();
+    }
 }
 
 // Global interface
@@ -274,6 +333,18 @@ window.loadModel = function (modelUrl) {
         tt.loadModel(modelUrl);
     }
 };
+
+window.loadAdvancedModel = function (objUrl, textureUrl) {
+    if (tt) {
+        tt.loadAdvancedModel(objUrl, textureUrl);
+    }
+};
+
+window.clear = function(){
+    if(tt){
+        tt.clear()
+    }
+}
 
 window.initThree = function (element) {
     if (tt) {

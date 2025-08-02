@@ -12,7 +12,11 @@ import org.springframework.context.ApplicationContextException;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
+import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 @Slf4j
@@ -53,7 +57,21 @@ public class TextureController {
         }
     }
 
-    public void getTexture(String textureId) {
+    public List<String> uploadTexture(Map<String, InputStream> textureInputStream, boolean isPrimary, String modelId) throws ApplicationContextException {
+        List<String> uploadedTextureIds = new ArrayList<>();
+        for (var entry : textureInputStream.entrySet()) {
+            String fileName = entry.getKey();
+            InputStream inputStream = entry.getValue();
+            InputStreamMultipartFile otherTexture = new InputStreamMultipartFile(inputStream, fileName);
+            if (!otherTexture.isEmpty()) {
+                uploadedTextureIds.add(uploadTexture(fileName, otherTexture, isPrimary, modelId));
+            }
+        }
+        return uploadedTextureIds;
+    }
+
+
+    private void getTexture(String textureId) {
         try {
             this.textureEntity = textureApiClient.getFileEntityById(textureId);
         } catch (Exception e) {
@@ -75,6 +93,12 @@ public class TextureController {
             this.getTexture(textureId);
         }
         return this.textureEntity.getName();
+    }
+    public String getTextureBase64(String textureId) throws IOException {
+        if (this.textureEntity == null || !Objects.equals(this.textureEntity.getId(), textureId)) {
+            this.getTexture(textureId);
+        }
+        return textureEntity.getBase64File();
     }
 }
 

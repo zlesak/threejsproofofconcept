@@ -48,7 +48,7 @@ public class ChapterApiClient implements IChapterApiClient {
                     ChapterEntity.class);
             return objectMapper.readValue(objectMapper.writeValueAsString(response.getBody()), ChapterEntity.class);
         }catch (HttpStatusCodeException ex) {
-            throw new ApiCallException("Chyba při nahrávání kapitoly", null, ex.getStatusCode(), ex.getResponseBodyAsString(), ex);
+            throw new ApiCallException("Chyba při nahrávání kapitoly", null, request.toString(), ex.getStatusCode(), ex.getResponseBodyAsString(), ex);
 
         } catch (Exception e) {
             throw new Exception("Neočekávaná chyba při volání API pro nahrání kapitoly: " + e.getMessage(), e);
@@ -81,7 +81,7 @@ public class ChapterApiClient implements IChapterApiClient {
             );
             return objectMapper.readValue(objectMapper.writeValueAsString(response.getBody()), ChapterEntity.class);
         } catch (HttpStatusCodeException ex) {
-            throw new ApiCallException("Chyba při získávání kapitoly dle jejího ID", chapterId, ex.getStatusCode(), ex.getResponseBodyAsString(), ex);
+            throw new ApiCallException("Chyba při získávání kapitoly dle jejího ID", chapterId, requestEntity.toString(), ex.getStatusCode(), ex.getResponseBodyAsString(), ex);
 
         } catch (Exception e) {
             throw new Exception("Neočekávaná chyba při volání API pro získání kapitoly: " + e.getMessage(), e);

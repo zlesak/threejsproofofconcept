@@ -7,8 +7,8 @@ import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.router.*;
 import cz.uhk.zlesak.threejslearningapp.controllers.ChapterController;
 import cz.uhk.zlesak.threejslearningapp.controllers.ModelController;
+import cz.uhk.zlesak.threejslearningapp.controllers.TextureController;
 import cz.uhk.zlesak.threejslearningapp.data.ViewTypeEnum;
-import cz.uhk.zlesak.threejslearningapp.models.entities.ModelEntity;
 import cz.uhk.zlesak.threejslearningapp.models.entities.quickEntities.QuickModelEntity;
 import cz.uhk.zlesak.threejslearningapp.views.listing.ChapterListView;
 import cz.uhk.zlesak.threejslearningapp.views.scaffolds.ChapterScaffold;
@@ -29,16 +29,18 @@ import org.springframework.context.annotation.Scope;
 public class ChapterView extends ChapterScaffold {
     private final ChapterController chapterController;
     private final ModelController modelController;
+    private final TextureController textureController;
 
     /**
      * ChapterView constructor - creates instance of chapter view instance that then accomplishes the goal of getting
      * and serving the user the requested chapter from proper backend API endpoint via chapterApiClient.
      */
     @Autowired
-    public ChapterView(ChapterController chapterController, ModelController modelController) {
+    public ChapterView(ChapterController chapterController, ModelController modelController, TextureController textureController) {
         super(ViewTypeEnum.VIEW);
         this.chapterController = chapterController;
         this.modelController = modelController;
+        this.textureController = textureController;
     }
 
     /**
@@ -73,9 +75,13 @@ public class ChapterView extends ChapterScaffold {
 
             QuickModelEntity quickModelEntity = chapterController.getChapterFirstQuickModelEntity();
             try {
-                ModelEntity modelFile = modelController.getModel(quickModelEntity.getModel().getId());
-                String base64Model = modelFile.getBase64File();
-                renderer.loadModel(base64Model);
+                String base64Model = modelController.getModelBase64(quickModelEntity.getModel().getId());
+                if(quickModelEntity.getMainTexture() != null) {
+                    String base64Texture = textureController.getTextureBase64(quickModelEntity.getMainTexture().getId());
+                    renderer.loadAdvancedModel(base64Model,base64Texture);
+                }else{
+                    renderer.loadModel(base64Model);
+                }
             } catch (Exception e) {
                 log.error(e.getMessage());
                 Notification.show("Nepovedlo se načíst model: " + e.getMessage(), 5000, Notification.Position.MIDDLE);

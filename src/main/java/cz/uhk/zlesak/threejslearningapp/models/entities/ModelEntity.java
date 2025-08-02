@@ -5,9 +5,6 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.SuperBuilder;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Base64;
 import java.util.List;
 
 /**
@@ -20,15 +17,4 @@ import java.util.List;
 public class ModelEntity extends Entity {
     String MainTextureEntity;
     List<String> TextureEntities;
-
-    public String getBase64File() throws IOException {
-        if (File != null) {
-            InputStream inputStream = File.getInputStream();
-            byte[] bytes = inputStream.readAllBytes();
-            inputStream.close();
-
-            return Base64.getEncoder().encodeToString(bytes);
-        }
-        return null;
-    }
 }

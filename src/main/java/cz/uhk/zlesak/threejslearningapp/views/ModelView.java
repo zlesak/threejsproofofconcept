@@ -41,9 +41,8 @@ public class ModelView extends ModelScaffold {
             event.forwardTo(ModelListView.class);
         }
 
-        ModelEntity modelFile = modelController.getModel(modelId);
         try {
-            String base64Model = modelFile.getBase64File();
+            String base64Model = modelController.getModelBase64(modelId);
             renderer.loadModel(base64Model);
         } catch (IOException e) {
             log.error(e.getMessage());

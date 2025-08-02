@@ -74,6 +74,18 @@ public class Three extends Component{
             """, "data:application/octet-stream;base64," + base64Model);
     }
 
+    public void loadAdvancedModel(String objectUrl, String textureUrl) {
+        getElement().executeJs("""
+            try {
+                if (typeof window.loadAdvancedModel === 'function') {
+                    window.loadAdvancedModel($0, $1);
+                }
+            } catch (e) {
+                console.error('[JS] Error in loadAdvancedModel:', e);
+            }
+            """, "data:application/octet-stream;base64," + objectUrl, "data:application/octet-stream;base64," + textureUrl);
+    }
+
     @ClientCallable
     public void modelLoadedEvent() {
         fireEvent(new ModelLoadedEvent(this));
@@ -81,5 +93,17 @@ public class Three extends Component{
 
     public void addModelLoadedEventListener(ComponentEventListener<ModelLoadedEvent> listener) {
         addListener(ModelLoadedEvent.class, listener);
+    }
+
+    public void clear() {
+        getElement().executeJs("""
+            try {
+                if (typeof window.clear === 'function') {
+                    window.clear();
+                }
+            } catch (e) {
+                console.error('[JS] Error in clearModel:', e);
+            }
+            """);
     }
 }

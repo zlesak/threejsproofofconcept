@@ -17,7 +17,7 @@ import java.util.List;
 @AllArgsConstructor
 @SuperBuilder
 @NoArgsConstructor
-public class ChapterEntity  extends Entity {
+public class ChapterEntity extends Entity {
     String Content;
     List<QuickModelEntity> Models;
     String Metadata;
