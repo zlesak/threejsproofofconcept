@@ -14,6 +14,7 @@ import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -34,6 +35,10 @@ public class TextureController {
     }
 
     public String uploadTexture(String textureName, InputStreamMultipartFile inputStream, boolean isPrimary, String modelId) throws ApplicationContextException {
+        return uploadTexture(textureName, inputStream, isPrimary, modelId, null);
+    }
+
+    public String uploadTexture(String textureName, InputStreamMultipartFile inputStream, boolean isPrimary, String modelId, InputStreamMultipartFile csv) throws ApplicationContextException {
 
         if (textureName.isEmpty()) {
             throw new ApplicationContextException("Název textury nesmí být prázdný.");
@@ -43,8 +48,10 @@ public class TextureController {
         }
 
         try {
+            String csvString = csv == null ? null : new String(csv.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
             TextureEntity textureEntity = TextureEntity.builder()
                     .Name(textureName)
+                    .CSV(csvString)
                     .build();
             TextureUploadEntity uploadedEntity = TextureUploadEntity.builder()
                     .targetFileId(modelId)
@@ -57,19 +64,30 @@ public class TextureController {
         }
     }
 
-    public List<String> uploadTexture(Map<String, InputStream> textureInputStream, boolean isPrimary, String modelId) throws ApplicationContextException {
+    public List<String> uploadTexture(Map<String, InputStream> textureInputStream, boolean isPrimary, String modelId, Map<String, InputStream> csvInputStream) throws ApplicationContextException {
         List<String> uploadedTextureIds = new ArrayList<>();
         for (var entry : textureInputStream.entrySet()) {
             String fileName = entry.getKey();
             InputStream inputStream = entry.getValue();
+            InputStream csvStream = null;
+            String prefix ="";
+            if (csvInputStream != null) {
+                prefix = fileName.substring(0, fileName.lastIndexOf('.'));
+                csvStream = csvInputStream.get(prefix + ".csv");
+            }
+
             InputStreamMultipartFile otherTexture = new InputStreamMultipartFile(inputStream, fileName);
             if (!otherTexture.isEmpty()) {
-                uploadedTextureIds.add(uploadTexture(fileName, otherTexture, isPrimary, modelId));
+                if (csvStream == null) {
+                    uploadedTextureIds.add(uploadTexture(fileName, otherTexture, isPrimary, modelId));
+                } else {
+                    InputStreamMultipartFile csv = new InputStreamMultipartFile(csvStream, prefix + ".csv");
+                    uploadedTextureIds.add(uploadTexture(fileName, otherTexture, isPrimary, modelId, csv));
+                }
             }
         }
         return uploadedTextureIds;
     }
-
 
     private void getTexture(String textureId) {
         try {
@@ -88,12 +106,14 @@ public class TextureController {
         InputStream textureStream = texture.getInputStream();
         return new StreamResource(texture.getName(), () -> textureStream);
     }
+
     public String getTextureName(String textureId) {
         if (this.textureEntity == null || !Objects.equals(this.textureEntity.getId(), textureId)) {
             this.getTexture(textureId);
         }
         return this.textureEntity.getName();
     }
+
     public String getTextureBase64(String textureId) throws IOException {
         if (this.textureEntity == null || !Objects.equals(this.textureEntity.getId(), textureId)) {
             this.getTexture(textureId);

@@ -61,16 +61,21 @@ public class ModelController {
         }
     }
 
-    public QuickModelEntity uploadModel(String modelName, Map<String, InputStream> modelInputStream, Map<String, InputStream> mainTextureInputStream, Map<String, InputStream> otherTexturesInputStreamList) throws ApplicationContextException {
+    public QuickModelEntity uploadModel(String modelName, Map<String, InputStream> modelInputStream, Map<String, InputStream> mainTextureInputStream, Map<String, InputStream> otherTexturesInputStreamList, Map<String, InputStream> csvInputStreamList) throws ApplicationContextException {
 
-        //TODO checks
         QuickModelEntity uploadedModel = uploadModel(modelName, modelInputStream);
-
+        if (modelName.isEmpty()) {
+            throw new ApplicationContextException("Název modelu nesmí být prázdný.");
+        }
+        if (modelInputStream.isEmpty()) {
+            throw new ApplicationContextException("Soubor pro nahrání modelu nesmí být prázdný.");
+        }
         if (mainTextureInputStream.isEmpty()) {
             throw new ApplicationContextException("Hlavní textura nesmí být prázdná.");
         }
+
         try {
-            List<String> mainTextureUploadedList = textureController.uploadTexture(mainTextureInputStream, true, uploadedModel.getModel().getId());
+            List<String> mainTextureUploadedList = textureController.uploadTexture(mainTextureInputStream, true, uploadedModel.getModel().getId(), null);
             if (!mainTextureUploadedList.isEmpty()) {
                 QuickFileEntity mainTextureQuickFileEntity = QuickFileEntity.builder().id(mainTextureUploadedList.getFirst()).name(mainTextureInputStream.entrySet().iterator().next().getKey()).build();
                 uploadedModel.setMainTexture(mainTextureQuickFileEntity);
@@ -79,12 +84,14 @@ public class ModelController {
             log.error("Chyba při nahrávání hlavní textury: {}", e.getMessage(), e);
             throw new RuntimeException("Chyba při nahrávání hlavní textury: " + e.getMessage(), e);
         }
+
         try {
-            textureController.uploadTexture(otherTexturesInputStreamList, true, uploadedModel.getModel().getId());
+            textureController.uploadTexture(otherTexturesInputStreamList, true, uploadedModel.getModel().getId(), csvInputStreamList);
         } catch (Exception e) {
             log.error("Chyba při nahrávání vedlejších textur: {}", e.getMessage(), e);
             throw new RuntimeException("Chyba při nahrávání vedlejších textur: " + e.getMessage(), e);
         }
+
 
         return uploadedModel;
     }

@@ -21,6 +21,7 @@ import org.springframework.context.annotation.Scope;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Base64;
 
 @Slf4j
 @Scope("prototype")
@@ -37,15 +38,18 @@ public abstract class ModelScaffold extends Composite<VerticalLayout> implements
     @Getter
     protected final UploadComponent otherTexturesUploadComponent = new UploadComponent(new MultiFileMemoryBuffer(), List.of(".jpg"), false);
     @Getter
+    protected final UploadComponent csvUploadComponent = new UploadComponent(new MultiFileMemoryBuffer(), List.of(".csv"), false);
+    @Getter
     protected final TextField modelName;
     @Getter
     protected final VerticalLayout modelProperties;
 
     private final Div uploadOtherTexturesDiv;
-    private Div uploadModelDiv, uploadMainTextureDiv;
+    private Div uploadModelDiv, uploadMainTextureDiv, csvOtherTexturesDiv;
     protected String base64Model = null;
     protected String base64Texture = null;
     protected List<String> otherBase64Texture = new ArrayList<>();
+    protected List<String> csvBase64 = new ArrayList<>();
 
     public ModelScaffold(ViewTypeEnum viewTypeEnum) {
         HorizontalLayout modelPageLayout = new HorizontalLayout();
@@ -68,8 +72,9 @@ public abstract class ModelScaffold extends Composite<VerticalLayout> implements
         uploadModelDiv = new UploadLabelDiv(objUploadComponent, "Nahrát model");
         uploadMainTextureDiv = new UploadLabelDiv(mainTextureUploadComponent, "Hlavní textura");
         uploadOtherTexturesDiv = new UploadLabelDiv(otherTexturesUploadComponent, "Další textury");
+        csvOtherTexturesDiv = new UploadLabelDiv(csvUploadComponent, "CSV soubor s popisem textur");
 
-        modelProperties.add(modelName, isAdvanced, uploadModelDiv, uploadMainTextureDiv, uploadOtherTexturesDiv);
+        modelProperties.add(modelName, isAdvanced, uploadModelDiv, uploadMainTextureDiv, uploadOtherTexturesDiv, csvOtherTexturesDiv);
 
         model.add(modelDiv);
 
@@ -103,7 +108,7 @@ public abstract class ModelScaffold extends Composite<VerticalLayout> implements
                 if (inputStream != null) {
                     try {
                         byte[] bytes = inputStream.readAllBytes();
-                        base64Model = java.util.Base64.getEncoder().encodeToString(bytes);
+                        base64Model = Base64.getEncoder().encodeToString(bytes);
                         renderer.loadModel(base64Model);
                     } catch (Exception ex) {
                         ex.printStackTrace();
@@ -115,7 +120,7 @@ public abstract class ModelScaffold extends Composite<VerticalLayout> implements
                 if (inputStream != null) {
                     try {
                         byte[] bytes = inputStream.readAllBytes();
-                        base64Model = java.util.Base64.getEncoder().encodeToString(bytes);
+                        base64Model = Base64.getEncoder().encodeToString(bytes);
                         if (base64Texture != null) {
                             renderer.loadAdvancedModel(base64Model, base64Texture);
                         }
@@ -138,12 +143,13 @@ public abstract class ModelScaffold extends Composite<VerticalLayout> implements
         mainTextureUploadComponent.addSucceededListener(event -> {
             isAdvanced.setReadOnly(true);
             uploadOtherTexturesDiv.setEnabled(true);
+            csvOtherTexturesDiv.setEnabled(true);
             String fileName = event.getFileName();
             InputStream inputStream = ((MultiFileMemoryBuffer) mainTextureUploadComponent.getReceiver()).getInputStream(fileName);
             if (inputStream != null) {
                 try {
                     byte[] bytes = inputStream.readAllBytes();
-                    base64Texture = java.util.Base64.getEncoder().encodeToString(bytes);
+                    base64Texture = Base64.getEncoder().encodeToString(bytes);
                     if (base64Model != null) {
                         renderer.loadAdvancedModel(base64Model, base64Texture);
                     }
@@ -154,6 +160,8 @@ public abstract class ModelScaffold extends Composite<VerticalLayout> implements
         });
         mainTextureUploadComponent.addFileRemovedListener(event -> {
             renderer.clear();
+            uploadOtherTexturesDiv.setEnabled(false);
+            csvOtherTexturesDiv.setEnabled(false);
             base64Texture = null;
         });
 
@@ -163,7 +171,7 @@ public abstract class ModelScaffold extends Composite<VerticalLayout> implements
             if (inputStream != null) {
                 try {
                     byte[] bytes = inputStream.readAllBytes();
-                    String base64 = java.util.Base64.getEncoder().encodeToString(bytes);
+                    String base64 = Base64.getEncoder().encodeToString(bytes);
                     otherBase64Texture.add(base64);
                 } catch (Exception ex) {
                     ex.printStackTrace();
@@ -176,7 +184,34 @@ public abstract class ModelScaffold extends Composite<VerticalLayout> implements
             if (inputStream != null) {
                 try {
                     byte[] bytes = inputStream.readAllBytes();
-                    String base64 = java.util.Base64.getEncoder().encodeToString(bytes);
+                    String base64 = Base64.getEncoder().encodeToString(bytes);
+                    csvBase64.remove(base64);
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+            }
+        });
+
+        csvUploadComponent.addSucceededListener(event -> {
+            String fileName = event.getFileName();
+            InputStream inputStream = ((MultiFileMemoryBuffer) otherTexturesUploadComponent.getReceiver()).getInputStream(fileName);
+            if (inputStream != null) {
+                try {
+                    byte[] bytes = inputStream.readAllBytes();
+                    String base64 = Base64.getEncoder().encodeToString(bytes);
+                    csvBase64.add(base64);
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+            }
+        });
+        csvUploadComponent.addFileRemovedListener(event -> {
+            String fileName = event.getFileName();
+            InputStream inputStream = ((MultiFileMemoryBuffer) otherTexturesUploadComponent.getReceiver()).getInputStream(fileName);
+            if (inputStream != null) {
+                try {
+                    byte[] bytes = inputStream.readAllBytes();
+                    String base64 = Base64.getEncoder().encodeToString(bytes);
                     otherBase64Texture.remove(base64);
                 } catch (Exception ex) {
                     ex.printStackTrace();
@@ -194,13 +229,16 @@ public abstract class ModelScaffold extends Composite<VerticalLayout> implements
         objUploadComponent.setAcceptedFileTypes(List.of(".obj"));
         uploadMainTextureDiv.setVisible(true);
         uploadOtherTexturesDiv.setVisible(true);
+        csvOtherTexturesDiv.setVisible(true);
         uploadOtherTexturesDiv.setEnabled(false);
+        csvOtherTexturesDiv.setEnabled(false);
     }
 
     private void hideAdvancedModelUpload() {
         objUploadComponent.setAcceptedFileTypes(List.of(".glb"));
         uploadMainTextureDiv.setVisible(false);
         uploadOtherTexturesDiv.setVisible(false);
+        csvOtherTexturesDiv.setVisible(false);
     }
 
 

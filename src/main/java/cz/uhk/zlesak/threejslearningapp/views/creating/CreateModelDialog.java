@@ -53,7 +53,8 @@ public class CreateModelDialog extends Dialog {
                         scaffold.getModelName().getValue().trim(),
                         scaffold.getObjUploadComponent().getInputStreams(),
                         scaffold.getMainTextureUploadComponent().getInputStreams(),
-                        scaffold.getOtherTexturesUploadComponent().getInputStreams()
+                        scaffold.getOtherTexturesUploadComponent().getInputStreams(),
+                        scaffold.getCsvUploadComponent().getInputStreams()
                     );
                     log.info("Model a textruy pokročilého modelu nahrány");
                     Notification.show("Model úspěšně nahrán.", 3000, Notification.Position.MIDDLE);
