@@ -1,8 +1,8 @@
 package cz.uhk.zlesak.threejslearningapp.clients.interfaces;
 
-import cz.uhk.zlesak.threejslearningapp.models.IEntity;
+import cz.uhk.zlesak.threejslearningapp.models.entities.IEntity;
 import cz.uhk.zlesak.threejslearningapp.models.entities.Entity;
-import cz.uhk.zlesak.threejslearningapp.models.InputStreamMultipartFile;
+import cz.uhk.zlesak.threejslearningapp.data.files.InputStreamMultipartFile;
 
 import java.util.List;
 

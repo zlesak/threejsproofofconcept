@@ -1,6 +1,5 @@
 package cz.uhk.zlesak.threejslearningapp.models.entities;
 
-import cz.uhk.zlesak.threejslearningapp.models.IEntity;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

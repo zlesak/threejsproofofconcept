@@ -1,4 +1,4 @@
-package cz.uhk.zlesak.threejslearningapp.data;
+package cz.uhk.zlesak.threejslearningapp.exceptions;
 
 import lombok.Getter;
 import org.springframework.http.HttpStatusCode;

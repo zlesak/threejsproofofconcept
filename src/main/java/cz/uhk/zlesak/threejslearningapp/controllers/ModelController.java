@@ -1,8 +1,9 @@
 package cz.uhk.zlesak.threejslearningapp.controllers;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import cz.uhk.zlesak.threejslearningapp.clients.ModelApiClient;
-import cz.uhk.zlesak.threejslearningapp.models.InputStreamMultipartFile;
+import cz.uhk.zlesak.threejslearningapp.data.files.InputStreamMultipartFile;
 import cz.uhk.zlesak.threejslearningapp.models.entities.Entity;
 import cz.uhk.zlesak.threejslearningapp.models.entities.ModelEntity;
 import cz.uhk.zlesak.threejslearningapp.models.entities.quickEntities.QuickFileEntity;
@@ -15,6 +16,7 @@ import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -61,7 +63,7 @@ public class ModelController {
         }
     }
 
-    public QuickModelEntity uploadModel(String modelName, Map<String, InputStream> modelInputStream, Map<String, InputStream> mainTextureInputStream, Map<String, InputStream> otherTexturesInputStreamList, Map<String, InputStream> csvInputStreamList) throws ApplicationContextException {
+    public QuickModelEntity uploadModel(String modelName, Map<String, InputStream> modelInputStream, Map<String, InputStream> mainTextureInputStream, Map<String, InputStream> otherTexturesInputStreamList, Map<String, InputStream> csvInputStreamList) throws ApplicationContextException, JsonProcessingException {
 
         QuickModelEntity uploadedModel = uploadModel(modelName, modelInputStream);
         if (modelName.isEmpty()) {
@@ -86,17 +88,27 @@ public class ModelController {
         }
 
         try {
-            textureController.uploadTexture(otherTexturesInputStreamList, true, uploadedModel.getModel().getId(), csvInputStreamList);
+            List<String> otherTexturesUploadedList = textureController.uploadTexture(otherTexturesInputStreamList, true, uploadedModel.getModel().getId(), csvInputStreamList);
+            if (!otherTexturesUploadedList.isEmpty()) {
+                Iterator<Map.Entry<String, InputStream>> otherTexturesInputStreamListIterator = otherTexturesInputStreamList.entrySet().iterator();
+                List<QuickFileEntity> otherTextureEntities = otherTexturesUploadedList.stream()
+                    .map(id -> QuickFileEntity.builder()
+                        .id(id)
+                        .name(otherTexturesInputStreamListIterator.next().getKey())
+                        .build())
+                    .toList();
+                uploadedModel.setOtherTextures(otherTextureEntities);
+            }
         } catch (Exception e) {
             log.error("Chyba při nahrávání vedlejších textur: {}", e.getMessage(), e);
             throw new RuntimeException("Chyba při nahrávání vedlejších textur: " + e.getMessage(), e);
         }
-
-
+        String json = new com.fasterxml.jackson.databind.ObjectMapper().writeValueAsString(uploadedModel);
+        log.info(json);
         return uploadedModel;
     }
 
-    public void getModel(String modelId) {
+    private void getModel(String modelId) {
         try {
             this.modelEntity = modelApiClient.getFileEntityById(modelId);
         } catch (Exception e) {

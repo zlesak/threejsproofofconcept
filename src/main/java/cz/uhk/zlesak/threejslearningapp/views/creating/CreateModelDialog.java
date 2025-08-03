@@ -6,7 +6,7 @@ import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.theme.lumo.Lumo;
 import cz.uhk.zlesak.threejslearningapp.controllers.ModelController;
-import cz.uhk.zlesak.threejslearningapp.data.ViewTypeEnum;
+import cz.uhk.zlesak.threejslearningapp.data.enums.ViewTypeEnum;
 import cz.uhk.zlesak.threejslearningapp.models.entities.quickEntities.QuickModelEntity;
 import cz.uhk.zlesak.threejslearningapp.views.scaffolds.ModelScaffold;
 import lombok.Getter;
@@ -33,6 +33,11 @@ public class CreateModelDialog extends Dialog {
         public void beforeEnter(com.vaadin.flow.router.BeforeEnterEvent event) {}
         @Override
         public void beforeLeave(com.vaadin.flow.router.BeforeLeaveEvent event) {}
+
+        @Override
+        public String getPageTitle() {
+            return "";
+        }
     }
 
     public interface ModelCreatedListener {

@@ -1,4 +1,4 @@
-package cz.uhk.zlesak.threejslearningapp.views;
+package cz.uhk.zlesak.threejslearningapp.views.showing;
 
 import com.vaadin.flow.component.Composite;
 import com.vaadin.flow.component.dependency.Uses;

@@ -14,9 +14,9 @@ import com.vaadin.flow.theme.lumo.LumoUtility.Gap;
 import cz.uhk.zlesak.threejslearningapp.components.ChapterSelectionCombobox;
 import cz.uhk.zlesak.threejslearningapp.components.EditorJsComponent;
 import cz.uhk.zlesak.threejslearningapp.components.NavigationContentComponent;
-import cz.uhk.zlesak.threejslearningapp.data.ViewTypeEnum;
-import cz.uhk.zlesak.threejslearningapp.threejsdraw.Three;
-import cz.uhk.zlesak.threejslearningapp.views.interfaces.IView;
+import cz.uhk.zlesak.threejslearningapp.data.enums.ViewTypeEnum;
+import cz.uhk.zlesak.threejslearningapp.components.ThreeJsComponent;
+import cz.uhk.zlesak.threejslearningapp.views.IView;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Scope;
 
@@ -33,7 +33,7 @@ public abstract class ChapterScaffold extends Composite<VerticalLayout> implemen
     protected final NavigationContentComponent navigationContentLayout = new NavigationContentComponent();
     protected final ProgressBar progressBar = new ProgressBar();
     protected final EditorJsComponent editorjs = new EditorJsComponent();
-    protected final Three renderer = new Three();
+    protected final ThreeJsComponent renderer = new ThreeJsComponent();
     protected final TextField chapterNameTextField = new TextField();
     protected final Div modelDiv = new Div(progressBar, renderer);
     protected final HorizontalLayout secondaryNavigationBar = new HorizontalLayout();

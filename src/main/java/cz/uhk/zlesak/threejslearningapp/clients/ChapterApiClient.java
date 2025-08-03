@@ -3,7 +3,7 @@ package cz.uhk.zlesak.threejslearningapp.clients;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import cz.uhk.zlesak.threejslearningapp.clients.interfaces.IApiClient;
 import cz.uhk.zlesak.threejslearningapp.clients.interfaces.IChapterApiClient;
-import cz.uhk.zlesak.threejslearningapp.data.ApiCallException;
+import cz.uhk.zlesak.threejslearningapp.exceptions.ApiCallException;
 import cz.uhk.zlesak.threejslearningapp.models.entities.ChapterEntity;
 import org.apache.commons.lang3.NotImplementedException;
 import org.springframework.beans.factory.annotation.Autowired;

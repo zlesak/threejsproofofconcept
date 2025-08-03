@@ -1,4 +1,4 @@
-package cz.uhk.zlesak.threejslearningapp.threejsdraw;
+package cz.uhk.zlesak.threejslearningapp.components;
 
 import com.vaadin.flow.component.ClientCallable;
 import com.vaadin.flow.component.Component;
@@ -14,11 +14,11 @@ import org.springframework.context.annotation.Scope;
 @NpmPackage(value = "three", version = "0.172.0")
 @Tag("canvas")
 @Scope("prototype")
-public class Three extends Component{
+public class ThreeJsComponent extends Component{
 
     private Runnable onDisposedCallback;
 
-    public Three() {
+    public ThreeJsComponent() {
         init();
     }
 
@@ -103,6 +103,39 @@ public class Three extends Component{
                 }
             } catch (e) {
                 console.error('[JS] Error in clearModel:', e);
+            }
+            """);
+    }
+    public void addOtherTexture(String base64Texture) {
+        getElement().executeJs("""
+            try {
+                if (typeof window.addOtherTexture === 'function') {
+                    window.addOtherTexture($0);
+                }
+            } catch (e) {
+                console.error('[JS] Error in addOtherTexture:', e);
+            }
+            """, "data:application/octet-stream;base64," + base64Texture);
+    }
+    public void switchOtherTexture(){
+        getElement().executeJs("""
+            try {
+                if (typeof window.switchOtherTexture === 'function') {
+                    window.switchOtherTexture();
+                }
+            } catch (e) {
+                console.error('[JS] Error in switchOtherTexture:', e);
+            }
+            """);
+    }
+    public void switchMainTexture(){
+        getElement().executeJs("""
+            try {
+                if (typeof window.switchMainTexture === 'function') {
+                    window.switchMainTexture();
+                }
+            } catch (e) {
+                console.error('[JS] Error in switchToMainTexture:', e);
             }
             """);
     }

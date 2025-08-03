@@ -1,11 +1,10 @@
-package cz.uhk.zlesak.threejslearningapp.views.interfaces;
+package cz.uhk.zlesak.threejslearningapp.views.showing;
 
 import com.vaadin.flow.component.Tag;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.router.*;
 import cz.uhk.zlesak.threejslearningapp.controllers.TextureController;
-import cz.uhk.zlesak.threejslearningapp.data.ViewTypeEnum;
-import cz.uhk.zlesak.threejslearningapp.views.MainPageView;
+import cz.uhk.zlesak.threejslearningapp.data.enums.ViewTypeEnum;
 import cz.uhk.zlesak.threejslearningapp.views.listing.ModelListView;
 import cz.uhk.zlesak.threejslearningapp.views.scaffolds.TextureScaffold;
 import lombok.extern.slf4j.Slf4j;
@@ -13,7 +12,6 @@ import org.springframework.context.annotation.Scope;
 
 
 @Slf4j
-@PageTitle("Zobrazit texturu")
 @Route("texture/:textureId?")
 @Tag("view-texture")
 @Scope("prototype")
@@ -48,5 +46,10 @@ public class TextureView extends TextureScaffold {
     @Override
     public void beforeLeave(BeforeLeaveEvent event) {
 
+    }
+
+    @Override
+    public String getPageTitle() {
+        return "";
     }
 }

@@ -7,8 +7,8 @@ import com.vaadin.flow.component.upload.receivers.MultiFileMemoryBuffer;
 import com.vaadin.flow.router.*;
 import cz.uhk.zlesak.threejslearningapp.components.UploadComponent;
 import cz.uhk.zlesak.threejslearningapp.controllers.TextureController;
-import cz.uhk.zlesak.threejslearningapp.data.ViewTypeEnum;
-import cz.uhk.zlesak.threejslearningapp.models.InputStreamMultipartFile;
+import cz.uhk.zlesak.threejslearningapp.data.enums.ViewTypeEnum;
+import cz.uhk.zlesak.threejslearningapp.data.files.InputStreamMultipartFile;
 import cz.uhk.zlesak.threejslearningapp.views.scaffolds.TextureScaffold;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,7 +19,6 @@ import org.vaadin.lineawesome.LineAwesomeIconUrl;
 import java.util.List;
 
 @Slf4j
-@PageTitle("Nahrát texturu")
 @Route("createTexture")
 @Menu(order = 3, icon = LineAwesomeIconUrl.IMAGE_SOLID)
 @Tag("create-texture")
@@ -59,5 +58,10 @@ public class CreateTextureView extends TextureScaffold {
     @Override
     public void beforeLeave(BeforeLeaveEvent event) {
 
+    }
+
+    @Override
+    public String getPageTitle() {
+        return "";
     }
 }

@@ -6,10 +6,9 @@ import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.router.BeforeEnterEvent;
 import com.vaadin.flow.router.BeforeLeaveEvent;
-import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import cz.uhk.zlesak.threejslearningapp.controllers.ModelController;
-import cz.uhk.zlesak.threejslearningapp.data.ViewTypeEnum;
+import cz.uhk.zlesak.threejslearningapp.data.enums.ViewTypeEnum;
 import cz.uhk.zlesak.threejslearningapp.models.entities.quickEntities.QuickModelEntity;
 import cz.uhk.zlesak.threejslearningapp.views.scaffolds.ModelScaffold;
 import lombok.extern.slf4j.Slf4j;
@@ -17,7 +16,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 
 @Slf4j
-@PageTitle("Nahrát 3D model")
 @Route("createModel")
 @Tag("create-model")
 @Scope("prototype")
@@ -56,5 +54,10 @@ public class CreateModelView extends ModelScaffold {
     @Override
     public void beforeLeave(BeforeLeaveEvent event) {
 
+    }
+
+    @Override
+    public String getPageTitle() {
+        return "";
     }
 }

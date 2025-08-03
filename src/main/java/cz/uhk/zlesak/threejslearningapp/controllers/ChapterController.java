@@ -1,7 +1,7 @@
 package cz.uhk.zlesak.threejslearningapp.controllers;
 
 import cz.uhk.zlesak.threejslearningapp.clients.ChapterApiClient;
-import cz.uhk.zlesak.threejslearningapp.models.SubChapterForComboBox;
+import cz.uhk.zlesak.threejslearningapp.models.records.SubChapterForComboBoxRecord;
 import cz.uhk.zlesak.threejslearningapp.models.entities.ChapterEntity;
 import cz.uhk.zlesak.threejslearningapp.models.entities.quickEntities.QuickModelEntity;
 import elemental.json.Json;
@@ -16,6 +16,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @Slf4j
 @Component
@@ -62,7 +63,10 @@ public class ChapterController {
         }
     }
 
-    public String getChapterName() {
+    public String getChapterName(String chapterId) throws Exception {
+        if(chapterEntity == null || !Objects.equals(chapterEntity.getId(), chapterId)) {
+            getChapter(chapterId);
+        }
         return chapterEntity.getName();
     }
 
@@ -70,18 +74,18 @@ public class ChapterController {
         return chapterEntity.getContent();
     }
 
-    public List<SubChapterForComboBox> getSubChaptersNames() {
-        List<SubChapterForComboBox> subChapters = new ArrayList<>();
+    public List<SubChapterForComboBoxRecord> getSubChaptersNames() {
+        List<SubChapterForComboBoxRecord> subChapters = new ArrayList<>();
         try {
             JsonArray blocks = Json.parse(chapterEntity.getContent()).getArray("blocks");
 
-            subChapters.add(new SubChapterForComboBox("", "Vyberte podkapitolu"));
+            subChapters.add(new SubChapterForComboBoxRecord("", "Vyberte podkapitolu"));
             for (int i = 0; i < blocks.length(); i++) {
                 JsonObject block = blocks.getObject(i);
                 if ("header".equals(block.getString("type")) && block.getObject("data").getNumber("level") == 1) {
                     String id = block.hasKey("id") ? block.getString("id") : "fallback-" + java.util.UUID.randomUUID().toString().substring(0, 7);
                     String text = block.getObject("data").getString("text");
-                    subChapters.add(new SubChapterForComboBox(id, text));
+                    subChapters.add(new SubChapterForComboBoxRecord(id, text));
                 }
             }
             return subChapters;
@@ -216,7 +220,10 @@ public class ChapterController {
         }
     }
 
-    public QuickModelEntity getChapterFirstQuickModelEntity() throws Exception {
+    public QuickModelEntity getChapterFirstQuickModelEntity(String chapterId) throws Exception {
+        if(chapterEntity == null || !Objects.equals(chapterEntity.getId(), chapterId)) {
+            getChapter(chapterId);
+        }
         try {
             return chapterEntity.getModels().getFirst();
         } catch (Exception e) {

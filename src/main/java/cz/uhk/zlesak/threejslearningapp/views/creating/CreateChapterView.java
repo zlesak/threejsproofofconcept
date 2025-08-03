@@ -11,10 +11,8 @@ import com.vaadin.flow.router.*;
 import cz.uhk.zlesak.threejslearningapp.controllers.ChapterController;
 import cz.uhk.zlesak.threejslearningapp.controllers.ModelController;
 import cz.uhk.zlesak.threejslearningapp.controllers.TextureController;
-import cz.uhk.zlesak.threejslearningapp.data.ViewTypeEnum;
+import cz.uhk.zlesak.threejslearningapp.data.enums.ViewTypeEnum;
 import cz.uhk.zlesak.threejslearningapp.models.entities.ChapterEntity;
-import cz.uhk.zlesak.threejslearningapp.models.entities.ModelEntity;
-import cz.uhk.zlesak.threejslearningapp.models.entities.TextureEntity;
 import cz.uhk.zlesak.threejslearningapp.views.scaffolds.ChapterScaffold;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,7 +21,6 @@ import org.springframework.context.annotation.Scope;
 import org.vaadin.lineawesome.LineAwesomeIconUrl;
 
 @Slf4j
-@PageTitle("Vytvořit kapitolu")
 @Route("createChapter")
 @Menu(order = 1, icon = LineAwesomeIconUrl.BOOK_OPEN_SOLID)
 @Tag("create-chapter")
@@ -51,11 +48,11 @@ public class CreateChapterView extends ChapterScaffold {
             createModelButton.setEnabled(false);
 
             String base64ModelFile = modelController.getModelBase64(entity.getModel().getId());
-            if(dialog.isAdvanced()) {
+            if (dialog.isAdvanced()) {
                 String textureFileEntity = textureController.getTextureBase64(entity.getMainTexture().getId());
                 renderer.loadAdvancedModel(base64ModelFile, textureFileEntity);
                 log.info("Pokročilý model s texturou byl načten.");
-            }else{
+            } else {
                 renderer.loadModel(base64ModelFile);
                 log.info("Jednoduchý model byl načten.");
             }
@@ -95,5 +92,10 @@ public class CreateChapterView extends ChapterScaffold {
     @Override
     public void beforeLeave(BeforeLeaveEvent event) {
 
+    }
+
+    @Override
+    public String getPageTitle() {
+        return "";
     }
 }

@@ -1,4 +1,4 @@
-package cz.uhk.zlesak.threejslearningapp.views;
+package cz.uhk.zlesak.threejslearningapp.views.scaffolds;
 
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.UI;
@@ -20,6 +20,7 @@ import cz.uhk.zlesak.threejslearningapp.components.AvatarItemComponent;
 import cz.uhk.zlesak.threejslearningapp.views.creating.CreateChapterView;
 import cz.uhk.zlesak.threejslearningapp.views.creating.CreateModelView;
 import cz.uhk.zlesak.threejslearningapp.views.creating.CreateTextureView;
+import cz.uhk.zlesak.threejslearningapp.views.showing.MainPageView;
 import org.springframework.context.annotation.Scope;
 import org.vaadin.lineawesome.LineAwesomeIcon;
 

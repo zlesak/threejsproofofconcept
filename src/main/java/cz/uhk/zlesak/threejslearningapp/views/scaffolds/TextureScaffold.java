@@ -7,8 +7,8 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.theme.lumo.LumoUtility;
-import cz.uhk.zlesak.threejslearningapp.data.ViewTypeEnum;
-import cz.uhk.zlesak.threejslearningapp.views.interfaces.IView;
+import cz.uhk.zlesak.threejslearningapp.data.enums.ViewTypeEnum;
+import cz.uhk.zlesak.threejslearningapp.views.IView;
 import org.springframework.context.annotation.Scope;
 
 @Scope("prototype")

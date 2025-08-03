@@ -3,7 +3,7 @@ package cz.uhk.zlesak.threejslearningapp.controllers;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.vaadin.flow.server.StreamResource;
 import cz.uhk.zlesak.threejslearningapp.clients.TextureApiClient;
-import cz.uhk.zlesak.threejslearningapp.models.InputStreamMultipartFile;
+import cz.uhk.zlesak.threejslearningapp.data.files.InputStreamMultipartFile;
 import cz.uhk.zlesak.threejslearningapp.models.entities.TextureEntity;
 import cz.uhk.zlesak.threejslearningapp.models.entities.TextureUploadEntity;
 import lombok.extern.slf4j.Slf4j;

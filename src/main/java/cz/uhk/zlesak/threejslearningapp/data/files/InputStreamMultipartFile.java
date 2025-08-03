@@ -1,4 +1,4 @@
-package cz.uhk.zlesak.threejslearningapp.models;
+package cz.uhk.zlesak.threejslearningapp.data.files;
 
 import lombok.SneakyThrows;
 import org.jetbrains.annotations.NotNull;

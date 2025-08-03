@@ -8,25 +8,26 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.progressbar.ProgressBar;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.component.upload.receivers.MultiFileMemoryBuffer;
+import com.vaadin.flow.i18n.I18NProvider;
 import com.vaadin.flow.theme.lumo.LumoUtility;
 import cz.uhk.zlesak.threejslearningapp.components.UploadComponent;
 import cz.uhk.zlesak.threejslearningapp.components.UploadLabelDiv;
-import cz.uhk.zlesak.threejslearningapp.data.ViewTypeEnum;
-import cz.uhk.zlesak.threejslearningapp.threejsdraw.Three;
-import cz.uhk.zlesak.threejslearningapp.views.interfaces.IView;
+import cz.uhk.zlesak.threejslearningapp.data.enums.ViewTypeEnum;
+import cz.uhk.zlesak.threejslearningapp.components.ThreeJsComponent;
+import cz.uhk.zlesak.threejslearningapp.views.IView;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Scope;
 
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Base64;
+import java.util.List;
 
 @Slf4j
 @Scope("prototype")
 public abstract class ModelScaffold extends Composite<VerticalLayout> implements IView {
-    protected final Three renderer = new Three();
+    protected final ThreeJsComponent renderer = new ThreeJsComponent();
     protected final ProgressBar progressBar = new ProgressBar();
     protected final Div modelDiv = new Div(progressBar, renderer);
     @Getter
@@ -50,6 +51,7 @@ public abstract class ModelScaffold extends Composite<VerticalLayout> implements
     protected String base64Texture = null;
     protected List<String> otherBase64Texture = new ArrayList<>();
     protected List<String> csvBase64 = new ArrayList<>();
+    protected I18NProvider i18nProvider;
 
     public ModelScaffold(ViewTypeEnum viewTypeEnum) {
         HorizontalLayout modelPageLayout = new HorizontalLayout();
