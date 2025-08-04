@@ -5,7 +5,10 @@ import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.dependency.JavaScript;
 import com.vaadin.flow.component.notification.Notification;
-import com.vaadin.flow.router.*;
+import com.vaadin.flow.router.BeforeEnterEvent;
+import com.vaadin.flow.router.BeforeLeaveEvent;
+import com.vaadin.flow.router.Route;
+import com.vaadin.flow.router.RouteParameters;
 import cz.uhk.zlesak.threejslearningapp.controllers.ChapterController;
 import cz.uhk.zlesak.threejslearningapp.controllers.ModelController;
 import cz.uhk.zlesak.threejslearningapp.controllers.TextureController;
@@ -66,6 +69,11 @@ public class ChapterView extends ChapterScaffold {
             log.error("Nelze načíst kapitolu bez ID");
             UI.getCurrent().navigate(ChapterListView.class);
         }
+        //TODO remove after proper logic and layout implemented after DOD
+        Button applyMaskToMainTextureButton = new Button("Aplikovat maskování hlavní textury #0000fe", addClickListener -> {
+            renderer.applyMaskToMainTexture("#0000fe");
+        });
+
 
         Button switchToMainTexture = new Button("Přepnout na hlavní texturu", addClickListener -> renderer.switchMainTexture());
 
@@ -86,8 +94,8 @@ public class ChapterView extends ChapterScaffold {
 
             QuickModelEntity quickModelEntity = chapterController.getChapterFirstQuickModelEntity(chapterId);
 
-String json = new com.fasterxml.jackson.databind.ObjectMapper().writeValueAsString(quickModelEntity);
-log.info(json);
+            String json = new com.fasterxml.jackson.databind.ObjectMapper().writeValueAsString(quickModelEntity);
+            log.info(json);
 
             try {
                 String base64Model = modelController.getModelBase64(quickModelEntity.getModel().getId());
@@ -123,7 +131,7 @@ log.info(json);
                 }
             });
 
-            modelDiv.add(switchTextureButton, switchToMainTexture);
+            modelDiv.add(switchTextureButton, switchToMainTexture, applyMaskToMainTextureButton); //TODO change beeter layout for all the needed action buttons
 
         } catch (Exception e) {
             Notification.show("Chyba při načítání kapitoly: " + e.getMessage(), 5000, Notification.Position.MIDDLE);

@@ -8,8 +8,10 @@ import com.vaadin.flow.component.dependency.NpmPackage;
 import com.vaadin.flow.function.SerializableRunnable;
 import cz.uhk.zlesak.threejslearningapp.events.ModelLoadedEvent;
 import com.vaadin.flow.component.ComponentEventListener;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Scope;
 
+@Slf4j
 @JsModule("./js/three-javascript.js")
 @NpmPackage(value = "three", version = "0.172.0")
 @Tag("canvas")
@@ -138,5 +140,22 @@ public class ThreeJsComponent extends Component{
                 console.error('[JS] Error in switchToMainTexture:', e);
             }
             """);
+    }
+
+    public void applyMaskToMainTexture(String maskColor){
+        getElement().executeJs("""
+            try {
+                if (typeof window.applyMaskToMainTexture === 'function') {
+                    window.applyMaskToMainTexture($0);//TODO CHANGE AFTER PROPER DEBUG DONE AND DOD accomplished
+                }
+            } catch (e) {
+                console.error('[JS] Error in applyMaskToMainTexture:', e);
+            }
+            """, maskColor);
+    }
+
+    @ClientCallable
+    public void onColorPicked(String hexColor) { //TODO implement proper functionality based on chosen logic of transefiring color to the JAVA side
+        log.info("Vybraná barva: " + hexColor);
     }
 }

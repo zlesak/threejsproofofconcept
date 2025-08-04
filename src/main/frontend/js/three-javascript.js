@@ -20,7 +20,6 @@ class ThreeTest {
 
   init = (element) => {
     this.element = element;
-
     // Camera
     this.camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.25, 50);
     this.camera.position.set(-1.8, 0.6, 2.7);
@@ -54,6 +53,7 @@ class ThreeTest {
     // Initial setup
     this.onWindowResize();
     this.startAnimation();
+    this.addClickListener();
   };
 
   configureControls = () => {
@@ -64,7 +64,7 @@ class ThreeTest {
     this.controls.enableZoom = true;
     this.controls.zoomToCursor = true;
     this.controls.target.set(0, 0, -0.2);
-    this.controls.autoRotateSpeed = 1.0;
+    this.controls.autoRotateSpeed = 0;
     this.controls.enableDamping = true;
     this.controls.dampingFactor = 0.2;
     this.controls.update();
@@ -127,7 +127,6 @@ class ThreeTest {
   loadModel = (modelUrl) => {
     if (!this.scene) return;
 
-    // Clean up previous model
     if (this.model) {
       this.disposeObject(this.model);
       this.scene.remove(this.model);
@@ -139,30 +138,15 @@ class ThreeTest {
       (gltf) => {
         this.model = gltf.scene;
 
-        // Center geometry if it exists
         if (this.model.children[0]?.geometry) {
           this.model.children[0].geometry.center();
         }
 
         this.scene.add(this.model);
 
-        // Center camera on model
-        const box = new THREE.Box3().setFromObject(this.model);
-        const center = box.getCenter(new THREE.Vector3());
-        const size = box.getSize(new THREE.Vector3());
-
-        this.camera.position.copy(center);
-        this.camera.position.x += size.length();
-        this.camera.position.y += size.length() * 0.5;
-        this.camera.position.z += size.length();
-        this.camera.lookAt(center);
-
-        this.controls.target.copy(center);
-        this.controls.update();
-        this.onWindowResize();
+        this.centerCameraOnModel();
 
         if (this.element && this.element.$server && typeof this.element.$server.modelLoadedEvent === 'function') {
-          // console.info('Model loaded successfully');
           this.element.$server.modelLoadedEvent();
         }
       },
@@ -173,6 +157,22 @@ class ThreeTest {
       }
     );
   };
+
+  centerCameraOnModel = () => {
+    const box = new THREE.Box3().setFromObject(this.model);
+    const center = box.getCenter(new THREE.Vector3());
+    const size = box.getSize(new THREE.Vector3());
+
+    this.camera.position.copy(center);
+    this.camera.position.x += size.length();
+    this.camera.position.y += size.length() * 0.5;
+    this.camera.position.z += size.length();
+    this.camera.lookAt(center);
+
+    this.controls.target.copy(center);
+    this.controls.update();
+    this.onWindowResize();
+  }
 
   loadAdvancedModel = (objUrl, mainTextureUrl) => {
     const textureLoader = new THREE.TextureLoader();
@@ -190,19 +190,7 @@ class ThreeTest {
       this.scene.add(this.model);
 
       // Center camera on model
-      const box = new THREE.Box3().setFromObject(this.model);
-      const center = box.getCenter(new THREE.Vector3());
-      const size = box.getSize(new THREE.Vector3());
-
-      this.camera.position.copy(center);
-      this.camera.position.x += size.length();
-      this.camera.position.y += size.length() * 0.5;
-      this.camera.position.z += size.length();
-      this.camera.lookAt(center);
-
-      this.controls.target.copy(center);
-      this.controls.update();
-      this.onWindowResize();
+      this.centerCameraOnModel();
 
       if (this.element && this.element.$server && typeof this.element.$server.modelLoadedEvent === 'function') {
         console.info('Advanced model loaded successfully');
@@ -218,9 +206,8 @@ class ThreeTest {
 
   addOtherTexture = (textureUrl) => {
     const textureLoader = new THREE.TextureLoader();
-    const newTexture = textureLoader.load(textureUrl, (texture) => {
+    textureLoader.load(textureUrl, (texture) => {
       this.otherTextures.push(texture);
-      this.switchOtherTexture(this.otherTextures.length - 1);
     }, undefined, (error) => {
       console.error('Error loading texture:', error);
     });
@@ -362,10 +349,126 @@ class ThreeTest {
     }
     this.render();
   };
+
+  getTextureColorAtClick = (event) => {
+    if (!this.camera || !this.scene || !this.renderer) return;
+    const rect = this.renderer.domElement.getBoundingClientRect();
+    const mouse = new THREE.Vector2();
+    mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+    mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+
+    const raycaster = new THREE.Raycaster();
+    raycaster.setFromCamera(mouse, this.camera);
+    const intersects = raycaster.intersectObjects(this.scene.children, true);
+    if (intersects.length > 0) {
+      const intersect = intersects[0];
+      const uv = intersect.uv;
+      const mesh = intersect.object;
+      const texture = mesh.material?.map;
+      if (uv && texture && texture.image) {
+        const image = texture.image;
+        const canvas = document.createElement('canvas');
+        canvas.width = image.width;
+        canvas.height = image.height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(image, 0, 0);
+        const x = Math.floor(uv.x * image.width);
+        const y = Math.floor((1 - uv.y) * image.height);
+        const pixel = ctx.getImageData(x, y, 1, 1).data;
+        const hex = '#' + ((1 << 24) | (pixel[0] << 16) | (pixel[1] << 8) | pixel[2]).toString(16).slice(1);
+
+        if (this.element && this.element.$server && typeof this.element.$server.onColorPicked === 'function') {
+          this.element.$server.onColorPicked(hex);
+        }
+      }
+    }
+    return null;
+  };
+
+  addClickListener = () => {
+    if (this.renderer && this.renderer.domElement) {
+      this.renderer.domElement.addEventListener('click', (event) => {
+        this.getTextureColorAtClick(event);
+      });
+    }
+  }
+
+  applyMaskToMainTexture(maskColor) {
+    const mainImage = this.mainTexture.image;
+    const maskImage = this.otherTextures[this.currentOtherTextureIndex].image;
+    const width = mainImage.width;
+    const height = mainImage.height;
+
+    const resultCanvas = document.createElement('canvas');
+    resultCanvas.width = width;
+    resultCanvas.height = height;
+    const ctx = resultCanvas.getContext('2d');
+
+    ctx.drawImage(mainImage, 0, 0);
+
+    const maskCanvas = document.createElement('canvas');
+    maskCanvas.width = width;
+    maskCanvas.height = height;
+    const maskCtx = maskCanvas.getContext('2d');
+    maskCtx.drawImage(maskImage, 0, 0);
+
+    const mainImageData = ctx.getImageData(0, 0, width, height);
+    const maskImageData = maskCtx.getImageData(0, 0, width, height);
+    const mainData = mainImageData.data;
+    const maskData = maskImageData.data;
+
+    const maskColorRgb = hexToRgb(maskColor);
+    console.log("Mask color RGB:", maskColorRgb);
+
+    for (let i = 0; i < width * height; i++) {
+      const maskR = maskData[i * 4];
+      const maskG = maskData[i * 4 + 1];
+      const maskB = maskData[i * 4 + 2];
+
+      if (maskR === maskColorRgb.r && maskG === maskColorRgb.g && maskB === maskColorRgb.b) {
+        mainData[i * 4] = maskColorRgb.r;
+        mainData[i * 4 + 1] = maskColorRgb.g;
+        mainData[i * 4 + 2] = maskColorRgb.b;
+        mainData[i * 4 + 3] = maskData[i * 4 + 3];
+      }
+    }
+
+    ctx.putImageData(mainImageData, 0, 0);
+
+    const resultTexture = new THREE.CanvasTexture(resultCanvas);
+    resultTexture.needsUpdate = true;
+    return resultTexture;
+  }
+}
+
+function hexToRgb(hex) {
+  hex = hex.replace('#', '');
+  if (hex.length === 3) {
+    hex = hex[0]+hex[0]+hex[1]+hex[1]+hex[2]+hex[2];
+  }
+  const num = parseInt(hex, 16);
+  return {
+    r: (num >> 16) & 255,
+    g: (num >> 8) & 255,
+    b: num & 255
+  };
 }
 
 // Global interface
 let tt = null;
+
+window.applyMaskToMainTexture = function(maskColor) {
+  if (tt && tt.mainTexture) {
+    const resultTexture = tt.applyMaskToMainTexture(maskColor);
+    tt.model.traverse((child) => {
+      if (child.isMesh) {
+        child.material.map = resultTexture;
+        child.material.needsUpdate = true;
+      }
+    });
+    tt.render();
+  }
+}
 
 window.loadModel = function(modelUrl) {
   if (tt) {
@@ -412,11 +515,13 @@ window.addOtherTexture = function(textureUrl) {
     tt.addOtherTexture(textureUrl);
   }
 };
+
 window.switchOtherTexture = function(index) {
   if (tt) {
     tt.switchOtherTexture(index);
   }
 };
+
 window.switchMainTexture = function() {
   if (tt) {
     tt.switchToMainTexture();
