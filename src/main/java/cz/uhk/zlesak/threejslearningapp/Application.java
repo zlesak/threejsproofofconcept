@@ -9,6 +9,11 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.web.client.RestTemplate;
 
+/**
+ * Main application class for the Three.js Learning App.
+ * It sets up the Spring Boot application and provides RestTemplate and I18NProvider beans.
+ * The application uses a custom theme named "threejslearningapp".
+ */
 @SpringBootApplication
 @Theme(value = "threejslearningapp")
 public class Application implements AppShellConfigurator {

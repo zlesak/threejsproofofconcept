@@ -16,6 +16,11 @@ import org.springframework.context.annotation.Scope;
 
 import java.io.IOException;
 
+/**
+ * ModelView for displaying a 3D model without the need for the sub-chapter to be present.
+ * It is accessible at the route "/model/:modelId?".
+ * The model is loaded from the backend using the ModelController.
+ */
 @Slf4j
 @Route("model/:modelId?")
 @Tag("view-model")

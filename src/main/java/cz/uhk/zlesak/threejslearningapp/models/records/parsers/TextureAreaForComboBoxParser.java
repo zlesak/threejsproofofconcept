@@ -3,7 +3,7 @@ package cz.uhk.zlesak.threejslearningapp.models.records.parsers;
 import cz.uhk.zlesak.threejslearningapp.models.records.TextureAreaForComboBoxRecord;
 
 import java.util.List;
-
+//TODO WIP - wait for the BE side to provide the CSV for textures
 public abstract class TextureAreaForComboBoxParser {
 
     public static List<TextureAreaForComboBoxRecord> csvParse(String csv){

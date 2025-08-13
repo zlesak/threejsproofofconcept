@@ -10,7 +10,7 @@ import cz.uhk.zlesak.threejslearningapp.views.scaffolds.TextureScaffold;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Scope;
 
-
+//TODO: Is this still relevant, will we be wanting to see the texture for the model as is, or is it not wanted?
 @Slf4j
 @Route("texture/:textureId?")
 @Tag("view-texture")

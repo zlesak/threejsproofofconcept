@@ -5,6 +5,11 @@ import cz.uhk.zlesak.threejslearningapp.models.records.TextureListingForComboBox
 
 import java.util.List;
 
+/**
+ * TextureListingDataParser class - utility class for parsing texture data into records for combo box.
+ * This class provides a method to convert a list of QuickFileEntity objects into a list of TextureListingForComboBoxRecord objects.
+ * Used for populating combo boxes with texture listings in the application.
+ */
 public abstract class TextureListingDataParser
 {
     public static List<TextureListingForComboBoxRecord> textureListingForComboBoxDataParser(List<QuickFileEntity> textures) {

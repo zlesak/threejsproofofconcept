@@ -8,17 +8,19 @@ import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
-import com.vaadin.flow.router.Menu;
-import com.vaadin.flow.router.PageTitle;
-import com.vaadin.flow.router.Route;
+import com.vaadin.flow.router.*;
+import cz.uhk.zlesak.threejslearningapp.views.IView;
 import org.springframework.context.annotation.Scope;
 import org.vaadin.lineawesome.LineAwesomeIconUrl;
 
-@PageTitle("Domovská stránka")
-@Route("")
+/**
+ * Main page view of the application.
+ * This view is accessible at the root route ("/").
+ * It displays a welcome message and some introductory text.
+ */
 @Menu(order = 0, icon = LineAwesomeIconUrl.HOME_SOLID)
 @Scope("prototype")
-public class MainPageView extends Composite<VerticalLayout> {
+public class MainPageView extends Composite<VerticalLayout> implements IView {
 
     public MainPageView() {
 /// content
@@ -48,5 +50,20 @@ public class MainPageView extends Composite<VerticalLayout> {
         layoutRow.add(layoutColumn);
         layoutColumn.add(h1, hr, textSmall);
         getContent().add(layoutRow);
+    }
+
+    @Override
+    public String getPageTitle() {
+        return "Domovská stránka"; //TODO use i18n for the page title
+    }
+
+    @Override
+    public void beforeEnter(BeforeEnterEvent event) {
+
+    }
+
+    @Override
+    public void beforeLeave(BeforeLeaveEvent event) {
+
     }
 }
