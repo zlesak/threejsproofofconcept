@@ -54,7 +54,7 @@ public class TextureController {
                     .CSV(csvString)
                     .build();
             TextureUploadEntity uploadedEntity = TextureUploadEntity.builder()
-                    .targetFileId(modelId)
+                    .modelId(modelId)
                     .isPrimary(isPrimary)
                     .texture(textureEntity)
                     .build();
@@ -79,7 +79,8 @@ public class TextureController {
             InputStreamMultipartFile otherTexture = new InputStreamMultipartFile(inputStream, fileName);
             if (!otherTexture.isEmpty()) {
                 if (csvStream == null) {
-                    uploadedTextureIds.add(uploadTexture(fileName, otherTexture, isPrimary, modelId));
+                    String uploadedTextureId = uploadTexture(fileName, otherTexture, isPrimary, modelId);
+                    uploadedTextureIds.add(uploadedTextureId);
                 } else {
                     InputStreamMultipartFile csv = new InputStreamMultipartFile(csvStream, prefix + ".csv");
                     uploadedTextureIds.add(uploadTexture(fileName, otherTexture, isPrimary, modelId, csv));

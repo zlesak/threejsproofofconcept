@@ -20,12 +20,25 @@ import org.springframework.web.client.RestTemplate;
 import java.io.ByteArrayInputStream;
 import java.util.List;
 
+/**
+ * TextureApiClient provides connection to the backend service for managing textures.
+ * It implements the IFileApiClient interface and provides methods for creating, retrieving, uploading, downloading, and deleting texture entities.
+ * It uses RestTemplate for making HTTP requests to the backend service.
+ * The base URL for the API is determined by the IApiClient interface.
+ */
 @Service
 public class TextureApiClient implements IFileApiClient {
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
     private final String baseUrl;
 
+    /**
+     * Constructor for TextureApiClient.
+     * Initializes the RestTemplate and ObjectMapper, and sets the base URL for API requests.
+     *
+     * @param restTemplate the RestTemplate used for making HTTP requests
+     * @param objectMapper the ObjectMapper used for JSON serialization/deserialization
+     */
     @Autowired
     public TextureApiClient(RestTemplate restTemplate, ObjectMapper objectMapper) {
         this.objectMapper = objectMapper;
@@ -33,18 +46,30 @@ public class TextureApiClient implements IFileApiClient {
         this.baseUrl = IApiClient.getBaseUrl() + "texture/";
     }
 
+    /**
+     * This method is not implemented as the textures upload is handled by uploadFileEntity.
+     * @param entity The entity to create.
+     * @throws NotImplementedException Always thrown as this method is not implemented for textures.
+     */
     @Override
     public void createFileEntity(Entity entity) throws NotImplementedException {
         throw new NotImplementedException("Tato metoda není implementována pro textury.");
     }
 
+    /**
+     * API call function to retrieve a texture entity by its ID.
+     * This method retrieves a texture file from the backend service using its ID.
+     * @param fileEntityId The ID of the texture entity to retrieve.
+     * @return Returns the TextureEntity if found, otherwise throws an exception.
+     * @throws Exception Throws exception if anything goes wrong when retrieving the texture via this API call.
+     */
     @Override
     public TextureEntity getFileEntityById(String fileEntityId) throws Exception {
         String url = baseUrl + "download/" + fileEntityId;
         try {
             ResponseEntity<byte[]> response = restTemplate.exchange(
                     url,
-                    HttpMethod.POST,
+                    HttpMethod.GET,
                     null,
                     byte[].class
             );
@@ -67,11 +92,24 @@ public class TextureApiClient implements IFileApiClient {
         }
     }
 
+    /**
+     * This method is not implemented as the textures are not retrieved by author but the model that they belong to.
+     * @param authorId The ID of the author.
+     * @throws NotImplementedException Always thrown as this method is not implemented for textures.
+     */
     @Override
     public List<Entity> getFileEntitiesByAuthor(String authorId) throws NotImplementedException {
         throw new NotImplementedException("Tato metoda není implementována pro textury.");
     }
 
+    /**
+     * API call function to upload a texture file along with its metadata.
+     * This method uploads a texture file and its associated metadata to the backend.
+     * @param inputStreamMultipartFile The InputStreamMultipartFile containing the texture file.
+     * @param textureEntity The IEntity containing metadata for the texture.
+     * @return Returns ID of uploaded texture proving its successful upload.
+     * @throws Exception Throws exception if anything goes wrong when uploading the texture via this API call.
+     */
     @Override
     public String uploadFileEntity(InputStreamMultipartFile inputStreamMultipartFile, IEntity textureEntity) throws Exception {
         String url = baseUrl + "upload";
@@ -102,13 +140,20 @@ public class TextureApiClient implements IFileApiClient {
         }
     }
 
+    /**
+     * API call function to download a texture file by its ID.
+     * This method retrieves a texture file from the backend service using its ID.
+     * @param fileEntityId The ID of the texture entity to download.
+     * @return Returns the TextureEntity containing the downloaded file and its metadata.
+     * @throws Exception Throws exception if anything goes wrong when downloading the texture via this API call.
+     */
     @Override
     public Entity downloadFileEntityById(String fileEntityId) throws Exception {
         String url = baseUrl + "download/" + fileEntityId;
         try {
             ResponseEntity<byte[]> response = restTemplate.exchange(
                     url,
-                    HttpMethod.POST,
+                    HttpMethod.GET,
                     null,
                     byte[].class
             );
@@ -128,6 +173,11 @@ public class TextureApiClient implements IFileApiClient {
         }
     }
 
+    /**
+     * This method is not implemented at this moment as the textures should be deleted on BE side after their aro no longer associated with any model.
+     * @param modelId The ID of the model.
+     * @throws NotImplementedException Always thrown as this method is not implemented for textures.
+     */
     @Override
     public void deleteFileEntity(String modelId) throws NotImplementedException {
         throw new NotImplementedException("Tato metoda není implementována pro textury.");

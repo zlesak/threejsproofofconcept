@@ -17,6 +17,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.BiConsumer;
 
+/**
+ * Custom upload component that allows multiple file uploads with a memory buffer.
+ * It provides listeners for file upload success, removal, and rejection.
+ * It also supports setting accepted file types and a maximum file size.
+ */
 @Getter
 @Scope("prototype")
 public class UploadComponent extends Upload {
@@ -25,6 +30,13 @@ public class UploadComponent extends Upload {
     @Setter
     private BiConsumer<String, InputStream> uploadListener;
 
+    /**
+     * Constructor for UploadComponent.
+     *
+     * @param buffer              The memory buffer to store uploaded files.
+     * @param acceptedFileTypes   List of accepted file types for upload.
+     * @param maxOneFile          If true, restricts the upload to a maximum of one file.
+     */
     public UploadComponent(MultiFileMemoryBuffer buffer, List<String> acceptedFileTypes, boolean maxOneFile) {
         super(buffer);
         if (maxOneFile) {
@@ -68,11 +80,19 @@ public class UploadComponent extends Upload {
         setDropLabel(new Span("Přetáhněte soubor sem nebo klikněte na Nahrát soubor"));
     }
 
+    /**
+     * Clears the list of uploaded files and input streams that it has saved in operation.
+     */
     public void clear() {
         clearFileList();
         inputStreams.clear();
     }
 
+    /**
+     * Sets the accepted file types for the upload component.
+     *
+     * @param acceptedFileTypes Array of accepted file types.
+     */
     public void setAcceptedFileTypes(List<String> acceptedFileTypes) {
         setAcceptedFileTypes(acceptedFileTypes.toArray(new String[0]));
         Button uploadButton = (Button) getUploadButton();

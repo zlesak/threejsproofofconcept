@@ -8,8 +8,7 @@ import lombok.Data;
 @AllArgsConstructor
 @Builder
 public class TextureUploadEntity implements IEntity {
-    String targetFileId;
+    String modelId;
     Boolean isPrimary;
     TextureEntity texture;
-
 }

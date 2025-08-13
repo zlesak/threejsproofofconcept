@@ -3,7 +3,6 @@ package cz.uhk.zlesak.threejslearningapp.views.scaffolds;
 import com.vaadin.flow.component.Composite;
 import com.vaadin.flow.component.Tag;
 import com.vaadin.flow.component.dependency.JavaScript;
-import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.Scroller;
@@ -11,11 +10,9 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.progressbar.ProgressBar;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.theme.lumo.LumoUtility.Gap;
-import cz.uhk.zlesak.threejslearningapp.components.ChapterSelectionCombobox;
-import cz.uhk.zlesak.threejslearningapp.components.EditorJsComponent;
-import cz.uhk.zlesak.threejslearningapp.components.NavigationContentComponent;
+import cz.uhk.zlesak.threejslearningapp.components.*;
+import cz.uhk.zlesak.threejslearningapp.components.ComboBoxes.ChapterSelectionComboBox;
 import cz.uhk.zlesak.threejslearningapp.data.enums.ViewTypeEnum;
-import cz.uhk.zlesak.threejslearningapp.components.ThreeJsComponent;
 import cz.uhk.zlesak.threejslearningapp.views.IView;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Scope;
@@ -29,13 +26,13 @@ import org.springframework.context.annotation.Scope;
 @Scope("prototype")
 public abstract class ChapterScaffold extends Composite<VerticalLayout> implements IView {
     protected final TextField searchInChapterTextField = new TextField();
-    protected final ChapterSelectionCombobox chapterSelectionComboBox = new ChapterSelectionCombobox();
+    protected final ChapterSelectionComboBox chapterSelectionComboBox = new ChapterSelectionComboBox();
     protected final NavigationContentComponent navigationContentLayout = new NavigationContentComponent();
     protected final ProgressBar progressBar = new ProgressBar();
     protected final EditorJsComponent editorjs = new EditorJsComponent();
     protected final ThreeJsComponent renderer = new ThreeJsComponent();
     protected final TextField chapterNameTextField = new TextField();
-    protected final Div modelDiv = new Div(progressBar, renderer);
+    protected final ModelDiv modelDiv = new ModelDiv(progressBar, renderer);
     protected final HorizontalLayout secondaryNavigationBar = new HorizontalLayout();
 
     protected final VerticalLayout chapterContent = new VerticalLayout();
@@ -74,8 +71,6 @@ public abstract class ChapterScaffold extends Composite<VerticalLayout> implemen
         }
 
 //nastavení samostatných elementů
-        //Nastavení divId, DŮLEŽITÉ PRO THREEJS
-        modelDiv.setId("modelDiv");
 
         chapterNameTextField.setMaxLength(255);
         chapterNameTextField.setRequired(true);
@@ -124,8 +119,6 @@ public abstract class ChapterScaffold extends Composite<VerticalLayout> implemen
         navigationContentLayout.setSpacing(false);
         navigationContentLayout.getThemeList().add("spacing-s");
 
-        modelDiv.setWidthFull();
-        modelDiv.setHeightFull();
         renderer.getStyle().set("width", "100%");
         searchInChapterTextField.setPlaceholder("Vyhledat v textu kapitoly (NEIMPLEMENTOVÁNO)");
         searchInChapterTextField.setMinWidth("450px");

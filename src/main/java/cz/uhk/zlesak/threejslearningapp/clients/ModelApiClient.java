@@ -20,12 +20,25 @@ import org.springframework.web.client.RestTemplate;
 import java.io.ByteArrayInputStream;
 import java.util.List;
 
+/**
+ * ModelApiClient provides connection to the backend service for managing models.
+ * It implements the IFileApiClient interface and provides methods for creating, retrieving, uploading, downloading, and deleting model entities.
+ * It uses RestTemplate for making HTTP requests to the backend service.
+ * The base URL for the API is determined by the IApiClient interface.
+ */
 @Service
 public class ModelApiClient implements IFileApiClient {
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
     private final String baseUrl;
 
+    /**
+     * Constructor for ModelApiClient.
+     * Initializes the RestTemplate and ObjectMapper, and sets the base URL for API requests.
+     *
+     * @param restTemplate the RestTemplate used for making HTTP requests
+     * @param objectMapper the ObjectMapper used for JSON serialization/deserialization
+     */
     @Autowired
     public ModelApiClient(RestTemplate restTemplate, ObjectMapper objectMapper) {
         this.objectMapper = objectMapper;
@@ -33,18 +46,31 @@ public class ModelApiClient implements IFileApiClient {
         this.baseUrl = IApiClient.getBaseUrl() + "model/";
     }
 
+    /**
+     * This method is now not implemented as the models upload is handled by uploadFileEntity.
+     * @param entity The entity to create.
+     * @throws NotImplementedException Always thrown as this method is not implemented for models.
+     */
     @Override
     public void createFileEntity(Entity entity) throws NotImplementedException {
         throw new NotImplementedException("Tato metoda není implementována pro modely.");
     }
 
+    /**
+     * API call function to retrieve a model entity by its ID.
+     * This method downloads the model file and returns a ModelEntity containing the file and its metadata.
+     * It uses the RestTemplate to make a GET request to the backend service.
+     * @param fileEntityId The ID of the model entity to retrieve.
+     * @return ModelEntity containing the file and its metadata.
+     * @throws Exception if the model is not found or there is an error during the download process.
+     */
     @Override
     public ModelEntity getFileEntityById(String fileEntityId) throws Exception {
         String url = baseUrl + "download/" + fileEntityId;
         try {
             ResponseEntity<byte[]> response = restTemplate.exchange(
                     url,
-                    HttpMethod.POST,
+                    HttpMethod.GET,
                     null,
                     byte[].class
             );
@@ -69,11 +95,27 @@ public class ModelApiClient implements IFileApiClient {
         }
     }
 
+    /**
+     * This method is not implemented as of this moment.
+     * @param authorId ID of the author whose file entities are to be retrieved.
+     * @return List of Entity objects representing the file entities authored by the specified author.
+     * @throws NotImplementedException as of now
+     */
     @Override
     public List<Entity> getFileEntitiesByAuthor(String authorId) throws NotImplementedException {
         throw new NotImplementedException("Tato metoda není implementována pro modely.");
     }
 
+    /**
+     * API call function to upload a file entity.
+     * This method uploads a file to the backend service and associates it with a file entity.
+     * It uses the RestTemplate to make a POST request with multipart/form-data content type.
+     * The file is sent as a resource, and the metadata of the file entity is sent as a JSON part.
+     * @param inputStreamMultipartFile the file to be uploaded, wrapped in an InputStreamMultipartFile
+     * @param fileEntity the file entity containing metadata about the file
+     * @return the ID of the uploaded file entity as a String, proving the correct upload
+     * @throws Exception if there is an error during the upload process or if the response is not successful.
+     */
     @Override
     public String uploadFileEntity(InputStreamMultipartFile inputStreamMultipartFile, IEntity fileEntity) throws Exception {
         String url = baseUrl + "upload";
@@ -108,13 +150,21 @@ public class ModelApiClient implements IFileApiClient {
         }
     }
 
+    /**
+     * API call function to download a file entity by its ID.
+     * This method retrieves the file associated with the given file entity ID and returns it as an Entity object.
+     * It uses the RestTemplate to make a GET request to the backend service.
+     * @param fileEntityId The ID of the file entity to download.
+     * @return Entity containing the file and its metadata.
+     * @throws Exception if the file is not found or there is an error during the download process.
+     */
     @Override
     public Entity downloadFileEntityById(String fileEntityId) throws Exception {
         String url = baseUrl + "download/" + fileEntityId;
         try {
             ResponseEntity<byte[]> response = restTemplate.exchange(
                     url,
-                    HttpMethod.POST,
+                    HttpMethod.GET,
                     null,
                     byte[].class
             );
@@ -134,6 +184,11 @@ public class ModelApiClient implements IFileApiClient {
         }
     }
 
+    /**
+     * This method is not implemented as of this moment.
+     * @param modelId ID of the model to be deleted.
+     * @throws NotImplementedException as of now
+     */
     @Override
     public void deleteFileEntity(String modelId) throws NotImplementedException {
         throw new NotImplementedException("Metoda deleteFileEntity není implementována pro ModelApiClient.");

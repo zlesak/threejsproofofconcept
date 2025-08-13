@@ -20,17 +20,29 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Controller for managing 3D models, including uploading and retrieving model files and textures.
+ * This class handles the interaction with the model API client to upload models and textures,
+ * and provides methods to retrieve model files, names, and base64 representations.
+ * It also integrates with the TextureController to manage textures associated with the models as the textures are an integral part of the model data.
+ * @see TextureController
+ */
 @Slf4j
 @Component
 @Scope("prototype")
 public class ModelController {
-    @Autowired
     private final TextureController textureController;
-
     private final ModelApiClient modelApiClient;
     private final ObjectMapper objectMapper;
     private ModelEntity modelEntity = null;
 
+    /**
+     * Constructor for ModelController.
+     * Initializes controller with dependencies for texture management, model API client, and JSON processing.
+     * @param textureController the controller for managing textures associated with models.
+     * @param modelApiClient the API client for interacting with model-related endpoints.
+     * @param objectMapper the ObjectMapper for JSON serialization and deserialization.
+     */
     @Autowired
     public ModelController(TextureController textureController, ModelApiClient modelApiClient, ObjectMapper objectMapper) {
         this.textureController = textureController;
@@ -38,7 +50,16 @@ public class ModelController {
         this.objectMapper = objectMapper;
     }
 
-    public QuickModelEntity uploadModel(String modelName, Map<String, InputStream> inputStreams) throws ApplicationContextException {
+    /**
+     * Uploads a 3D model with the specified name and input streams.
+     * The method checks for valid model name and input streams, then uploads the model using the model API client.
+     * It returns a QuickModelEntity containing the uploaded model's details as a proof of successful upload.
+     * @param modelName the name of the model to be uploaded.
+     * @param inputStreams a map of input streams representing the model file to be uploaded, where the key is the file name and the value is the InputStream of the file.
+     * @return QuickModelEntity containing the details of the uploaded model.
+     * @throws RuntimeException if the model name is empty or the input streams are empty, or if an error occurs during the upload process.
+     */
+    public QuickModelEntity uploadModel(String modelName, Map<String, InputStream> inputStreams) throws RuntimeException {
 
         if (modelName.isEmpty()) {
             throw new ApplicationContextException("Název modelu nesmí být prázdný.");
@@ -63,7 +84,23 @@ public class ModelController {
         }
     }
 
-    public QuickModelEntity uploadModel(String modelName, Map<String, InputStream> modelInputStream, Map<String, InputStream> mainTextureInputStream, Map<String, InputStream> otherTexturesInputStreamList, Map<String, InputStream> csvInputStreamList) throws ApplicationContextException, JsonProcessingException {
+    /**
+     * Uploads a 3D model along with its textures and CSV files.
+     * This method handles the upload of the model file, main texture, other textures, and CSV files.
+     * It validates the inputs and uses the TextureController to manage texture uploads.
+     * If any of the required inputs are empty, it throws an ApplicationContextException.
+     * @param modelName the name of the model to be uploaded.
+     * @param modelInputStream a map of input streams representing the model file to be uploaded, where the key is the file name and the value is the InputStream of the file.
+     * @param mainTextureInputStream a map of input streams representing the main texture file to be uploaded, where the key is the file name and the value is the InputStream of the file.
+     * @param otherTexturesInputStreamList a map of input streams representing other texture files to be uploaded, where the key is the file name and the value is the InputStream of the file.
+     * @param csvInputStreamList a map of input streams representing CSV files to be uploaded, where the key is the file name and the value is the InputStream of the file.
+     * @return QuickModelEntity containing the details of the uploaded model and its textures.
+     * @throws ApplicationContextException if the model name is empty, the model input stream is empty, or the main texture input stream is empty.
+     * @throws JsonProcessingException if there is an error during JSON processing of the uploaded model entity.
+     * @throws RuntimeException if there is an error during the upload of the main texture or other textures.
+     * @see TextureController
+     */
+    public QuickModelEntity uploadModel(String modelName, Map<String, InputStream> modelInputStream, Map<String, InputStream> mainTextureInputStream, Map<String, InputStream> otherTexturesInputStreamList, Map<String, InputStream> csvInputStreamList) throws ApplicationContextException, JsonProcessingException, RuntimeException {
 
         QuickModelEntity uploadedModel = uploadModel(modelName, modelInputStream);
         if (modelName.isEmpty()) {
@@ -108,7 +145,14 @@ public class ModelController {
         return uploadedModel;
     }
 
-    private void getModel(String modelId) {
+    /**
+     * Retrieves a model entity by its ID.
+     * This method uses the model API client to fetch the model entity from the BE.
+     * @param modelId the ID of the model to be retrieved.
+     * @throws RuntimeException if there is an error during the retrieval of the model entity.
+     * @see ModelApiClient#getFileEntityById(String)
+     */
+    private void getModel(String modelId) throws RuntimeException {
         try {
             this.modelEntity = modelApiClient.getFileEntityById(modelId);
         } catch (Exception e) {
@@ -117,20 +161,14 @@ public class ModelController {
         }
     }
 
-    public InputStreamMultipartFile getModelFile(String modelId) {
-        if (this.modelEntity == null || !this.modelEntity.getId().equals(modelId)) {
-            this.getModel(modelId);
-        }
-        return this.modelEntity.getFile();
-    }
-
-    public String getModelName(String modelId) {
-        if (this.modelEntity == null || !this.modelEntity.getId().equals(modelId)) {
-            this.getModel(modelId);
-        }
-        return this.modelEntity.getName();
-    }
-
+    /**
+     * Retrieves the base64 representation of a model by its ID.
+     * The base64 format is used to transfer the model to the Three.js renderer.
+     * This method checks if the model entity is already loaded; if not, it fetches it using the getModel method.
+     * @param modelId the ID of the model for which the base64 representation is requested.
+     * @return the base64 representation of the model file as a String.
+     * @throws IOException if there is an error during the retrieval of the model entity or its base64 representation.
+     */
     public String getModelBase64(String modelId) throws IOException {
         if (this.modelEntity == null || !this.modelEntity.getId().equals(modelId)) {
             this.getModel(modelId);

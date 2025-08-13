@@ -11,10 +11,21 @@ import com.vaadin.flow.dom.DomEventListener;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Scope;
 
+/**
+ * Component for displaying navigation content based on sub-chapters.
+ * It initializes sub-chapter data and provides methods to show or hide sub-chapter navigation content.
+ * The component listens for click events on individual "catch" points that then scroll to specific sub-chapter locations.
+ */
 @Slf4j
 @Scope("prototype")
 public class NavigationContentComponent extends VerticalLayout {
 
+    /**
+     * Initializes the sub-chapter data by parsing the provided JSON content.
+     * It creates a vertical layout for each sub-chapter and adds anchors for each content block.
+     * Each anchor is set up with a click listener that scrolls to the corresponding sub-chapter location in EditorJs
+     * @param subChaptersContent The JSON content containing sub-chapter data, including headings and content blocks.
+     */
     public void initializeSubChapterData(JsonValue subChaptersContent) {
         DomEventListener scrollClickListener = event -> {
             String dataIdToScroll = event.getSource().getAttribute("data-target-id");
@@ -49,12 +60,22 @@ public class NavigationContentComponent extends VerticalLayout {
         }
     }
 
+    /**
+     * Hides the sub-chapter navigation by setting its display style to 'none'.
+     * @param subchapterId The ID of the sub-chapter element to hide.
+     */
     public void hideSubchapterNavigationContent(String subchapterId) {
         UI.getCurrent().getPage().executeJs(
                 "const el = document.getElementById($0); if (el) { el.style.display = 'none'; }",
                 subchapterId
         );
     }
+
+    /**
+     * Shows the sub-chapter navigation by setting its display style to 'block'.
+     * This method is used to make the sub-chapter navigation visible when needed.
+     * @param subchapterId The ID of the sub-chapter element to show.
+     */
     public void showSubchapterNavigationContent(String subchapterId) {
         UI.getCurrent().getPage().executeJs(
                 "const el = document.getElementById($0); if (el) { el.style.display = 'block'; }",

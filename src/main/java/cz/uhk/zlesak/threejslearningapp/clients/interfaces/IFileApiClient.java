@@ -6,6 +6,12 @@ import cz.uhk.zlesak.threejslearningapp.data.files.InputStreamMultipartFile;
 
 import java.util.List;
 
+/**
+ * Interface for file-related API client operations.
+ * This interface defines methods for creating, retrieving, uploading, downloading, and deleting file entities.
+ * Files represent both models and its textures, thus this interface is used in both model and texture api clients.
+ * It extends the IApiClient interface to be able to get the address of the backend service based on the environment.
+ */
 public interface IFileApiClient extends IApiClient {
     void createFileEntity(Entity entity) throws Exception;
     Entity getFileEntityById(String fileEntityId) throws Exception;

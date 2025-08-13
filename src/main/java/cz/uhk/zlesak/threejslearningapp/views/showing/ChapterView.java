@@ -13,12 +13,16 @@ import cz.uhk.zlesak.threejslearningapp.controllers.ChapterController;
 import cz.uhk.zlesak.threejslearningapp.controllers.ModelController;
 import cz.uhk.zlesak.threejslearningapp.controllers.TextureController;
 import cz.uhk.zlesak.threejslearningapp.data.enums.ViewTypeEnum;
+import cz.uhk.zlesak.threejslearningapp.models.entities.quickEntities.QuickFileEntity;
 import cz.uhk.zlesak.threejslearningapp.models.entities.quickEntities.QuickModelEntity;
+import cz.uhk.zlesak.threejslearningapp.models.records.parsers.TextureListingDataParser;
 import cz.uhk.zlesak.threejslearningapp.views.listing.ChapterListView;
 import cz.uhk.zlesak.threejslearningapp.views.scaffolds.ChapterScaffold;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
+
+import java.util.List;
 
 /**
  * ChapterView Class - Shows the requested chapter from URL parameter. Initializes all the necessary elements
@@ -119,9 +123,17 @@ public class ChapterView extends ChapterScaffold {
                 Notification.show("Nepovedlo se načíst model: " + e.getMessage(), 5000, Notification.Position.MIDDLE);
                 throw e;
             }
-            editorjs.setChapterContentData(chapterController.getChapterEntityContent());
-            chapterSelectionComboBox.initializeChapterSelectionComboBox(chapterController.getSubChaptersNames());
-            navigationContentLayout.initializeSubChapterData(chapterController.getSubChaptersContent());
+            //TODO move to controller?
+            List<QuickFileEntity> allModelTexturesQuickFileEntities = quickModelEntity.getOtherTextures();
+
+
+            allModelTexturesQuickFileEntities.add(quickModelEntity.getMainTexture());
+            modelDiv.initializeTextureListingComboBoxData(TextureListingDataParser.textureListingForComboBoxDataParser(allModelTexturesQuickFileEntities));
+
+
+            editorjs.setChapterContentData(chapterController.getChapterContent(chapterId));
+            chapterSelectionComboBox.initializeChapterSelectionComboBox(chapterController.getSubChaptersNames(chapterId));
+            navigationContentLayout.initializeSubChapterData(chapterController.getSubChaptersContent(chapterId));
 
             chapterSelectionComboBox.addSubChapterChangeListener(event2 -> {
                 try {
