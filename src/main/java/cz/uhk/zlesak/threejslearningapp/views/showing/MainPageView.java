@@ -1,6 +1,7 @@
 package cz.uhk.zlesak.threejslearningapp.views.showing;
 
 import com.vaadin.flow.component.Composite;
+import com.vaadin.flow.component.Tag;
 import com.vaadin.flow.component.html.H1;
 import com.vaadin.flow.component.html.Hr;
 import com.vaadin.flow.component.html.Paragraph;
@@ -8,18 +9,18 @@ import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
-import com.vaadin.flow.router.*;
+import com.vaadin.flow.router.BeforeEnterEvent;
+import com.vaadin.flow.router.BeforeLeaveEvent;
+import com.vaadin.flow.router.Route;
 import cz.uhk.zlesak.threejslearningapp.views.IView;
-import org.springframework.context.annotation.Scope;
-import org.vaadin.lineawesome.LineAwesomeIconUrl;
 
 /**
  * Main page view of the application.
  * This view is accessible at the root route ("/").
  * It displays a welcome message and some introductory text.
  */
-@Menu(order = 0, icon = LineAwesomeIconUrl.HOME_SOLID)
-@Scope("prototype")
+@Route("")
+@Tag("main-page-view")
 public class MainPageView extends Composite<VerticalLayout> implements IView {
 
     public MainPageView() {

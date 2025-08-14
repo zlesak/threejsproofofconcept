@@ -19,7 +19,6 @@ import com.vaadin.flow.theme.lumo.LumoUtility.*;
 import cz.uhk.zlesak.threejslearningapp.components.AvatarItemComponent;
 import cz.uhk.zlesak.threejslearningapp.views.creating.CreateChapterView;
 import cz.uhk.zlesak.threejslearningapp.views.creating.CreateModelView;
-import cz.uhk.zlesak.threejslearningapp.views.creating.CreateTextureView;
 import cz.uhk.zlesak.threejslearningapp.views.showing.MainPageView;
 import org.springframework.context.annotation.Scope;
 import org.vaadin.lineawesome.LineAwesomeIcon;
@@ -120,11 +119,10 @@ public class MainLayout extends AppLayout {
 
     /// Function for creating menu items to appear at the top navigation
     private MenuItemInfo[] createMenuItems() {
-        return new MenuItemInfo[]{ //
+        return new MenuItemInfo[]{
                 new MenuItemInfo("Domovská stránka", LineAwesomeIcon.HOME_SOLID.create(), MainPageView.class),
                 new MenuItemInfo("Vytvořit kapitolu", LineAwesomeIcon.PEN_ALT_SOLID.create(), CreateChapterView.class),
-                new MenuItemInfo("Nahrát model", LineAwesomeIcon.OBJECT_GROUP.create(), CreateModelView.class),
-                new MenuItemInfo("Nahrát texturu", LineAwesomeIcon.PAINT_ROLLER_SOLID.create(), CreateTextureView.class)
+                new MenuItemInfo("Nahrát model", LineAwesomeIcon.OBJECT_GROUP.create(), CreateModelView.class)
         };
     }
 

@@ -74,9 +74,7 @@ public class ChapterView extends ChapterScaffold {
             UI.getCurrent().navigate(ChapterListView.class);
         }
         //TODO remove after proper logic and layout implemented after DOD
-        Button applyMaskToMainTextureButton = new Button("Aplikovat maskování hlavní textury #0000fe", addClickListener -> {
-            renderer.applyMaskToMainTexture("#0000fe");
-        });
+        Button applyMaskToMainTextureButton = new Button("Aplikovat maskování hlavní textury #0000fe", addClickListener -> renderer.applyMaskToMainTexture("#0000fe"));
 
 
         Button switchToMainTexture = new Button("Přepnout na hlavní texturu", addClickListener -> renderer.switchMainTexture());
@@ -125,8 +123,6 @@ public class ChapterView extends ChapterScaffold {
             }
             //TODO move to controller?
             List<QuickFileEntity> allModelTexturesQuickFileEntities = quickModelEntity.getOtherTextures();
-
-
             allModelTexturesQuickFileEntities.add(quickModelEntity.getMainTexture());
             modelDiv.initializeTextureListingComboBoxData(TextureListingDataParser.textureListingForComboBoxDataParser(allModelTexturesQuickFileEntities));
 

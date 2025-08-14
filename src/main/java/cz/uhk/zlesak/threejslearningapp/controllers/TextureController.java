@@ -6,6 +6,7 @@ import cz.uhk.zlesak.threejslearningapp.clients.TextureApiClient;
 import cz.uhk.zlesak.threejslearningapp.data.files.InputStreamMultipartFile;
 import cz.uhk.zlesak.threejslearningapp.models.entities.TextureEntity;
 import cz.uhk.zlesak.threejslearningapp.models.entities.TextureUploadEntity;
+import cz.uhk.zlesak.threejslearningapp.models.entities.quickEntities.QuickFileEntity;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContextException;
@@ -17,7 +18,6 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 
 @Slf4j
@@ -34,23 +34,19 @@ public class TextureController {
         this.objectMapper = objectMapper;
     }
 
-    public String uploadTexture(String textureName, InputStreamMultipartFile inputStream, boolean isPrimary, String modelId) throws ApplicationContextException {
-        return uploadTexture(textureName, inputStream, isPrimary, modelId, null);
-    }
+    public String uploadTexture(InputStreamMultipartFile inputStream, boolean isPrimary, String modelId, InputStream csv) throws ApplicationContextException {
 
-    public String uploadTexture(String textureName, InputStreamMultipartFile inputStream, boolean isPrimary, String modelId, InputStreamMultipartFile csv) throws ApplicationContextException {
-
-        if (textureName.isEmpty()) {
-            throw new ApplicationContextException("Název textury nesmí být prázdný.");
-        }
         if (inputStream.isEmpty()) {
             throw new ApplicationContextException("Soubor pro nahrání textury nesmí být prázdný.");
         }
+        if (inputStream.getDisplayName().isEmpty()) {
+            throw new ApplicationContextException("Název textury nesmí být prázdný.");
+        }
 
         try {
-            String csvString = csv == null ? null : new String(csv.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
+            String csvString = csv == null ? null : new String(csv.readAllBytes(), StandardCharsets.UTF_8);
             TextureEntity textureEntity = TextureEntity.builder()
-                    .Name(textureName)
+                    .Name(inputStream.getDisplayName())
                     .CSV(csvString)
                     .build();
             TextureUploadEntity uploadedEntity = TextureUploadEntity.builder()
@@ -64,30 +60,30 @@ public class TextureController {
         }
     }
 
-    public List<String> uploadTexture(Map<String, InputStream> textureInputStream, boolean isPrimary, String modelId, Map<String, InputStream> csvInputStream) throws ApplicationContextException {
-        List<String> uploadedTextureIds = new ArrayList<>();
-        for (var entry : textureInputStream.entrySet()) {
-            String fileName = entry.getKey();
-            InputStream inputStream = entry.getValue();
-            InputStream csvStream = null;
-            String prefix ="";
-            if (csvInputStream != null) {
-                prefix = fileName.substring(0, fileName.lastIndexOf('.'));
-                csvStream = csvInputStream.get(prefix + ".csv");
-            }
-
-            InputStreamMultipartFile otherTexture = new InputStreamMultipartFile(inputStream, fileName);
-            if (!otherTexture.isEmpty()) {
-                if (csvStream == null) {
-                    String uploadedTextureId = uploadTexture(fileName, otherTexture, isPrimary, modelId);
-                    uploadedTextureIds.add(uploadedTextureId);
-                } else {
-                    InputStreamMultipartFile csv = new InputStreamMultipartFile(csvStream, prefix + ".csv");
-                    uploadedTextureIds.add(uploadTexture(fileName, otherTexture, isPrimary, modelId, csv));
+    public List<QuickFileEntity> uploadOtherTextures(List<InputStreamMultipartFile> textureInputStream, String modelId, List<InputStreamMultipartFile> csvInputStream) throws ApplicationContextException {
+        List<QuickFileEntity> otherTextureEntities = new ArrayList<>();
+        for (var entry : textureInputStream) {
+            if (!entry.isEmpty()) {
+                InputStream csvStream = null;
+                String prefix;
+                if (csvInputStream != null) {
+                    prefix = entry.getName().substring(0, entry.getName().lastIndexOf('.'));
+                    for (InputStreamMultipartFile csvFile : csvInputStream) {
+                        if (csvFile.getName().equals(prefix + ".csv")) {
+                            csvStream = csvFile.getInputStream();
+                            break;
+                        }
+                    }
                 }
+
+                String uploadedTextureId = uploadTexture(entry, false, modelId, csvStream);
+                otherTextureEntities.add(QuickFileEntity.builder()
+                        .id(uploadedTextureId)
+                        .name(entry.getName())
+                        .build());
             }
         }
-        return uploadedTextureIds;
+        return otherTextureEntities;
     }
 
     private void getTexture(String textureId) {
@@ -119,6 +115,7 @@ public class TextureController {
         if (this.textureEntity == null || !Objects.equals(this.textureEntity.getId(), textureId)) {
             this.getTexture(textureId);
         }
+        log.info("Získávám base64 reprezentaci textury: {}", textureId);
         return textureEntity.getBase64File();
     }
 }

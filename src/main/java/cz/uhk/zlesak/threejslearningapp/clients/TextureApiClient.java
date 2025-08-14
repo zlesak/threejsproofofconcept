@@ -79,7 +79,11 @@ public class TextureApiClient implements IFileApiClient {
                 if (contentDisposition != null && contentDisposition.contains("filename=")) {
                     filename = contentDisposition.substring(contentDisposition.indexOf("filename=") + 9).replace("\"", "");
                 }
-                InputStreamMultipartFile file = new InputStreamMultipartFile(new ByteArrayInputStream(response.getBody()), filename);
+                InputStreamMultipartFile file = InputStreamMultipartFile.builder()
+                        .fileName(filename)
+                        .displayName(filename)
+                        .inputStream(new ByteArrayInputStream(response.getBody()))
+                        .build();
                 return TextureEntity.builder()
                         .Name(filename)
                         .File(file)
@@ -164,7 +168,12 @@ public class TextureApiClient implements IFileApiClient {
                 if (contentDisposition != null && contentDisposition.contains("filename=")) {
                     filename = contentDisposition.substring(contentDisposition.indexOf("filename=") + 9).replace("\"", "");
                 }
-                return TextureEntity.builder().Name(filename).File(new InputStreamMultipartFile(new ByteArrayInputStream(response.getBody()), filename)).build();
+                InputStreamMultipartFile file = InputStreamMultipartFile.builder()
+                        .fileName(filename)
+                        .displayName(filename) //todo change after i wil get the name back from the BE
+                        .inputStream(new ByteArrayInputStream(response.getBody()))
+                        .build();
+                return TextureEntity.builder().Name(filename).File(file).build();
             } else {
                 throw new Exception("Soubor nebyl nalezen nebo došlo k chybě při stahování.");
             }

@@ -56,17 +56,17 @@ public class CreateModelDialog extends Dialog {
                 if (scaffold.getIsAdvanced().getValue()) {
                     quickModelEntity = modelController.uploadModel(
                         scaffold.getModelName().getValue().trim(),
-                        scaffold.getObjUploadComponent().getInputStreams(),
-                        scaffold.getMainTextureUploadComponent().getInputStreams(),
-                        scaffold.getOtherTexturesUploadComponent().getInputStreams(),
-                        scaffold.getCsvUploadComponent().getInputStreams()
+                        scaffold.getObjUploadComponent().getUploadedFiles().getFirst(),
+                        scaffold.getMainTextureUploadComponent().getUploadedFiles().getFirst(),
+                        scaffold.getOtherTexturesUploadComponent().getUploadedFiles(),
+                        scaffold.getCsvUploadComponent().getUploadedFiles()
                     );
                     log.info("Model a textruy pokročilého modelu nahrány");
                     Notification.show("Model úspěšně nahrán.", 3000, Notification.Position.MIDDLE);
                 } else {
                     quickModelEntity = modelController.uploadModel(
                         scaffold.getModelName().getValue().trim(),
-                        scaffold.getObjUploadComponent().getInputStreams()
+                        scaffold.getObjUploadComponent().getUploadedFiles().getFirst()
                     );
                     log.info("Model a textury jednoduchého modelu nahrány");
                     Notification.show("Model a textury úspěšně nahrány.", 3000, Notification.Position.MIDDLE);

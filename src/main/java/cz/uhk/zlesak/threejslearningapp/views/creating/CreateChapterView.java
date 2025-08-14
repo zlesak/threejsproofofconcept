@@ -18,11 +18,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContextException;
 import org.springframework.context.annotation.Scope;
-import org.vaadin.lineawesome.LineAwesomeIconUrl;
 
 @Slf4j
 @Route("createChapter")
-@Menu(order = 1, icon = LineAwesomeIconUrl.BOOK_OPEN_SOLID)
 @Tag("create-chapter")
 @Scope("prototype")
 public class CreateChapterView extends ChapterScaffold {
@@ -37,9 +35,7 @@ public class CreateChapterView extends ChapterScaffold {
 
         CreateModelDialog dialog = new CreateModelDialog(modelController);
         Button createModelButton = new Button("Vytvořit model");
-        createModelButton.addClickListener(e -> {
-            dialog.open();
-        });
+        createModelButton.addClickListener(e -> dialog.open());
 
         dialog.setModelCreatedListener(entity -> {
             chapterController.setUploadedModel(entity);

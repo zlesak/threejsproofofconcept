@@ -31,10 +31,10 @@ public class CreateModelView extends ModelScaffold {
             try {
                 QuickModelEntity quickModelEntity;
                 if (isAdvanced.getValue()) {
-                    quickModelEntity = modelController.uploadModel(modelName.getValue().trim(), objUploadComponent.getInputStreams(), mainTextureUploadComponent.getInputStreams(), otherTexturesUploadComponent.getInputStreams(), csvUploadComponent.getInputStreams());
+                    quickModelEntity = modelController.uploadModel(modelName.getValue().trim(), objUploadComponent.getUploadedFiles().getFirst(), mainTextureUploadComponent.getUploadedFiles().getFirst(), otherTexturesUploadComponent.getUploadedFiles(), csvUploadComponent.getUploadedFiles());
                     Notification.show("Model úspěšně nahrán.", 3000, Notification.Position.MIDDLE);
                 } else {
-                    quickModelEntity = modelController.uploadModel(modelName.getValue().trim(), objUploadComponent.getInputStreams());
+                    quickModelEntity = modelController.uploadModel(modelName.getValue().trim(), objUploadComponent.getUploadedFiles().getFirst());
                     Notification.show("Model a textury úspěšně nahrány.", 3000, Notification.Position.MIDDLE);
                 }
                 UI.getCurrent().navigate("model/" + quickModelEntity.getModel().getId());

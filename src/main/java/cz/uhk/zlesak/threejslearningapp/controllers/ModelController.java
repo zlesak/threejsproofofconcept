@@ -15,10 +15,7 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Controller for managing 3D models, including uploading and retrieving model files and textures.
@@ -54,30 +51,25 @@ public class ModelController {
      * Uploads a 3D model with the specified name and input streams.
      * The method checks for valid model name and input streams, then uploads the model using the model API client.
      * It returns a QuickModelEntity containing the uploaded model's details as a proof of successful upload.
-     * @param modelName the name of the model to be uploaded.
-     * @param inputStreams a map of input streams representing the model file to be uploaded, where the key is the file name and the value is the InputStream of the file.
+     * @param modelName as of the whole object with possible textures and CSVs.
+     * @param inputStream the input stream representing the model file to be uploaded.
      * @return QuickModelEntity containing the details of the uploaded model.
      * @throws RuntimeException if the model name is empty or the input streams are empty, or if an error occurs during the upload process.
      */
-    public QuickModelEntity uploadModel(String modelName, Map<String, InputStream> inputStreams) throws RuntimeException {
+    public QuickModelEntity uploadModel(String modelName, InputStreamMultipartFile inputStream) throws RuntimeException {
 
         if (modelName.isEmpty()) {
             throw new ApplicationContextException("Název modelu nesmí být prázdný.");
         }
-        if (inputStreams.isEmpty()) {
+        if (inputStream.isEmpty()) {
             throw new ApplicationContextException("Soubor pro nahrání modelu nesmí být prázdný.");
         }
-
-        var entry = inputStreams.entrySet().iterator().next();
-        String fileName = entry.getKey();
-        InputStream objInputStream = entry.getValue();
-        InputStreamMultipartFile multipartFile = new InputStreamMultipartFile(objInputStream, fileName);
 
         try {
             Entity entity = ModelEntity.builder()
                     .Name(modelName)
                     .build();
-            String response = modelApiClient.uploadFileEntity(multipartFile, entity);
+            String response = modelApiClient.uploadFileEntity(inputStream, entity);
             return objectMapper.readValue(response, QuickModelEntity.class);
         } catch (Exception e) {
             throw new RuntimeException("Chyba při nahrávání modelu: " + e.getMessage(), e);
@@ -100,9 +92,8 @@ public class ModelController {
      * @throws RuntimeException if there is an error during the upload of the main texture or other textures.
      * @see TextureController
      */
-    public QuickModelEntity uploadModel(String modelName, Map<String, InputStream> modelInputStream, Map<String, InputStream> mainTextureInputStream, Map<String, InputStream> otherTexturesInputStreamList, Map<String, InputStream> csvInputStreamList) throws ApplicationContextException, JsonProcessingException, RuntimeException {
+    public QuickModelEntity uploadModel(String modelName, InputStreamMultipartFile modelInputStream, InputStreamMultipartFile mainTextureInputStream, List<InputStreamMultipartFile> otherTexturesInputStreamList, List<InputStreamMultipartFile> csvInputStreamList) throws ApplicationContextException, JsonProcessingException, RuntimeException {
 
-        QuickModelEntity uploadedModel = uploadModel(modelName, modelInputStream);
         if (modelName.isEmpty()) {
             throw new ApplicationContextException("Název modelu nesmí být prázdný.");
         }
@@ -112,11 +103,15 @@ public class ModelController {
         if (mainTextureInputStream.isEmpty()) {
             throw new ApplicationContextException("Hlavní textura nesmí být prázdná.");
         }
+        QuickModelEntity uploadedModel = uploadModel(modelName, modelInputStream);
 
         try {
-            List<String> mainTextureUploadedList = textureController.uploadTexture(mainTextureInputStream, true, uploadedModel.getModel().getId(), null);
-            if (!mainTextureUploadedList.isEmpty()) {
-                QuickFileEntity mainTextureQuickFileEntity = QuickFileEntity.builder().id(mainTextureUploadedList.getFirst()).name(mainTextureInputStream.entrySet().iterator().next().getKey()).build();
+            String mainTextureUploadedId = textureController.uploadTexture(mainTextureInputStream, true, uploadedModel.getModel().getId(), null);
+            if (!mainTextureUploadedId.isEmpty()) {
+                QuickFileEntity mainTextureQuickFileEntity = QuickFileEntity.builder()
+                        .id(mainTextureUploadedId)
+                        .name(mainTextureInputStream.getDisplayName())
+                        .build();
                 uploadedModel.setMainTexture(mainTextureQuickFileEntity);
             }
         } catch (Exception e) {
@@ -125,17 +120,8 @@ public class ModelController {
         }
 
         try {
-            List<String> otherTexturesUploadedList = textureController.uploadTexture(otherTexturesInputStreamList, true, uploadedModel.getModel().getId(), csvInputStreamList);
-            if (!otherTexturesUploadedList.isEmpty()) {
-                Iterator<Map.Entry<String, InputStream>> otherTexturesInputStreamListIterator = otherTexturesInputStreamList.entrySet().iterator();
-                List<QuickFileEntity> otherTextureEntities = otherTexturesUploadedList.stream()
-                    .map(id -> QuickFileEntity.builder()
-                        .id(id)
-                        .name(otherTexturesInputStreamListIterator.next().getKey())
-                        .build())
-                    .toList();
-                uploadedModel.setOtherTextures(otherTextureEntities);
-            }
+            List<QuickFileEntity> otherTexturesUploadedList = textureController.uploadOtherTextures(otherTexturesInputStreamList, uploadedModel.getModel().getId(), csvInputStreamList);
+            uploadedModel.setOtherTextures(otherTexturesUploadedList);
         } catch (Exception e) {
             log.error("Chyba při nahrávání vedlejších textur: {}", e.getMessage(), e);
             throw new RuntimeException("Chyba při nahrávání vedlejších textur: " + e.getMessage(), e);
@@ -173,6 +159,7 @@ public class ModelController {
         if (this.modelEntity == null || !this.modelEntity.getId().equals(modelId)) {
             this.getModel(modelId);
         }
+        log.info("Získávám base64 reprezentaci modelu: {}", modelId);
         return modelEntity.getBase64File();
     }
 }

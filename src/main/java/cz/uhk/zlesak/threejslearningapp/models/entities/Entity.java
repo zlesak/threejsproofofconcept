@@ -40,7 +40,6 @@ public abstract class Entity implements IEntity {
 
             return Base64.getEncoder().encodeToString(bytes);
         }
-        log.warn("File is null for entity: {}", this);
         return null;
     }
 }

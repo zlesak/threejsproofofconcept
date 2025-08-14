@@ -1,9 +1,11 @@
 package cz.uhk.zlesak.threejslearningapp.data.files;
 
+import lombok.Builder;
 import lombok.SneakyThrows;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -13,11 +15,12 @@ import java.io.InputStream;
  * Used to handle file uploads as for the model or texture files.
  * Wraps the file name and display name, which is bettter suited for displaying in UI components.
  */
+@Builder
 public class InputStreamMultipartFile implements MultipartFile {
 
     private final InputStream inputStream;
     private final String fileName;
-    private final String displayName;
+    private String displayName;
 
     /**
      * Constructor for InputStreamMultipartFile.
@@ -27,12 +30,21 @@ public class InputStreamMultipartFile implements MultipartFile {
      * @param displayName the display name of the file, if null, it will be set to fileName
      */
     public InputStreamMultipartFile(InputStream inputStream, String fileName, String displayName) {
-        this.inputStream = inputStream;
+        if (inputStream != null && !(inputStream instanceof BufferedInputStream)) {
+            this.inputStream = new BufferedInputStream(inputStream);
+        } else {
+            this.inputStream = inputStream;
+        }
         this.fileName = fileName;
         this.displayName = displayName != null ? displayName : fileName;
     }
 
     //region Getters
+
+    /**
+     * Override of method for the name getter
+     * @return FILE NAME!
+     */
     @NotNull
     @Override
     public String getName() {
@@ -42,6 +54,10 @@ public class InputStreamMultipartFile implements MultipartFile {
     @NotNull
     public String getDisplayName() {
         return displayName;
+    }
+
+    public void setDisplayName(String displayName) {
+        this.displayName = displayName != null ? displayName : fileName;
     }
 
     @Override
@@ -57,7 +73,11 @@ public class InputStreamMultipartFile implements MultipartFile {
     @SneakyThrows
     @Override
     public boolean isEmpty() {
-        return inputStream.available() == 0;
+        if (inputStream == null) return true;
+        inputStream.mark(1);
+        int firstByte = inputStream.read();
+        inputStream.reset();
+        return firstByte == -1;
     }
 
     @SneakyThrows
@@ -84,4 +104,3 @@ public class InputStreamMultipartFile implements MultipartFile {
         throw new UnsupportedOperationException("Not supported.");
     }
 }
-

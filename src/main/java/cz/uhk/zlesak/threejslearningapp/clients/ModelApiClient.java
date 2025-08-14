@@ -80,7 +80,11 @@ public class ModelApiClient implements IFileApiClient {
                 if (contentDisposition != null && contentDisposition.contains("filename=")) {
                     filename = contentDisposition.substring(contentDisposition.indexOf("filename=") + 9).replace("\"", "");
                 }
-                InputStreamMultipartFile file = new InputStreamMultipartFile(new ByteArrayInputStream(response.getBody()), filename);
+                InputStreamMultipartFile file =InputStreamMultipartFile.builder()
+                        .fileName(filename)
+                        .displayName((filename))// todo cahgne after be know filename
+                        .inputStream(new ByteArrayInputStream(response.getBody()))
+                        .build();
                 return ModelEntity.builder()
                         .Name(filename)
                         .MainTextureEntity(null)
@@ -175,7 +179,12 @@ public class ModelApiClient implements IFileApiClient {
                 if (contentDisposition != null && contentDisposition.contains("filename=")) {
                     filename = contentDisposition.substring(contentDisposition.indexOf("filename=") + 9).replace("\"", "");
                 }
-                return ModelEntity.builder().Name(filename).File(new InputStreamMultipartFile(new ByteArrayInputStream(response.getBody()), filename)).build();
+                InputStreamMultipartFile file = InputStreamMultipartFile.builder()
+                        .inputStream(new ByteArrayInputStream(response.getBody()))
+                        .fileName(filename)
+                        .displayName(filename)//todo change after display name returning from BE
+                        .build();
+                return ModelEntity.builder().Name(filename).File(file).build();
             } else {
                 throw new Exception("Soubor nebyl nalezen nebo došlo k chybě při stahování.");
             }

@@ -7,14 +7,17 @@ import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.shared.Tooltip;
 import com.vaadin.flow.component.upload.Upload;
 import com.vaadin.flow.component.upload.receivers.MultiFileMemoryBuffer;
+import com.vaadin.flow.component.textfield.TextField;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.context.annotation.Scope;
+import cz.uhk.zlesak.threejslearningapp.data.files.InputStreamMultipartFile;
 
 import java.io.InputStream;
-import java.util.LinkedHashMap;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.function.BiConsumer;
 
 /**
@@ -26,9 +29,11 @@ import java.util.function.BiConsumer;
 @Scope("prototype")
 public class UploadComponent extends Upload {
     @Getter
-    private Map<String, InputStream> inputStreams = new LinkedHashMap<>();
+    private List<InputStreamMultipartFile> uploadedFiles = new ArrayList<>();
     @Setter
     private BiConsumer<String, InputStream> uploadListener;
+
+    private final VerticalLayout fileListLayout = new VerticalLayout();
 
     /**
      * Constructor for UploadComponent.
@@ -46,18 +51,38 @@ public class UploadComponent extends Upload {
         setMaxFileSize(50 * 1024 * 1024);
         setDropAllowed(true);
 
+        fileListLayout.setPadding(false);
+        fileListLayout.setSpacing(true);
+        fileListLayout.setWidthFull();
+        // Přidání layoutu do komponenty
+        getElement().appendChild(fileListLayout.getElement());
+
         addSucceededListener(event -> {
             String fileName = event.getFileName();
             InputStream stream = buffer.getInputStream(fileName);
-            inputStreams.put(fileName, stream);
+            InputStreamMultipartFile file = new InputStreamMultipartFile(stream, fileName, fileName);
+            uploadedFiles.add(file);
             if (uploadListener != null) {
                 uploadListener.accept(fileName, stream);
             }
+            TextField displayNameField = new TextField("Zobrazovací název");
+            displayNameField.setValue(fileName);
+            displayNameField.addValueChangeListener(e -> file.setDisplayName(e.getValue()));
+            displayNameField.setWidth("300px");
+            Span fileNameLabel = new Span(fileName);
+            HorizontalLayout fileRow = new HorizontalLayout(fileNameLabel, displayNameField);
+            fileRow.setAlignItems(HorizontalLayout.Alignment.CENTER);
+            fileRow.setId("file-row-" + fileName.hashCode());
+            fileListLayout.add(fileRow);
         });
 
         addFileRemovedListener(event -> {
             String fileName = event.getFileName();
-            inputStreams.remove(fileName);
+            uploadedFiles.removeIf(f -> f.getName().equals(fileName));
+            fileListLayout.getChildren()
+                .filter(c -> c.getId().isPresent() && c.getId().get().equals("file-row-" + fileName.hashCode()))
+                .findFirst()
+                .ifPresent(fileListLayout::remove);
         });
 
         addFileRejectedListener(event -> {
@@ -84,8 +109,7 @@ public class UploadComponent extends Upload {
      * Clears the list of uploaded files and input streams that it has saved in operation.
      */
     public void clear() {
-        clearFileList();
-        inputStreams.clear();
+        uploadedFiles.clear();
     }
 
     /**
@@ -96,5 +120,6 @@ public class UploadComponent extends Upload {
     public void setAcceptedFileTypes(List<String> acceptedFileTypes) {
         setAcceptedFileTypes(acceptedFileTypes.toArray(new String[0]));
         Button uploadButton = (Button) getUploadButton();
-        uploadButton.setText("Nahrát soubor (" + String.join(", ", acceptedFileTypes) + ")");    }
+        uploadButton.setText("Nahrát soubor (" + String.join(", ", acceptedFileTypes) + ")");
+    }
 }
