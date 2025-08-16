@@ -4,10 +4,13 @@ import com.vaadin.flow.component.Tag;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.function.SerializableRunnable;
-import com.vaadin.flow.router.*;
-import com.vaadin.flow.i18n.I18NProvider;
+import com.vaadin.flow.router.BeforeEnterEvent;
+import com.vaadin.flow.router.BeforeLeaveEvent;
+import com.vaadin.flow.router.Route;
+import com.vaadin.flow.router.RouteParameters;
 import cz.uhk.zlesak.threejslearningapp.controllers.ModelController;
 import cz.uhk.zlesak.threejslearningapp.data.enums.ViewTypeEnum;
+import cz.uhk.zlesak.threejslearningapp.i18n.CustomI18NProvider;
 import cz.uhk.zlesak.threejslearningapp.views.listing.ModelListView;
 import cz.uhk.zlesak.threejslearningapp.views.scaffolds.ModelScaffold;
 import lombok.extern.slf4j.Slf4j;
@@ -29,10 +32,9 @@ public class ModelView extends ModelScaffold {
     private final ModelController modelController;
 
     @Autowired
-    public ModelView(ModelController modelController, I18NProvider i18nProvider) {
-        super(ViewTypeEnum.VIEW);
+    public ModelView(ModelController modelController, CustomI18NProvider i18nProvider) {
+        super(i18nProvider, ViewTypeEnum.VIEW);
         this.modelController = modelController;
-        this.i18nProvider = i18nProvider;
     }
 
     @Override
@@ -53,7 +55,7 @@ public class ModelView extends ModelScaffold {
             log.error(e.getMessage());
             Notification.show("Nepovedlo se načíst model: " + e.getMessage(), 5000, Notification.Position.MIDDLE);
             event.forwardTo(ModelListView.class);
-        } catch (Exception e){
+        } catch (Exception e) {
             log.error("Neočekávaná chyba při načítání modelu: {}", e.getMessage(), e);
             Notification.show("Neočekávaná chyba při načítání modelu: " + e.getMessage(), 5000, Notification.Position.MIDDLE);
             event.forwardTo(ModelListView.class);

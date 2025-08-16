@@ -3,15 +3,15 @@ package cz.uhk.zlesak.threejslearningapp.clients;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import cz.uhk.zlesak.threejslearningapp.clients.interfaces.IApiClient;
 import cz.uhk.zlesak.threejslearningapp.clients.interfaces.IFileApiClient;
-import cz.uhk.zlesak.threejslearningapp.exceptions.ApiCallException;
-import cz.uhk.zlesak.threejslearningapp.models.entities.IEntity;
 import cz.uhk.zlesak.threejslearningapp.data.files.InputStreamMultipartFile;
+import cz.uhk.zlesak.threejslearningapp.exceptions.ApiCallException;
 import cz.uhk.zlesak.threejslearningapp.models.entities.Entity;
+import cz.uhk.zlesak.threejslearningapp.models.entities.IEntity;
 import cz.uhk.zlesak.threejslearningapp.models.entities.TextureEntity;
 import org.apache.commons.lang3.NotImplementedException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.HttpStatusCodeException;
@@ -26,7 +26,7 @@ import java.util.List;
  * It uses RestTemplate for making HTTP requests to the backend service.
  * The base URL for the API is determined by the IApiClient interface.
  */
-@Service
+@Component
 public class TextureApiClient implements IFileApiClient {
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
@@ -48,6 +48,7 @@ public class TextureApiClient implements IFileApiClient {
 
     /**
      * This method is not implemented as the textures upload is handled by uploadFileEntity.
+     *
      * @param entity The entity to create.
      * @throws NotImplementedException Always thrown as this method is not implemented for textures.
      */
@@ -59,6 +60,7 @@ public class TextureApiClient implements IFileApiClient {
     /**
      * API call function to retrieve a texture entity by its ID.
      * This method retrieves a texture file from the backend service using its ID.
+     *
      * @param fileEntityId The ID of the texture entity to retrieve.
      * @return Returns the TextureEntity if found, otherwise throws an exception.
      * @throws Exception Throws exception if anything goes wrong when retrieving the texture via this API call.
@@ -98,6 +100,7 @@ public class TextureApiClient implements IFileApiClient {
 
     /**
      * This method is not implemented as the textures are not retrieved by author but the model that they belong to.
+     *
      * @param authorId The ID of the author.
      * @throws NotImplementedException Always thrown as this method is not implemented for textures.
      */
@@ -109,8 +112,9 @@ public class TextureApiClient implements IFileApiClient {
     /**
      * API call function to upload a texture file along with its metadata.
      * This method uploads a texture file and its associated metadata to the backend.
+     *
      * @param inputStreamMultipartFile The InputStreamMultipartFile containing the texture file.
-     * @param textureEntity The IEntity containing metadata for the texture.
+     * @param textureEntity            The IEntity containing metadata for the texture.
      * @return Returns ID of uploaded texture proving its successful upload.
      * @throws Exception Throws exception if anything goes wrong when uploading the texture via this API call.
      */
@@ -147,6 +151,7 @@ public class TextureApiClient implements IFileApiClient {
     /**
      * API call function to download a texture file by its ID.
      * This method retrieves a texture file from the backend service using its ID.
+     *
      * @param fileEntityId The ID of the texture entity to download.
      * @return Returns the TextureEntity containing the downloaded file and its metadata.
      * @throws Exception Throws exception if anything goes wrong when downloading the texture via this API call.
@@ -184,6 +189,7 @@ public class TextureApiClient implements IFileApiClient {
 
     /**
      * This method is not implemented at this moment as the textures should be deleted on BE side after their aro no longer associated with any model.
+     *
      * @param modelId The ID of the model.
      * @throws NotImplementedException Always thrown as this method is not implemented for textures.
      */

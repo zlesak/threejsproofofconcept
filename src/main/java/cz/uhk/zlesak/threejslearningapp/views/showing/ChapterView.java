@@ -1,14 +1,15 @@
 package cz.uhk.zlesak.threejslearningapp.views.showing;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.vaadin.flow.component.Tag;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.dependency.JavaScript;
-import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.router.BeforeEnterEvent;
 import com.vaadin.flow.router.BeforeLeaveEvent;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.router.RouteParameters;
+import cz.uhk.zlesak.threejslearningapp.components.Notifications.ErrorNotification;
 import cz.uhk.zlesak.threejslearningapp.controllers.ChapterController;
 import cz.uhk.zlesak.threejslearningapp.controllers.ModelController;
 import cz.uhk.zlesak.threejslearningapp.controllers.TextureController;
@@ -35,8 +36,8 @@ import java.util.List;
 @Scope("prototype")
 public class ChapterView extends ChapterScaffold {
     private final ChapterController chapterController;
-    private final ModelController modelController;
-    private final TextureController textureController;
+
+    private String chapterId;
 
     /**
      * ChapterView constructor - creates instance of chapter view instance that then accomplishes the goal of getting
@@ -46,8 +47,69 @@ public class ChapterView extends ChapterScaffold {
     public ChapterView(ChapterController chapterController, ModelController modelController, TextureController textureController) {
         super(ViewTypeEnum.VIEW);
         this.chapterController = chapterController;
-        this.modelController = modelController;
-        this.textureController = textureController;
+
+
+        //TODO remove after proper logic and layout implemented after DOD
+        Button applyMaskToMainTextureButton = new Button("Aplikovat maskování hlavní textury #0000fe", addClickListener -> renderer.applyMaskToMainTexture("#0000fe"));
+
+        try {
+            chapterNameTextField.setValue(chapterController.getChapterName(chapterId));
+            chapterNameTextField.setReadOnly(true);
+
+            QuickModelEntity quickModelEntity = chapterController.getChapterFirstQuickModelEntity(chapterId);
+
+            String json = new ObjectMapper().writeValueAsString(quickModelEntity);
+            log.info(json);
+
+            try {
+                String base64Model = modelController.getModelBase64(quickModelEntity.getModel().getId());
+                if (quickModelEntity.getMainTexture() != null) {
+                    String base64Texture = textureController.getTextureBase64(quickModelEntity.getMainTexture().getId());
+                    renderer.loadAdvancedModel(base64Model, base64Texture);
+                } else {
+                    renderer.loadModel(base64Model);
+                }
+                log.info("Počet vedlejších textur: {}", (long) quickModelEntity.getOtherTextures().size());
+                if (!quickModelEntity.getOtherTextures().isEmpty()) {
+                    for (var texture : quickModelEntity.getOtherTextures()) {
+                        String otherTextureBase64 = textureController.getTextureBase64(texture.getId());
+                        renderer.addOtherTexture(otherTextureBase64);
+                    }
+                }
+            } catch (Exception e) {
+                log.error(e.getMessage());
+                new ErrorNotification("Nepovedlo se načíst model: " + e.getMessage(), 5000);
+                throw e;
+            }
+
+            //TODO move to controller?
+            List<QuickFileEntity> allModelTexturesQuickFileEntities = quickModelEntity.getOtherTextures();
+            QuickFileEntity mainTexture = quickModelEntity.getMainTexture();
+            if (mainTexture != null) {
+                allModelTexturesQuickFileEntities.addFirst(mainTexture);
+            }
+            modelDiv.initializeTextureListingSelectData(TextureListingDataParser.textureListingForSelectDataParser(allModelTexturesQuickFileEntities));
+
+
+            editorjs.setChapterContentData(chapterController.getChapterContent(chapterId));
+            chapterSelect.initializeChapterSelectionSelect(chapterController.getSubChaptersNames(chapterId));
+            navigationContentLayout.initializeSubChapterData(chapterController.getSubChaptersContent(chapterId));
+
+            chapterSelect.addSubChapterChangeListener(event2 -> {
+                try {
+                    editorjs.setSelectedSubchapterData(chapterController.getSelectedSubChapterContent(event2.getNewValue().id()));
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            });
+
+            modelDiv.add(applyMaskToMainTextureButton);
+
+        } catch (Exception e) {
+            log.error("Chyba při načítání kapitoly: {}", e.getMessage(), e);
+            new ErrorNotification("Chyba při načítání kapitoly: " + e.getMessage(), 5000);
+            UI.getCurrent().navigate(ChapterListView.class);
+        }
     }
 
     /**
@@ -67,89 +129,20 @@ public class ChapterView extends ChapterScaffold {
         if (parameters.getParameterNames().isEmpty()) {
             event.forwardTo(ChapterListView.class);
         }
-        String chapterId = event.getRouteParameters().get("chapterId").orElse(null);
+        this.chapterId = event.getRouteParameters().get("chapterId").orElse(null);
         if (chapterId == null) {
-            Notification.show("Nelze načíst kapitolu bez ID", 3000, Notification.Position.MIDDLE);
             log.error("Nelze načíst kapitolu bez ID");
-            UI.getCurrent().navigate(ChapterListView.class);
-        }
-        //TODO remove after proper logic and layout implemented after DOD
-        Button applyMaskToMainTextureButton = new Button("Aplikovat maskování hlavní textury #0000fe", addClickListener -> renderer.applyMaskToMainTexture("#0000fe"));
-
-
-        Button switchToMainTexture = new Button("Přepnout na hlavní texturu", addClickListener -> renderer.switchMainTexture());
-
-        Button switchTextureButton = new Button("Přepnout vedlejší texturu texturu", addClickListener -> {
-            switchToMainTexture.setEnabled(true);
-            switchToMainTexture.setVisible(true);
-            renderer.switchOtherTexture();
-        });
-        switchTextureButton.setVisible(false);
-
-        switchToMainTexture.setVisible(false);
-        switchToMainTexture.setEnabled(false);
-        switchTextureButton.setVisible(false);
-
-        try {
-            chapterNameTextField.setValue(chapterController.getChapterName(chapterId));
-            chapterNameTextField.setReadOnly(true);
-
-            QuickModelEntity quickModelEntity = chapterController.getChapterFirstQuickModelEntity(chapterId);
-
-            String json = new com.fasterxml.jackson.databind.ObjectMapper().writeValueAsString(quickModelEntity);
-            log.info(json);
-
-            try {
-                String base64Model = modelController.getModelBase64(quickModelEntity.getModel().getId());
-                if (quickModelEntity.getMainTexture() != null) {
-                    String base64Texture = textureController.getTextureBase64(quickModelEntity.getMainTexture().getId());
-                    renderer.loadAdvancedModel(base64Model, base64Texture);
-                    switchToMainTexture.setVisible(true);
-                    switchTextureButton.setVisible(true);
-                } else {
-                    renderer.loadModel(base64Model);
-                }
-                log.info("Počet vedlejších textur: {}", (long) quickModelEntity.getOtherTextures().size());
-                if (!quickModelEntity.getOtherTextures().isEmpty()) {
-                    for (var texture : quickModelEntity.getOtherTextures()) {
-                        String otherTextureBase64 = textureController.getTextureBase64(texture.getId());
-                        renderer.addOtherTexture(otherTextureBase64);
-                    }
-                }
-            } catch (Exception e) {
-                log.error(e.getMessage());
-                Notification.show("Nepovedlo se načíst model: " + e.getMessage(), 5000, Notification.Position.MIDDLE);
-                throw e;
-            }
-            //TODO move to controller?
-            List<QuickFileEntity> allModelTexturesQuickFileEntities = quickModelEntity.getOtherTextures();
-            allModelTexturesQuickFileEntities.add(quickModelEntity.getMainTexture());
-            modelDiv.initializeTextureListingComboBoxData(TextureListingDataParser.textureListingForComboBoxDataParser(allModelTexturesQuickFileEntities));
-
-
-            editorjs.setChapterContentData(chapterController.getChapterContent(chapterId));
-            chapterSelectionComboBox.initializeChapterSelectionComboBox(chapterController.getSubChaptersNames(chapterId));
-            navigationContentLayout.initializeSubChapterData(chapterController.getSubChaptersContent(chapterId));
-
-            chapterSelectionComboBox.addSubChapterChangeListener(event2 -> {
-                try {
-                    editorjs.setSelectedSubchapterData(chapterController.getSelectedSubChapterContent(event2.getNewValue().id()));
-                } catch (Exception e) {
-                    throw new RuntimeException(e);
-                }
-            });
-
-            modelDiv.add(switchTextureButton, switchToMainTexture, applyMaskToMainTextureButton); //TODO change beeter layout for all the needed action buttons
-
-        } catch (Exception e) {
-            Notification.show("Chyba při načítání kapitoly: " + e.getMessage(), 5000, Notification.Position.MIDDLE);
-            log.error("Chyba při načítání kapitoly", e);
+            new ErrorNotification("Nelze načíst kapitolu bez ID", 5000);
             UI.getCurrent().navigate(ChapterListView.class);
         }
     }
 
     @Override
     public String getPageTitle() {
-        return "";
+        try {
+            return this.i18NProvider.getTranslation("page.title.chapterView", UI.getCurrent().getLocale()) + " - " + chapterController.getChapterName(chapterId).trim();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 }

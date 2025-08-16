@@ -1,18 +1,18 @@
 package cz.uhk.zlesak.threejslearningapp.events;
 
 import com.vaadin.flow.component.ComponentEvent;
-import cz.uhk.zlesak.threejslearningapp.components.ComboBoxes.TextureListingComboBox;
-import cz.uhk.zlesak.threejslearningapp.models.records.TextureListingForComboBoxRecord;
+import cz.uhk.zlesak.threejslearningapp.components.Selects.TextureListingSelect;
+import cz.uhk.zlesak.threejslearningapp.models.records.TextureListingForSelectRecord;
 
 /**
- * Event that is fired when the selected texture listing in the TextureListingComboBox changes.
+ * Event that is fired when the selected texture listing in the TextureListingSelect changes.
  * This event is used to trigger actions in the UI after the texture listing selection is changed.
  */
-public class TextureListingChangeEvent extends ComponentEvent<TextureListingComboBox> {
-    private final TextureListingForComboBoxRecord oldValue;
-    private final TextureListingForComboBoxRecord newValue;
+public class TextureListingChangeEvent extends ComponentEvent<TextureListingSelect> {
+    private final TextureListingForSelectRecord oldValue;
+    private final TextureListingForSelectRecord newValue;
 
-    public TextureListingChangeEvent(TextureListingComboBox source, boolean fromClient, TextureListingForComboBoxRecord oldValue, TextureListingForComboBoxRecord newValue) {
+    public TextureListingChangeEvent(TextureListingSelect source, boolean fromClient, TextureListingForSelectRecord oldValue, TextureListingForSelectRecord newValue) {
         super(source, fromClient);
         this.oldValue = oldValue;
         this.newValue = newValue;

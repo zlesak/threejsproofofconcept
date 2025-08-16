@@ -3,15 +3,15 @@ package cz.uhk.zlesak.threejslearningapp.clients;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import cz.uhk.zlesak.threejslearningapp.clients.interfaces.IApiClient;
 import cz.uhk.zlesak.threejslearningapp.clients.interfaces.IFileApiClient;
-import cz.uhk.zlesak.threejslearningapp.exceptions.ApiCallException;
-import cz.uhk.zlesak.threejslearningapp.models.entities.IEntity;
 import cz.uhk.zlesak.threejslearningapp.data.files.InputStreamMultipartFile;
+import cz.uhk.zlesak.threejslearningapp.exceptions.ApiCallException;
 import cz.uhk.zlesak.threejslearningapp.models.entities.Entity;
+import cz.uhk.zlesak.threejslearningapp.models.entities.IEntity;
 import cz.uhk.zlesak.threejslearningapp.models.entities.ModelEntity;
 import org.apache.commons.lang3.NotImplementedException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.HttpStatusCodeException;
@@ -26,7 +26,7 @@ import java.util.List;
  * It uses RestTemplate for making HTTP requests to the backend service.
  * The base URL for the API is determined by the IApiClient interface.
  */
-@Service
+@Component
 public class ModelApiClient implements IFileApiClient {
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
@@ -48,6 +48,7 @@ public class ModelApiClient implements IFileApiClient {
 
     /**
      * This method is now not implemented as the models upload is handled by uploadFileEntity.
+     *
      * @param entity The entity to create.
      * @throws NotImplementedException Always thrown as this method is not implemented for models.
      */
@@ -60,6 +61,7 @@ public class ModelApiClient implements IFileApiClient {
      * API call function to retrieve a model entity by its ID.
      * This method downloads the model file and returns a ModelEntity containing the file and its metadata.
      * It uses the RestTemplate to make a GET request to the backend service.
+     *
      * @param fileEntityId The ID of the model entity to retrieve.
      * @return ModelEntity containing the file and its metadata.
      * @throws Exception if the model is not found or there is an error during the download process.
@@ -80,7 +82,7 @@ public class ModelApiClient implements IFileApiClient {
                 if (contentDisposition != null && contentDisposition.contains("filename=")) {
                     filename = contentDisposition.substring(contentDisposition.indexOf("filename=") + 9).replace("\"", "");
                 }
-                InputStreamMultipartFile file =InputStreamMultipartFile.builder()
+                InputStreamMultipartFile file = InputStreamMultipartFile.builder()
                         .fileName(filename)
                         .displayName((filename))// todo cahgne after be know filename
                         .inputStream(new ByteArrayInputStream(response.getBody()))
@@ -101,6 +103,7 @@ public class ModelApiClient implements IFileApiClient {
 
     /**
      * This method is not implemented as of this moment.
+     *
      * @param authorId ID of the author whose file entities are to be retrieved.
      * @return List of Entity objects representing the file entities authored by the specified author.
      * @throws NotImplementedException as of now
@@ -115,8 +118,9 @@ public class ModelApiClient implements IFileApiClient {
      * This method uploads a file to the backend service and associates it with a file entity.
      * It uses the RestTemplate to make a POST request with multipart/form-data content type.
      * The file is sent as a resource, and the metadata of the file entity is sent as a JSON part.
+     *
      * @param inputStreamMultipartFile the file to be uploaded, wrapped in an InputStreamMultipartFile
-     * @param fileEntity the file entity containing metadata about the file
+     * @param fileEntity               the file entity containing metadata about the file
      * @return the ID of the uploaded file entity as a String, proving the correct upload
      * @throws Exception if there is an error during the upload process or if the response is not successful.
      */
@@ -158,6 +162,7 @@ public class ModelApiClient implements IFileApiClient {
      * API call function to download a file entity by its ID.
      * This method retrieves the file associated with the given file entity ID and returns it as an Entity object.
      * It uses the RestTemplate to make a GET request to the backend service.
+     *
      * @param fileEntityId The ID of the file entity to download.
      * @return Entity containing the file and its metadata.
      * @throws Exception if the file is not found or there is an error during the download process.
@@ -195,6 +200,7 @@ public class ModelApiClient implements IFileApiClient {
 
     /**
      * This method is not implemented as of this moment.
+     *
      * @param modelId ID of the model to be deleted.
      * @throws NotImplementedException as of now
      */

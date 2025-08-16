@@ -33,27 +33,32 @@ public abstract class ModelScaffold extends Composite<VerticalLayout> implements
     @Getter
     protected final Checkbox isAdvanced = new Checkbox("Pokročilé nahrání modelu", false);
     @Getter
-    protected final UploadComponent objUploadComponent = new UploadComponent(new MultiFileMemoryBuffer(), List.of(".glb"), true);
+    protected final UploadComponent objUploadComponent;
     @Getter
-    protected final UploadComponent mainTextureUploadComponent = new UploadComponent(new MultiFileMemoryBuffer(), List.of(".jpg"), true);
+    protected final UploadComponent mainTextureUploadComponent;
     @Getter
-    protected final UploadComponent otherTexturesUploadComponent = new UploadComponent(new MultiFileMemoryBuffer(), List.of(".jpg"), false);
+    protected final UploadComponent otherTexturesUploadComponent;
     @Getter
-    protected final UploadComponent csvUploadComponent = new UploadComponent(new MultiFileMemoryBuffer(), List.of(".csv"), false);
+    protected final UploadComponent csvUploadComponent;
     @Getter
     protected final TextField modelName;
     @Getter
     protected final VerticalLayout modelProperties;
 
     private final Div uploadOtherTexturesDiv;
-    private Div uploadModelDiv, uploadMainTextureDiv, csvOtherTexturesDiv;
+    private final Div uploadModelDiv, uploadMainTextureDiv, csvOtherTexturesDiv;
     protected String base64Model = null;
     protected String base64Texture = null;
     protected List<String> otherBase64Texture = new ArrayList<>();
     protected List<String> csvBase64 = new ArrayList<>();
-    protected I18NProvider i18nProvider;
+    protected final I18NProvider i18nProvider;
 
-    public ModelScaffold(ViewTypeEnum viewTypeEnum) {
+    public ModelScaffold(I18NProvider i18nProvider, ViewTypeEnum viewTypeEnum) {
+        this.i18nProvider = i18nProvider;
+        objUploadComponent = new UploadComponent(new MultiFileMemoryBuffer(), List.of(".glb"), true);
+        mainTextureUploadComponent = new UploadComponent(new MultiFileMemoryBuffer(), List.of(".jpg"), true);
+        otherTexturesUploadComponent = new UploadComponent(new MultiFileMemoryBuffer(), List.of(".jpg"), false);
+        csvUploadComponent = new UploadComponent(new MultiFileMemoryBuffer(), List.of(".csv"), false);
         HorizontalLayout modelPageLayout = new HorizontalLayout();
         modelProperties = new VerticalLayout();
         VerticalLayout model = new VerticalLayout();
@@ -113,7 +118,7 @@ public abstract class ModelScaffold extends Composite<VerticalLayout> implements
                         base64Model = Base64.getEncoder().encodeToString(bytes);
                         renderer.loadModel(base64Model);
                     } catch (Exception ex) {
-                        ex.printStackTrace();
+                        log.error("Chyba při zpracování modelu", ex);
                     }
                 }
             } else {
@@ -127,7 +132,7 @@ public abstract class ModelScaffold extends Composite<VerticalLayout> implements
                             renderer.loadAdvancedModel(base64Model, base64Texture);
                         }
                     } catch (Exception ex) {
-                        ex.printStackTrace();
+                        log.error("Chyba při zpracování modelu", ex);
                     }
                 }
             }
@@ -156,7 +161,7 @@ public abstract class ModelScaffold extends Composite<VerticalLayout> implements
                         renderer.loadAdvancedModel(base64Model, base64Texture);
                     }
                 } catch (Exception ex) {
-                    ex.printStackTrace();
+                    log.error("Chyba při zpracování hlavní textury", ex);
                 }
             }
         });
@@ -176,7 +181,7 @@ public abstract class ModelScaffold extends Composite<VerticalLayout> implements
                     String base64 = Base64.getEncoder().encodeToString(bytes);
                     otherBase64Texture.add(base64);
                 } catch (Exception ex) {
-                    ex.printStackTrace();
+                    log.error("Chyba při zpracování další textury", ex);
                 }
             }
         });
@@ -189,7 +194,7 @@ public abstract class ModelScaffold extends Composite<VerticalLayout> implements
                     String base64 = Base64.getEncoder().encodeToString(bytes);
                     csvBase64.remove(base64);
                 } catch (Exception ex) {
-                    ex.printStackTrace();
+                    log.error("Chyba při zpracování další textury", ex);
                 }
             }
         });
@@ -203,7 +208,7 @@ public abstract class ModelScaffold extends Composite<VerticalLayout> implements
                     String base64 = Base64.getEncoder().encodeToString(bytes);
                     csvBase64.add(base64);
                 } catch (Exception ex) {
-                    ex.printStackTrace();
+                    log.error("Chyba při zpracování CSV souboru", ex);
                 }
             }
         });
@@ -216,7 +221,7 @@ public abstract class ModelScaffold extends Composite<VerticalLayout> implements
                     String base64 = Base64.getEncoder().encodeToString(bytes);
                     otherBase64Texture.remove(base64);
                 } catch (Exception ex) {
-                    ex.printStackTrace();
+                    log.error("Chyba při zpracování CSV souboru", ex);
                 }
             }
         });
@@ -261,3 +266,4 @@ public abstract class ModelScaffold extends Composite<VerticalLayout> implements
         renderer.setVisible(show);
     }
 }
+

@@ -1,14 +1,16 @@
 package cz.uhk.zlesak.threejslearningapp.i18n;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.vaadin.flow.i18n.I18NProvider;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
-import java.io.IOException;
+import java.io.File;
 import java.io.InputStream;
+import java.net.URL;
 import java.util.List;
 import java.util.Locale;
-import java.util.Properties;
+import java.util.Map;
 
 /**
  * Custom I18NProvider for providing Czech translations.
@@ -17,21 +19,39 @@ import java.util.Properties;
 @Slf4j
 @Component
 public class CustomI18NProvider implements I18NProvider {
-    private final Properties csProperties = new Properties();
+    private final Map<String, String> csTranslations;
 
     /**
      * Constructor for CustomI18NProvider.
      * It loads the Czech translations from the properties file.
      * If the file is not found or an error occurs during loading, it logs an error message.
-     * The properties file should be located in the classpath under "texts/pages_cs.properties
+     * The properties file should be located in the classpath under texts/ directory with the name ending in "_cs.properties".
+     * For example: texts/pages_cs.properties.
      */
     public CustomI18NProvider() {
-        try (InputStream input = getClass().getClassLoader().getResourceAsStream("texts/pages_cs.properties")) {
-            if (input != null) {
-                csProperties.load(input);
+        csTranslations = new java.util.HashMap<>();
+        try {
+            ClassLoader classLoader = getClass().getClassLoader();
+            URL textsDir = classLoader.getResource("texts");
+            if (textsDir != null) {
+                File dir = new File(textsDir.toURI());
+                File[] files = dir.listFiles((d, name) -> name.endsWith("_cs.json"));
+                if (files != null) {
+                    ObjectMapper mapper = new ObjectMapper();
+                    for (File file : files) {
+                        try (InputStream input = classLoader.getResourceAsStream("texts/" + file.getName())) {
+                            if (input == null) {
+                                log.error("Soubor s překlady nebyl nalezen: texts/{}", file.getName());
+                                continue;
+                            }
+                            Map<String, String> map = mapper.readValue(input, Map.class);
+                            csTranslations.putAll(map);
+                        }
+                    }
+                }
             }
-        } catch (IOException e) {
-            log.error("Chyba při načítání českých překladů: {}", e.getMessage(), e);
+        } catch (Exception e) {
+            log.error("Chyba při načítání českých překladů z JSON: {}", e.getMessage(), e);
         }
     }
 
@@ -48,9 +68,11 @@ public class CustomI18NProvider implements I18NProvider {
     @Override
     public String getTranslation(String key, Locale locale, Object... params) {
         if (locale.getLanguage().equals("cs")) {
-            String value = csProperties.getProperty(key);
-            if (value != null) {
-                return value;
+            if (csTranslations != null) {
+                String value = csTranslations.get(key);
+                if (value != null) {
+                    return value;
+                }
             }
         }
         log.warn("Překlad nenalezen pro klíč: {} v jazyce: {}", key, locale.getLanguage());
@@ -65,6 +87,6 @@ public class CustomI18NProvider implements I18NProvider {
      */
     @Override
     public List<Locale> getProvidedLocales() {
-        return List.of(new Locale("cs"));
+        return List.of(Locale.forLanguageTag("cs"));
     }
 }

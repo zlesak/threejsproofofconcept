@@ -8,7 +8,7 @@ import cz.uhk.zlesak.threejslearningapp.models.entities.ChapterEntity;
 import org.apache.commons.lang3.NotImplementedException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestTemplate;
 
@@ -20,7 +20,7 @@ import java.util.List;
  * It uses RestTemplate for making HTTP requests to the backend service.
  * The base URL for the API is determined by the IApiClient interface
  */
-@Service
+@Component
 public class ChapterApiClient implements IChapterApiClient {
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
@@ -42,6 +42,7 @@ public class ChapterApiClient implements IChapterApiClient {
 
     /**
      * API call function to endpoint create to create chapter coming from frontend view
+     *
      * @param chapter Chapter entity to save via API
      * @return Returns saved chapter, as the behavior is to redirect user to the created chapter
      * @throws Exception Throws exception if anything goes bad when saving the chapter via this API call
@@ -53,14 +54,14 @@ public class ChapterApiClient implements IChapterApiClient {
         headers.setContentType(MediaType.APPLICATION_JSON);
         HttpEntity<ChapterEntity> request = new HttpEntity<>(chapter, headers);
 
-        try{
+        try {
             ResponseEntity<ChapterEntity> response = restTemplate.exchange(
                     url,
                     HttpMethod.POST,
                     request,
                     ChapterEntity.class);
             return objectMapper.readValue(objectMapper.writeValueAsString(response.getBody()), ChapterEntity.class);
-        }catch (HttpStatusCodeException ex) {
+        } catch (HttpStatusCodeException ex) {
             throw new ApiCallException("Chyba při nahrávání kapitoly", null, request.toString(), ex.getStatusCode(), ex.getResponseBodyAsString(), ex);
 
         } catch (Exception e) {
@@ -71,7 +72,8 @@ public class ChapterApiClient implements IChapterApiClient {
     /**
      * API call function to update chapter coming from frontend view
      * This method is not implemented yet and will throw NotImplementedException.
-     * @param chapterId ID of the chapter to update
+     *
+     * @param chapterId     ID of the chapter to update
      * @param chapterEntity ChapterEntity containing updated chapter data
      * @throws NotImplementedException Throws NotImplementedException as of this moment
      */
@@ -83,6 +85,7 @@ public class ChapterApiClient implements IChapterApiClient {
     /**
      * API call function to delete chapter by its ID
      * This method is not implemented yet and will throw NotImplementedException.
+     *
      * @param chapterId ID of the chapter to delete
      * @throws NotImplementedException Throws NotImplementedException as of this moment
      */
@@ -97,6 +100,7 @@ public class ChapterApiClient implements IChapterApiClient {
      * It uses the RestTemplate to make a GET request to the backend service.
      * If the request is successful, it returns the chapter entity.
      * If there is an error during the request, it throws an ApiCallException with details about the error.
+     *
      * @param chapterId ID of the chapter to retrieve
      * @return Returns the ChapterEntity corresponding to the provided chapterId
      * @throws Exception Throws an exception if there is an error during the API call
@@ -127,6 +131,7 @@ public class ChapterApiClient implements IChapterApiClient {
     /**
      * API call function to get chapters by author ID
      * This method is not implemented yet and will throw NotImplementedException.
+     *
      * @param authorId ID of the author whose chapters are to be retrieved
      * @return List of chapter IDs authored by the specified author
      * @throws NotImplementedException Throws NotImplementedException as of this moment
@@ -139,6 +144,7 @@ public class ChapterApiClient implements IChapterApiClient {
     /**
      * API call function to get all chapters
      * This method is not implemented yet and will throw NotImplementedException.
+     *
      * @return List of all chapter IDs
      * @throws NotImplementedException Throws NotImplementedException as of this moment
      */

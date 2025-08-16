@@ -3,12 +3,15 @@ package cz.uhk.zlesak.threejslearningapp.views.creating;
 import com.vaadin.flow.component.Tag;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
-import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.router.BeforeEnterEvent;
 import com.vaadin.flow.router.BeforeLeaveEvent;
 import com.vaadin.flow.router.Route;
+import cz.uhk.zlesak.threejslearningapp.components.BeforeLeaveActionDialog;
+import cz.uhk.zlesak.threejslearningapp.components.Notifications.ErrorNotification;
+import cz.uhk.zlesak.threejslearningapp.components.Notifications.InfoNotification;
 import cz.uhk.zlesak.threejslearningapp.controllers.ModelController;
 import cz.uhk.zlesak.threejslearningapp.data.enums.ViewTypeEnum;
+import cz.uhk.zlesak.threejslearningapp.i18n.CustomI18NProvider;
 import cz.uhk.zlesak.threejslearningapp.models.entities.quickEntities.QuickModelEntity;
 import cz.uhk.zlesak.threejslearningapp.views.scaffolds.ModelScaffold;
 import lombok.extern.slf4j.Slf4j;
@@ -20,10 +23,11 @@ import org.springframework.context.annotation.Scope;
 @Tag("create-model")
 @Scope("prototype")
 public class CreateModelView extends ModelScaffold {
+    private boolean skipBeforeLeaveDialog = false;
 
     @Autowired
-    public CreateModelView(ModelController modelController) {
-        super(ViewTypeEnum.CREATE);
+    public CreateModelView(ModelController modelController, CustomI18NProvider i18nProvider) {
+        super(i18nProvider, ViewTypeEnum.CREATE);
 
         Button createButton = new Button("Vytvořit model");
 
@@ -32,15 +36,16 @@ public class CreateModelView extends ModelScaffold {
                 QuickModelEntity quickModelEntity;
                 if (isAdvanced.getValue()) {
                     quickModelEntity = modelController.uploadModel(modelName.getValue().trim(), objUploadComponent.getUploadedFiles().getFirst(), mainTextureUploadComponent.getUploadedFiles().getFirst(), otherTexturesUploadComponent.getUploadedFiles(), csvUploadComponent.getUploadedFiles());
-                    Notification.show("Model úspěšně nahrán.", 3000, Notification.Position.MIDDLE);
+                    new InfoNotification("Model úspěšně nahrán.", 3000);
                 } else {
                     quickModelEntity = modelController.uploadModel(modelName.getValue().trim(), objUploadComponent.getUploadedFiles().getFirst());
-                    Notification.show("Model a textury úspěšně nahrány.", 3000, Notification.Position.MIDDLE);
+                    new InfoNotification("Model a textury úspěšně nahrány.", 3000);
                 }
+                skipBeforeLeaveDialog = true;
                 UI.getCurrent().navigate("model/" + quickModelEntity.getModel().getId());
             } catch (Exception e) {
                 log.error("Error uploading model", e);
-                Notification.show("Chyba při nahrávání modelu: " + e.getMessage(), 5000, Notification.Position.MIDDLE);
+                new ErrorNotification("Chyba při nahrávání modelu: " + e.getMessage(), 5000);
             }
         });
         modelProperties.add(createButton);
@@ -53,11 +58,17 @@ public class CreateModelView extends ModelScaffold {
 
     @Override
     public void beforeLeave(BeforeLeaveEvent event) {
-
+        if (!skipBeforeLeaveDialog) {
+            BeforeLeaveActionDialog.leave(event);
+        }
     }
 
     @Override
     public String getPageTitle() {
-        return "";
+        try {
+            return this.i18nProvider.getTranslation("page.title.createChapterView", UI.getCurrent().getLocale());
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 }

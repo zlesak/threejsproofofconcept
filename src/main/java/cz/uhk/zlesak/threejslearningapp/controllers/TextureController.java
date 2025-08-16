@@ -79,7 +79,7 @@ public class TextureController {
                 String uploadedTextureId = uploadTexture(entry, false, modelId, csvStream);
                 otherTextureEntities.add(QuickFileEntity.builder()
                         .id(uploadedTextureId)
-                        .name(entry.getName())
+                        .name(entry.getDisplayName())
                         .build());
             }
         }
@@ -115,7 +115,6 @@ public class TextureController {
         if (this.textureEntity == null || !Objects.equals(this.textureEntity.getId(), textureId)) {
             this.getTexture(textureId);
         }
-        log.info("Získávám base64 reprezentaci textury: {}", textureId);
         return textureEntity.getBase64File();
     }
 }

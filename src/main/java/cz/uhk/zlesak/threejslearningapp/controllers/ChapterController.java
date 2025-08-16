@@ -1,7 +1,7 @@
 package cz.uhk.zlesak.threejslearningapp.controllers;
 
 import cz.uhk.zlesak.threejslearningapp.clients.ChapterApiClient;
-import cz.uhk.zlesak.threejslearningapp.models.records.SubChapterForComboBoxRecord;
+import cz.uhk.zlesak.threejslearningapp.models.records.SubChapterForSelectRecord;
 import cz.uhk.zlesak.threejslearningapp.models.entities.ChapterEntity;
 import cz.uhk.zlesak.threejslearningapp.models.entities.quickEntities.QuickModelEntity;
 import elemental.json.Json;
@@ -130,24 +130,24 @@ public class ChapterController {
      * If an error occurs during the parsing, it logs the error and throws an Exception.
      * @return a list of SubChapterForComboBoxRecord objects containing sub-chapter IDs and names
      * @throws Exception if there is an error retrieving the sub-chapter names or if the chapter does not exist
-     * @see SubChapterForComboBoxRecord
+     * @see SubChapterForSelectRecord
      */
-    public List<SubChapterForComboBoxRecord> getSubChaptersNames(String chapterId) throws Exception {
+    public List<SubChapterForSelectRecord> getSubChaptersNames(String chapterId) throws Exception {
         if(chapterEntity == null || !Objects.equals(chapterEntity.getId(), chapterId)) {
             getChapter(chapterId);
         }
 
-        List<SubChapterForComboBoxRecord> subChapters = new ArrayList<>();
+        List<SubChapterForSelectRecord> subChapters = new ArrayList<>();
         try {
             JsonArray blocks = Json.parse(chapterEntity.getContent()).getArray("blocks");
 
-            subChapters.add(new SubChapterForComboBoxRecord("", "Vyberte podkapitolu"));
+            subChapters.add(new SubChapterForSelectRecord("", "Vyberte podkapitolu"));
             for (int i = 0; i < blocks.length(); i++) {
                 JsonObject block = blocks.getObject(i);
                 if ("header".equals(block.getString("type")) && block.getObject("data").getNumber("level") == 1) {
                     String id = block.hasKey("id") ? block.getString("id") : "fallback-" + java.util.UUID.randomUUID().toString().substring(0, 7);
                     String text = block.getObject("data").getString("text");
-                    subChapters.add(new SubChapterForComboBoxRecord(id, text));
+                    subChapters.add(new SubChapterForSelectRecord(id, text));
                 }
             }
             return subChapters;
