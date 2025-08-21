@@ -3,7 +3,6 @@ import { customElement, state } from 'lit/decorators.js';
 import EditorJS, { OutputData } from '@editorjs/editorjs';
 import Header from '@editorjs/header';
 import List from '@editorjs/list';
-import LinkTool from '@editorjs/link';
 import Paragraph from '@editorjs/paragraph';
 import Underline from '@editorjs/underline';
 import Quote from '@editorjs/quote';
@@ -12,6 +11,8 @@ import Hyperlink from 'editorjs-hyperlink';
 import Strikethrough from '@sotaproject/strikethrough';
 import uploader from '@ajite/editorjs-image-base64';
 import ImageTool from '@editorjs/image';
+import LinkTool from '@editorjs/link';
+import TextureColorLinkTool from './textureColorLinkTool/textureColorLinkTool';
 
 @customElement('editor-js')
 export class EditorJs extends LitElement {
@@ -82,11 +83,15 @@ export class EditorJs extends LitElement {
         placeholder: 'Začněte tvořit...',
         tools: {
           strikethrough: Strikethrough,
-          underline: Underline,
-          paragraph: Paragraph,
           linkTool: LinkTool,
+          underline: Underline,
+          paragraph: {
+            class: Paragraph,
+            inlineToolbar: ['bold', 'strikethrough', 'underline', 'italic', 'textureColorLinkTool']
+          },
           header: {
             class: Header,
+            inlineToolbar: ['underline', 'bold', 'italic'],
             config: {
               placeholder: 'Vložte nadpis',
               levels: [1, 2, 3, 4, 5, 6],
@@ -97,6 +102,7 @@ export class EditorJs extends LitElement {
           list: List,
           quote: {
             class: Quote,
+            inlineToolbar: ['underline', 'bold', 'italic'],
             config: {
               quotePlaceholder: 'Citujte...',
               captionPlaceholder: 'Podepište autora citace'
@@ -116,7 +122,15 @@ export class EditorJs extends LitElement {
               rel: 'nofollow',
               availableTargets: ['_self'],
               availableRels: ['author', 'noreferrer'],
-              validate: false
+              validate: false,
+              inlineToolbar: ['underline', 'bold', 'italic']
+            }
+          },
+          textureColorLinkTool: {
+            class: TextureColorLinkTool,
+            config: {
+              textures: [],
+              colors: []
             }
           },
           image: {
@@ -131,10 +145,11 @@ export class EditorJs extends LitElement {
             toolNames: {
               'Text': 'Text', 'Heading': 'Nadpis', 'List': 'Seznam',
               'Warning': 'Varování', 'Quote': 'Citace', 'Code': 'Kód',
-              'Table': 'Tabulka', 'Link': 'Odkaz', 'Marker': 'Zvýrazňovač',
+              'Table': 'Tabulka', 'Link': 'Odkaz (mimo MISH)', 'Marker': 'Zvýrazňovač',
               'Bold': 'Tučně', 'Italic': 'Italika', 'InlineCode': 'Řádkový kód',
               'Ordered List': 'Seřazený Seznam', 'Unordered List': 'Neseřazený Seznam',
-              'Checklist': 'Odškrtávací seznam', 'Image': 'Obrázek', 'Attaches': 'Přílohy'
+              'Checklist': 'Odškrtávací seznam', 'Image': 'Obrázek', 'Attaches': 'Přílohy',
+              'Hyperlink': 'Hypertextový odkaz', 'Strikethrough': 'Přeškrtnutí'
             },
             tools: {
               'header': {
@@ -166,6 +181,13 @@ export class EditorJs extends LitElement {
                 'Add row above': 'Přidat řádek nahoru',
                 'Add row below': 'Přidat řádek dolu',
                 'Delete row': 'Smazat řádek'
+              },
+              'tools': {
+                'hyperlink': {
+                  'Save': 'Uložit',
+                  'Select target': 'Zvolte odkaz do textury',
+                  'Select rel': 'Zvolte rel'
+                }
               }
             },
             blockTunes: {
@@ -191,7 +213,6 @@ export class EditorJs extends LitElement {
                   'Add': 'Přidat další blok'
                 }
               },
-
               'blockTunes': {
                 'toggler': {
                   'Click to tune': 'Vyberte nastavení bloku',
@@ -204,6 +225,7 @@ export class EditorJs extends LitElement {
         onReady: () => {
           this.resolveEditorReadyPromise();
           this.dispatchEvent(new CustomEvent('editor-js-ready', { bubbles: true, composed: true }));
+          this.initializeCsv();
         },
         onChange: () => {
         }
@@ -214,6 +236,7 @@ export class EditorJs extends LitElement {
     }
   }
 
+  // @ts-ignore - Method is used by external components
   async getData(): Promise<OutputData> {
     await this.editorReadyPromise;
     if (!this.editor) {
@@ -227,6 +250,7 @@ export class EditorJs extends LitElement {
     }
   }
 
+  // @ts-ignore - Method is used by external components
   async getDataAsString(): Promise<string> {
     await this.editorReadyPromise;
     if (!this.editor) {
@@ -241,6 +265,7 @@ export class EditorJs extends LitElement {
     }
   }
 
+  // @ts-ignore - Method is used by external components
   async setChapterContentData(jsonData: string): Promise<void> {
     await this.editorReadyPromise;
     if (!this.editor || !this.editor.blocks) {
@@ -251,13 +276,14 @@ export class EditorJs extends LitElement {
     await this.setData(this._chapterContentData);
   }
 
+  // @ts-ignore - Method is used by external components
   async setSelectedSubchapterData(jsonData: string): Promise<void> {
     await this.editorReadyPromise;
     if (!this.editor || !this.editor.blocks) {
       console.error('setData: Editor or editor.blocks not fully initialized even after promise resolved.');
       return;
     }
-    const finalSubChapterDataOutputData : OutputData = structuredClone(this._chapterContentData);
+    const finalSubChapterDataOutputData: OutputData = structuredClone(this._chapterContentData);
     finalSubChapterDataOutputData.blocks = JSON.parse(jsonData);
     await this.setData(finalSubChapterDataOutputData);
   }
@@ -278,6 +304,7 @@ export class EditorJs extends LitElement {
     }
   }
 
+  // @ts-ignore - Method is used by external components
   public async toggleReadOnlyMode(readOnly?: boolean) {
     await this.editorReadyPromise;
     if (!this.editor) {
@@ -295,5 +322,28 @@ export class EditorJs extends LitElement {
       throw new Error('Editor not initialized in clear');
     }
     this.editor.clear();
+  }
+
+  public async initializeCsv() : Promise<void>{
+    await this.editorReadyPromise;
+    if (!this.editor || !this.editor.blocks) {
+      console.error('initializeCsv: Editor or editor.blocks not fully initialized even after promise resolved.');
+      return;
+    }
+    try {
+      const textures = [
+        { name: 'Textura 1', id: 't1' },
+        { name: 'Textura 2', id: 't2' }
+      ];
+      const colors = [
+        { name: 'Červená', id: 'red' },
+        { name: 'Modrá', id: 'blue' }
+      ];
+      console.info("setting");
+      TextureColorLinkTool.setGlobalTexturesAndColors(textures, colors);
+    }catch (error) {
+      console.error('Error initializing csv data:', error);
+      throw error;
+    }
   }
 }

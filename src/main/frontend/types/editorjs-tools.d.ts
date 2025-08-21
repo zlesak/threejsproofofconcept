@@ -120,10 +120,28 @@ declare module '@editorjs/header' {
         renderSettings?(): HTMLElement;
     }
 
-    export default Paragraph;
+    export default Header;
 }
 
 declare module '@ajite/editorjs-image-base64' {
     const uploader: any;
     export default uploader;
+}
+
+declare module '@editorjs/list' {
+    class List {
+        static get toolbox(): {
+            title: string;
+            icon: string;
+        };
+
+        constructor(config: any);
+
+        render(): HTMLElement;
+        save(blockContent: HTMLElement): any;
+        validate(savedData: any): boolean;
+        renderSettings?(): HTMLElement;
+    }
+
+    export default List;
 }
