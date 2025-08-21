@@ -11,7 +11,7 @@ import com.vaadin.flow.component.progressbar.ProgressBar;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.theme.lumo.LumoUtility.Gap;
 import cz.uhk.zlesak.threejslearningapp.components.*;
-import cz.uhk.zlesak.threejslearningapp.components.Selects.ChapterSelect;
+import cz.uhk.zlesak.threejslearningapp.components.selects.ChapterSelect;
 import cz.uhk.zlesak.threejslearningapp.data.enums.ViewTypeEnum;
 import cz.uhk.zlesak.threejslearningapp.i18n.CustomI18NProvider;
 import cz.uhk.zlesak.threejslearningapp.utils.SpringContextUtils;
@@ -49,13 +49,13 @@ public abstract class ChapterScaffold extends Composite<VerticalLayout> implemen
         VerticalLayout chapterNavigation = new VerticalLayout();
 
         Scroller chapterNavigationScroller = new Scroller(navigationContentLayout, Scroller.ScrollDirection.VERTICAL);
-        Scroller chapterContentScroller = new Scroller(editorjs, Scroller.ScrollDirection.VERTICAL);
+//        Scroller chapterContentScroller = new Scroller(editorjs, Scroller.ScrollDirection.VERTICAL);
 
         // Sestavení layoutu
         secondaryNavigationBar.add(chapterSelect, chapterNameTextField, searchInChapterTextField);
         chapterPageLayout.add(chapterNavigation, chapterContent, chapterModel);
         chapterNavigation.add(chapterNavigationScroller);
-        chapterContent.add(chapterContentScroller);
+        chapterContent.add(editorjs);
         chapterModel.add(modelDiv);
 
         switch (viewType) {
@@ -105,12 +105,12 @@ public abstract class ChapterScaffold extends Composite<VerticalLayout> implemen
 
         chapterContent.setHeightFull();
         chapterContent.getStyle().set("flex-grow", "1");
-        chapterContent.setFlexGrow(1, chapterContentScroller);
+//        chapterContent.setFlexGrow(1, chapterContentScroller);
         chapterContent.setPadding(false);
         chapterContent.getStyle().set("min-width", "0");
 
-        chapterContentScroller.setWidthFull();
-        chapterContentScroller.setHeightFull();
+//        chapterContentScroller.setWidthFull();
+//        chapterContentScroller.setHeightFull();
 
         chapterModel.setHeightFull();
         chapterModel.setWidthFull();

@@ -3,14 +3,13 @@ package cz.uhk.zlesak.threejslearningapp.components;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.html.Span;
-import com.vaadin.flow.component.notification.Notification;
-import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.shared.Tooltip;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.component.upload.Upload;
 import com.vaadin.flow.component.upload.receivers.MultiFileMemoryBuffer;
+import cz.uhk.zlesak.threejslearningapp.components.Notifications.ErrorNotification;
 import cz.uhk.zlesak.threejslearningapp.data.files.InputStreamMultipartFile;
 import cz.uhk.zlesak.threejslearningapp.i18n.CustomI18NProvider;
 import cz.uhk.zlesak.threejslearningapp.utils.SpringContextUtils;
@@ -83,9 +82,7 @@ public class UploadComponent extends Upload {
 
         addFileRejectedListener(event -> {
             String errorMessage = event.getErrorMessage();
-            Notification notification = Notification.show(errorMessage, 5000,
-                    Notification.Position.MIDDLE);
-            notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
+            new ErrorNotification(errorMessage);
         });
 
         String toolTipText = i18nProvider.getTranslation("upload.file.format.info.multiple", UI.getCurrent().getLocale()) + ": " + String.join(", ", acceptedFileTypes);

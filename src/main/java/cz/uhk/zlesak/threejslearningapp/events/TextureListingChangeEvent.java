@@ -1,7 +1,7 @@
 package cz.uhk.zlesak.threejslearningapp.events;
 
 import com.vaadin.flow.component.ComponentEvent;
-import cz.uhk.zlesak.threejslearningapp.components.Selects.TextureListingSelect;
+import cz.uhk.zlesak.threejslearningapp.components.selects.TextureListingSelect;
 import cz.uhk.zlesak.threejslearningapp.models.records.TextureListingForSelectRecord;
 
 /**

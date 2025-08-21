@@ -1,4 +1,4 @@
-package cz.uhk.zlesak.threejslearningapp.components.Selects;
+package cz.uhk.zlesak.threejslearningapp.components.selects;
 
 import com.vaadin.flow.component.ComponentEventListener;
 import cz.uhk.zlesak.threejslearningapp.events.TextureListingChangeEvent;
