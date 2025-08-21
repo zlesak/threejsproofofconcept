@@ -13,5 +13,5 @@ import lombok.experimental.SuperBuilder;
 @AllArgsConstructor
 @SuperBuilder
 public class TextureEntity extends Entity {
-    String CSV;
+    String CsvContent;
 }

@@ -1,4 +1,4 @@
-package cz.uhk.zlesak.threejslearningapp.components.Notifications;
+package cz.uhk.zlesak.threejslearningapp.components.notifications;
 
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;

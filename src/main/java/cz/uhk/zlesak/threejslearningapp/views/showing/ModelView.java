@@ -2,10 +2,9 @@ package cz.uhk.zlesak.threejslearningapp.views.showing;
 
 import com.vaadin.flow.component.Tag;
 import com.vaadin.flow.component.UI;
-import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.function.SerializableRunnable;
 import com.vaadin.flow.router.*;
-import cz.uhk.zlesak.threejslearningapp.components.Notifications.ErrorNotification;
+import cz.uhk.zlesak.threejslearningapp.components.notifications.ErrorNotification;
 import cz.uhk.zlesak.threejslearningapp.controllers.ModelController;
 import cz.uhk.zlesak.threejslearningapp.data.enums.ViewTypeEnum;
 import cz.uhk.zlesak.threejslearningapp.i18n.CustomI18NProvider;

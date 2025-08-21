@@ -47,7 +47,7 @@ public class TextureController {
             String csvString = csv == null ? null : new String(csv.readAllBytes(), StandardCharsets.UTF_8);
             TextureEntity textureEntity = TextureEntity.builder()
                     .Name(inputStream.getDisplayName())
-                    .CSV(csvString)
+                    .CsvContent(csvString)
                     .build();
             TextureUploadEntity uploadedEntity = TextureUploadEntity.builder()
                     .modelId(modelId)
@@ -60,21 +60,22 @@ public class TextureController {
         }
     }
 
-    public List<QuickTextureEntity> uploadOtherTextures(List<InputStreamMultipartFile> textureInputStream, String modelId, List<InputStreamMultipartFile> csvInputStream) throws ApplicationContextException, IOException {
+    public List<QuickTextureEntity> uploadOtherTextures(List<InputStreamMultipartFile> textureInputStream, String modelId, List<InputStreamMultipartFile> listCsvInputStream) throws ApplicationContextException {
         List<QuickTextureEntity> otherTextureEntities = new ArrayList<>();
         for (var entry : textureInputStream) {
             if (!entry.isEmpty()) {
+                InputStreamMultipartFile csv = null;
                 InputStream csvStream = null;
                 String prefix;
-                if (csvInputStream != null) {
-                    prefix = entry.getName().substring(0, entry.getName().lastIndexOf('.'));
-                    for (InputStreamMultipartFile csvFile : csvInputStream) {
-                        if (csvFile.getName().equals(prefix + ".csv")) {
-                            csvStream = csvFile.getInputStream();
-                            break;
-                        }
+                prefix = entry.getName().substring(0, entry.getName().lastIndexOf('.'));
+                for (InputStreamMultipartFile csvFile : listCsvInputStream) {
+                    if (csvFile.getName().equals(prefix + ".csv")) {
+                        csv = csvFile;
+                        csvStream = csv.getInputStream();
+                        break;
                     }
                 }
+                listCsvInputStream.remove(csv);
 
                 QuickTextureEntity quickTextureEntity = uploadTexture(entry, false, modelId, csvStream);
                 otherTextureEntities.add(quickTextureEntity);
