@@ -6,8 +6,8 @@ import cz.uhk.zlesak.threejslearningapp.clients.ModelApiClient;
 import cz.uhk.zlesak.threejslearningapp.data.files.InputStreamMultipartFile;
 import cz.uhk.zlesak.threejslearningapp.models.entities.Entity;
 import cz.uhk.zlesak.threejslearningapp.models.entities.ModelEntity;
-import cz.uhk.zlesak.threejslearningapp.models.entities.quickEntities.QuickFileEntity;
 import cz.uhk.zlesak.threejslearningapp.models.entities.quickEntities.QuickModelEntity;
+import cz.uhk.zlesak.threejslearningapp.models.entities.quickEntities.QuickTextureEntity;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContextException;
@@ -22,6 +22,7 @@ import java.util.List;
  * This class handles the interaction with the model API client to upload models and textures,
  * and provides methods to retrieve model files, names, and base64 representations.
  * It also integrates with the TextureController to manage textures associated with the models as the textures are an integral part of the model data.
+ *
  * @see TextureController
  */
 @Slf4j
@@ -36,9 +37,10 @@ public class ModelController {
     /**
      * Constructor for ModelController.
      * Initializes controller with dependencies for texture management, model API client, and JSON processing.
+     *
      * @param textureController the controller for managing textures associated with models.
-     * @param modelApiClient the API client for interacting with model-related endpoints.
-     * @param objectMapper the ObjectMapper for JSON serialization and deserialization.
+     * @param modelApiClient    the API client for interacting with model-related endpoints.
+     * @param objectMapper      the ObjectMapper for JSON serialization and deserialization.
      */
     @Autowired
     public ModelController(TextureController textureController, ModelApiClient modelApiClient, ObjectMapper objectMapper) {
@@ -51,7 +53,8 @@ public class ModelController {
      * Uploads a 3D model with the specified name and input streams.
      * The method checks for valid model name and input streams, then uploads the model using the model API client.
      * It returns a QuickModelEntity containing the uploaded model's details as a proof of successful upload.
-     * @param modelName as of the whole object with possible textures and CSVs.
+     *
+     * @param modelName   as of the whole object with possible textures and CSVs.
      * @param inputStream the input stream representing the model file to be uploaded.
      * @return QuickModelEntity containing the details of the uploaded model.
      * @throws RuntimeException if the model name is empty or the input streams are empty, or if an error occurs during the upload process.
@@ -69,8 +72,7 @@ public class ModelController {
             Entity entity = ModelEntity.builder()
                     .Name(modelName)
                     .build();
-            String response = modelApiClient.uploadFileEntity(inputStream, entity);
-            return objectMapper.readValue(response, QuickModelEntity.class);
+            return modelApiClient.uploadFileEntity(inputStream, entity);
         } catch (Exception e) {
             throw new RuntimeException("Chyba při nahrávání modelu: " + e.getMessage(), e);
         }
@@ -81,15 +83,16 @@ public class ModelController {
      * This method handles the upload of the model file, main texture, other textures, and CSV files.
      * It validates the inputs and uses the TextureController to manage texture uploads.
      * If any of the required inputs are empty, it throws an ApplicationContextException.
-     * @param modelName the name of the model to be uploaded.
-     * @param modelInputStream a map of input streams representing the model file to be uploaded, where the key is the file name and the value is the InputStream of the file.
-     * @param mainTextureInputStream a map of input streams representing the main texture file to be uploaded, where the key is the file name and the value is the InputStream of the file.
+     *
+     * @param modelName                    the name of the model to be uploaded.
+     * @param modelInputStream             a map of input streams representing the model file to be uploaded, where the key is the file name and the value is the InputStream of the file.
+     * @param mainTextureInputStream       a map of input streams representing the main texture file to be uploaded, where the key is the file name and the value is the InputStream of the file.
      * @param otherTexturesInputStreamList a map of input streams representing other texture files to be uploaded, where the key is the file name and the value is the InputStream of the file.
-     * @param csvInputStreamList a map of input streams representing CSV files to be uploaded, where the key is the file name and the value is the InputStream of the file.
+     * @param csvInputStreamList           a map of input streams representing CSV files to be uploaded, where the key is the file name and the value is the InputStream of the file.
      * @return QuickModelEntity containing the details of the uploaded model and its textures.
      * @throws ApplicationContextException if the model name is empty, the model input stream is empty, or the main texture input stream is empty.
-     * @throws JsonProcessingException if there is an error during JSON processing of the uploaded model entity.
-     * @throws RuntimeException if there is an error during the upload of the main texture or other textures.
+     * @throws JsonProcessingException     if there is an error during JSON processing of the uploaded model entity.
+     * @throws RuntimeException            if there is an error during the upload of the main texture or other textures.
      * @see TextureController
      */
     public QuickModelEntity uploadModel(String modelName, InputStreamMultipartFile modelInputStream, InputStreamMultipartFile mainTextureInputStream, List<InputStreamMultipartFile> otherTexturesInputStreamList, List<InputStreamMultipartFile> csvInputStreamList) throws ApplicationContextException, JsonProcessingException, RuntimeException {
@@ -106,27 +109,21 @@ public class ModelController {
         QuickModelEntity uploadedModel = uploadModel(modelName, modelInputStream);
 
         try {
-            String mainTextureUploadedId = textureController.uploadTexture(mainTextureInputStream, true, uploadedModel.getModel().getId(), null);
-            if (!mainTextureUploadedId.isEmpty()) {
-                QuickFileEntity mainTextureQuickFileEntity = QuickFileEntity.builder()
-                        .id(mainTextureUploadedId)
-                        .name(mainTextureInputStream.getDisplayName())
-                        .build();
-                uploadedModel.setMainTexture(mainTextureQuickFileEntity);
-            }
+            QuickTextureEntity mainTextureQuickFileEntity = textureController.uploadTexture(mainTextureInputStream, true, uploadedModel.getModel().getId(), null);
+            uploadedModel.setMainTexture(mainTextureQuickFileEntity);
         } catch (Exception e) {
             log.error("Chyba při nahrávání hlavní textury: {}", e.getMessage(), e);
             throw new RuntimeException("Chyba při nahrávání hlavní textury: " + e.getMessage(), e);
         }
 
         try {
-            List<QuickFileEntity> otherTexturesUploadedList = textureController.uploadOtherTextures(otherTexturesInputStreamList, uploadedModel.getModel().getId(), csvInputStreamList);
+            List<QuickTextureEntity> otherTexturesUploadedList = textureController.uploadOtherTextures(otherTexturesInputStreamList, uploadedModel.getModel().getId(), csvInputStreamList);
             uploadedModel.setOtherTextures(otherTexturesUploadedList);
         } catch (Exception e) {
             log.error("Chyba při nahrávání vedlejších textur: {}", e.getMessage(), e);
             throw new RuntimeException("Chyba při nahrávání vedlejších textur: " + e.getMessage(), e);
         }
-        String json = new com.fasterxml.jackson.databind.ObjectMapper().writeValueAsString(uploadedModel);
+        String json = new com.fasterxml.jackson.databind.ObjectMapper().writeValueAsString(uploadedModel);//TODO change to proper object mapper
         log.info(json);
         return uploadedModel;
     }
@@ -134,6 +131,7 @@ public class ModelController {
     /**
      * Retrieves a model entity by its ID.
      * This method uses the model API client to fetch the model entity from the BE.
+     *
      * @param modelId the ID of the model to be retrieved.
      * @throws RuntimeException if there is an error during the retrieval of the model entity.
      * @see ModelApiClient#getFileEntityById(String)
@@ -151,6 +149,7 @@ public class ModelController {
      * Retrieves the base64 representation of a model by its ID.
      * The base64 format is used to transfer the model to the Three.js renderer.
      * This method checks if the model entity is already loaded; if not, it fetches it using the getModel method.
+     *
      * @param modelId the ID of the model for which the base64 representation is requested.
      * @return the base64 representation of the model file as a String.
      * @throws IOException if there is an error during the retrieval of the model entity or its base64 representation.

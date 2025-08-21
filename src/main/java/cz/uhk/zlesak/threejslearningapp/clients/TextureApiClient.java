@@ -8,6 +8,7 @@ import cz.uhk.zlesak.threejslearningapp.exceptions.ApiCallException;
 import cz.uhk.zlesak.threejslearningapp.models.entities.Entity;
 import cz.uhk.zlesak.threejslearningapp.models.entities.IEntity;
 import cz.uhk.zlesak.threejslearningapp.models.entities.TextureEntity;
+import cz.uhk.zlesak.threejslearningapp.models.entities.quickEntities.QuickTextureEntity;
 import org.apache.commons.lang3.NotImplementedException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
@@ -119,7 +120,7 @@ public class TextureApiClient implements IFileApiClient {
      * @throws Exception Throws exception if anything goes wrong when uploading the texture via this API call.
      */
     @Override
-    public String uploadFileEntity(InputStreamMultipartFile inputStreamMultipartFile, IEntity textureEntity) throws Exception {
+    public QuickTextureEntity uploadFileEntity(InputStreamMultipartFile inputStreamMultipartFile, IEntity textureEntity) throws Exception {
         String url = baseUrl + "upload";
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.MULTIPART_FORM_DATA);
@@ -142,7 +143,8 @@ public class TextureApiClient implements IFileApiClient {
                     request,
                     String.class
             );
-            return response.getBody();
+            String responseBody = response.getBody();
+            return objectMapper.readValue(responseBody, QuickTextureEntity.class);
         } catch (HttpStatusCodeException ex) {
             throw new ApiCallException("Chyba při nahrávání textury", null, request.toString(), ex.getStatusCode(), ex.getResponseBodyAsString(), ex);
         }

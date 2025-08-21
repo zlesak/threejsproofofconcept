@@ -13,7 +13,7 @@ import lombok.Data;
 @Data
 @AllArgsConstructor
 @Builder
-public class QuickFileEntity {
+public class QuickFileEntity implements IQuickFile{
     String id;
     String name;
 }

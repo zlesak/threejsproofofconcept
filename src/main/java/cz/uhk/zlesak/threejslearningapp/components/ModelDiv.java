@@ -3,8 +3,8 @@ package cz.uhk.zlesak.threejslearningapp.components;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.progressbar.ProgressBar;
-import cz.uhk.zlesak.threejslearningapp.components.Selects.TextureAreaSelect;
-import cz.uhk.zlesak.threejslearningapp.components.Selects.TextureListingSelect;
+import cz.uhk.zlesak.threejslearningapp.components.selects.TextureAreaSelect;
+import cz.uhk.zlesak.threejslearningapp.components.selects.TextureListingSelect;
 import cz.uhk.zlesak.threejslearningapp.models.records.TextureAreaForSelectRecord;
 import cz.uhk.zlesak.threejslearningapp.models.records.TextureListingForSelectRecord;
 

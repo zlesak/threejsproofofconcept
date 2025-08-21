@@ -1,8 +1,8 @@
 package cz.uhk.zlesak.threejslearningapp.views.showing;
 
 import com.vaadin.flow.component.Tag;
-import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.router.*;
+import cz.uhk.zlesak.threejslearningapp.components.Notifications.ErrorNotification;
 import cz.uhk.zlesak.threejslearningapp.controllers.TextureController;
 import cz.uhk.zlesak.threejslearningapp.data.enums.ViewTypeEnum;
 import cz.uhk.zlesak.threejslearningapp.views.listing.ModelListView;
@@ -38,7 +38,7 @@ public class TextureView extends TextureScaffold {
             textureName.setValue(textureController.getTextureName(textureId));
         } catch (Exception e) {
             log.error(e.getMessage());
-            Notification.show("Nepovedlo se načíst texturu: " + e.getMessage(), 5000, Notification.Position.MIDDLE);
+            new ErrorNotification("Nepovedlo se načíst texturu: " + e.getMessage());
             event.forwardTo(ModelListView.class);
         }
     }
@@ -51,5 +51,10 @@ public class TextureView extends TextureScaffold {
     @Override
     public String getPageTitle() {
         return "";
+    }
+
+    @Override
+    public void afterNavigation(AfterNavigationEvent event) {
+
     }
 }

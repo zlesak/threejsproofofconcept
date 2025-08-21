@@ -1,5 +1,6 @@
 package cz.uhk.zlesak.threejslearningapp.views;
 
+import com.vaadin.flow.router.AfterNavigationObserver;
 import com.vaadin.flow.router.BeforeEnterObserver;
 import com.vaadin.flow.router.BeforeLeaveObserver;
 import com.vaadin.flow.router.HasDynamicTitle;
@@ -9,5 +10,5 @@ import com.vaadin.flow.router.HasDynamicTitle;
  * It extends BeforeLeaveObserver and BeforeEnterObserver to handle navigation events.
  * + HasDynamicTitle to support dynamic titles for the views.
  */
-public interface IView extends BeforeLeaveObserver, BeforeEnterObserver, HasDynamicTitle {
+public interface IView extends BeforeLeaveObserver, BeforeEnterObserver, HasDynamicTitle, AfterNavigationObserver {
 }

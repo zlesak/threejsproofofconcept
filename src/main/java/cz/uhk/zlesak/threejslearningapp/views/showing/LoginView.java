@@ -4,10 +4,7 @@ import com.vaadin.flow.component.Composite;
 import com.vaadin.flow.component.login.LoginForm;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
-import com.vaadin.flow.router.BeforeEnterEvent;
-import com.vaadin.flow.router.BeforeLeaveEvent;
-import com.vaadin.flow.router.PageTitle;
-import com.vaadin.flow.router.Route;
+import com.vaadin.flow.router.*;
 import cz.uhk.zlesak.threejslearningapp.views.IView;
 import org.springframework.context.annotation.Scope;
 
@@ -40,6 +37,11 @@ public class LoginView extends Composite<VerticalLayout> implements IView {
 
     @Override
     public void beforeLeave(BeforeLeaveEvent event) {
+
+    }
+
+    @Override
+    public void afterNavigation(AfterNavigationEvent event) {
 
     }
 }

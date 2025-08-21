@@ -4,6 +4,7 @@ import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.i18n.I18NProvider;
+import com.vaadin.flow.router.AfterNavigationEvent;
 import com.vaadin.flow.theme.lumo.Lumo;
 import cz.uhk.zlesak.threejslearningapp.components.Notifications.ErrorNotification;
 import cz.uhk.zlesak.threejslearningapp.components.Notifications.InfoNotification;
@@ -102,6 +103,11 @@ public class CreateModelDialog extends Dialog {
         @Override
         public String getPageTitle() {
             return "";
+        }
+
+        @Override
+        public void afterNavigation(AfterNavigationEvent event) {
+
         }
     }
 }

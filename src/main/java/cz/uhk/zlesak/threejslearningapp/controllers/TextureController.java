@@ -6,7 +6,7 @@ import cz.uhk.zlesak.threejslearningapp.clients.TextureApiClient;
 import cz.uhk.zlesak.threejslearningapp.data.files.InputStreamMultipartFile;
 import cz.uhk.zlesak.threejslearningapp.models.entities.TextureEntity;
 import cz.uhk.zlesak.threejslearningapp.models.entities.TextureUploadEntity;
-import cz.uhk.zlesak.threejslearningapp.models.entities.quickEntities.QuickFileEntity;
+import cz.uhk.zlesak.threejslearningapp.models.entities.quickEntities.QuickTextureEntity;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContextException;
@@ -34,7 +34,7 @@ public class TextureController {
         this.objectMapper = objectMapper;
     }
 
-    public String uploadTexture(InputStreamMultipartFile inputStream, boolean isPrimary, String modelId, InputStream csv) throws ApplicationContextException {
+    public QuickTextureEntity uploadTexture(InputStreamMultipartFile inputStream, boolean isPrimary, String modelId, InputStream csv) throws ApplicationContextException {
 
         if (inputStream.isEmpty()) {
             throw new ApplicationContextException("Soubor pro nahrání textury nesmí být prázdný.");
@@ -60,8 +60,8 @@ public class TextureController {
         }
     }
 
-    public List<QuickFileEntity> uploadOtherTextures(List<InputStreamMultipartFile> textureInputStream, String modelId, List<InputStreamMultipartFile> csvInputStream) throws ApplicationContextException {
-        List<QuickFileEntity> otherTextureEntities = new ArrayList<>();
+    public List<QuickTextureEntity> uploadOtherTextures(List<InputStreamMultipartFile> textureInputStream, String modelId, List<InputStreamMultipartFile> csvInputStream) throws ApplicationContextException, IOException {
+        List<QuickTextureEntity> otherTextureEntities = new ArrayList<>();
         for (var entry : textureInputStream) {
             if (!entry.isEmpty()) {
                 InputStream csvStream = null;
@@ -76,11 +76,8 @@ public class TextureController {
                     }
                 }
 
-                String uploadedTextureId = uploadTexture(entry, false, modelId, csvStream);
-                otherTextureEntities.add(QuickFileEntity.builder()
-                        .id(uploadedTextureId)
-                        .name(entry.getDisplayName())
-                        .build());
+                QuickTextureEntity quickTextureEntity = uploadTexture(entry, false, modelId, csvStream);
+                otherTextureEntities.add(quickTextureEntity);
             }
         }
         return otherTextureEntities;

@@ -6,6 +6,7 @@ import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
+import com.vaadin.flow.router.AfterNavigationEvent;
 import com.vaadin.flow.router.BeforeEnterEvent;
 import com.vaadin.flow.router.BeforeLeaveEvent;
 import com.vaadin.flow.router.Route;
@@ -53,7 +54,7 @@ public class CreateChapterView extends ChapterScaffold {
 
             String base64ModelFile = modelController.getModelBase64(entity.getModel().getId());
             if (dialog.isAdvanced()) {
-                String textureFileEntity = textureController.getTextureBase64(entity.getMainTexture().getId());
+                String textureFileEntity = textureController.getTextureBase64(entity.getMainTexture().getTextureFileId());
                 renderer.loadAdvancedModel(base64ModelFile, textureFileEntity);
             } else {
                 renderer.loadModel(base64ModelFile);
@@ -105,5 +106,10 @@ public class CreateChapterView extends ChapterScaffold {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
+
+    @Override
+    public void afterNavigation(AfterNavigationEvent event) {
+
     }
 }

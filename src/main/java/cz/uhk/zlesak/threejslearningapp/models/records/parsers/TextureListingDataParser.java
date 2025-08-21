@@ -1,6 +1,6 @@
 package cz.uhk.zlesak.threejslearningapp.models.records.parsers;
 
-import cz.uhk.zlesak.threejslearningapp.models.entities.quickEntities.QuickFileEntity;
+import cz.uhk.zlesak.threejslearningapp.models.entities.quickEntities.QuickTextureEntity;
 import cz.uhk.zlesak.threejslearningapp.models.records.TextureListingForSelectRecord;
 
 import java.util.List;
@@ -12,13 +12,13 @@ import java.util.List;
  */
 public abstract class TextureListingDataParser
 {
-    public static List<TextureListingForSelectRecord> textureListingForSelectDataParser(List<QuickFileEntity> textures) {
+    public static List<TextureListingForSelectRecord> textureListingForSelectDataParser(List<QuickTextureEntity> textures) {
         if(textures == null || textures.isEmpty()) {
             return List.of();
         }
         return textures.stream()
                 .map(texture -> new TextureListingForSelectRecord(
-                        texture.getId(),
+                        texture.getTextureFileId(),
                         texture.getName()))
                 .toList();
     }

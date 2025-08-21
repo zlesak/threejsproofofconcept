@@ -3,6 +3,7 @@ package cz.uhk.zlesak.threejslearningapp.views.creating;
 import com.vaadin.flow.component.Tag;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.router.AfterNavigationEvent;
 import com.vaadin.flow.router.BeforeEnterEvent;
 import com.vaadin.flow.router.BeforeLeaveEvent;
 import com.vaadin.flow.router.Route;
@@ -36,16 +37,16 @@ public class CreateModelView extends ModelScaffold {
                 QuickModelEntity quickModelEntity;
                 if (isAdvanced.getValue()) {
                     quickModelEntity = modelController.uploadModel(modelName.getValue().trim(), objUploadComponent.getUploadedFiles().getFirst(), mainTextureUploadComponent.getUploadedFiles().getFirst(), otherTexturesUploadComponent.getUploadedFiles(), csvUploadComponent.getUploadedFiles());
-                    new InfoNotification("Model úspěšně nahrán.", 3000);
+                    new InfoNotification("Model úspěšně nahrán.");
                 } else {
                     quickModelEntity = modelController.uploadModel(modelName.getValue().trim(), objUploadComponent.getUploadedFiles().getFirst());
-                    new InfoNotification("Model a textury úspěšně nahrány.", 3000);
+                    new InfoNotification("Model a textury úspěšně nahrány.");
                 }
                 skipBeforeLeaveDialog = true;
                 UI.getCurrent().navigate("model/" + quickModelEntity.getModel().getId());
             } catch (Exception e) {
                 log.error("Error uploading model", e);
-                new ErrorNotification("Chyba při nahrávání modelu: " + e.getMessage(), 5000);
+                new ErrorNotification("Chyba při nahrávání modelu: " + e.getMessage());
             }
         });
         modelProperties.add(createButton);
@@ -70,5 +71,10 @@ public class CreateModelView extends ModelScaffold {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
+
+    @Override
+    public void afterNavigation(AfterNavigationEvent event) {
+
     }
 }

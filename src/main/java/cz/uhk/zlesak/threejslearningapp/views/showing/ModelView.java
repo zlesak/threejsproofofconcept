@@ -4,10 +4,8 @@ import com.vaadin.flow.component.Tag;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.function.SerializableRunnable;
-import com.vaadin.flow.router.BeforeEnterEvent;
-import com.vaadin.flow.router.BeforeLeaveEvent;
-import com.vaadin.flow.router.Route;
-import com.vaadin.flow.router.RouteParameters;
+import com.vaadin.flow.router.*;
+import cz.uhk.zlesak.threejslearningapp.components.Notifications.ErrorNotification;
 import cz.uhk.zlesak.threejslearningapp.controllers.ModelController;
 import cz.uhk.zlesak.threejslearningapp.data.enums.ViewTypeEnum;
 import cz.uhk.zlesak.threejslearningapp.i18n.CustomI18NProvider;
@@ -53,11 +51,11 @@ public class ModelView extends ModelScaffold {
             renderer.loadModel(base64Model);
         } catch (IOException e) {
             log.error(e.getMessage());
-            Notification.show("Nepovedlo se načíst model: " + e.getMessage(), 5000, Notification.Position.MIDDLE);
+            new ErrorNotification("Nepovedlo se načíst model: " + e.getMessage());
             event.forwardTo(ModelListView.class);
         } catch (Exception e) {
             log.error("Neočekávaná chyba při načítání modelu: {}", e.getMessage(), e);
-            Notification.show("Neočekávaná chyba při načítání modelu: " + e.getMessage(), 5000, Notification.Position.MIDDLE);
+            new ErrorNotification("Neočekávaná chyba při načítání modelu: " + e.getMessage());
             event.forwardTo(ModelListView.class);
         }
     }
@@ -71,5 +69,10 @@ public class ModelView extends ModelScaffold {
     @Override
     public String getPageTitle() {
         return i18nProvider.getTranslation("page.title.modelView", UI.getCurrent().getLocale());
+    }
+
+    @Override
+    public void afterNavigation(AfterNavigationEvent event) {
+
     }
 }

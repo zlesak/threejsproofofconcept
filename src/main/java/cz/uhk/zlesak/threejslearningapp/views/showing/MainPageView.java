@@ -9,6 +9,7 @@ import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.router.AfterNavigationEvent;
 import com.vaadin.flow.router.BeforeEnterEvent;
 import com.vaadin.flow.router.BeforeLeaveEvent;
 import com.vaadin.flow.router.Route;
@@ -65,6 +66,11 @@ public class MainPageView extends Composite<VerticalLayout> implements IView {
 
     @Override
     public void beforeLeave(BeforeLeaveEvent event) {
+
+    }
+
+    @Override
+    public void afterNavigation(AfterNavigationEvent event) {
 
     }
 }

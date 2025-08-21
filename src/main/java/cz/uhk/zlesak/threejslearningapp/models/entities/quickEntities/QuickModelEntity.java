@@ -15,8 +15,8 @@ import java.util.List;
 @Getter
 @Setter
 @Builder
-public class QuickModelEntity {
+public class QuickModelEntity implements IQuickFile{
     QuickFileEntity model;
-    QuickFileEntity mainTexture;
-    List<QuickFileEntity> otherTextures;
+    QuickTextureEntity mainTexture;
+    List<QuickTextureEntity> otherTextures;
 }

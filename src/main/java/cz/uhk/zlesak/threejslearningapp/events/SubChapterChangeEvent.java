@@ -1,7 +1,7 @@
 package cz.uhk.zlesak.threejslearningapp.events;
 
 import com.vaadin.flow.component.ComponentEvent;
-import cz.uhk.zlesak.threejslearningapp.components.Selects.ChapterSelect;
+import cz.uhk.zlesak.threejslearningapp.components.selects.ChapterSelect;
 import cz.uhk.zlesak.threejslearningapp.models.records.SubChapterForSelectRecord;
 import lombok.Getter;
 

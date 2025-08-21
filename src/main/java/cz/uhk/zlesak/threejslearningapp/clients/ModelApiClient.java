@@ -8,6 +8,7 @@ import cz.uhk.zlesak.threejslearningapp.exceptions.ApiCallException;
 import cz.uhk.zlesak.threejslearningapp.models.entities.Entity;
 import cz.uhk.zlesak.threejslearningapp.models.entities.IEntity;
 import cz.uhk.zlesak.threejslearningapp.models.entities.ModelEntity;
+import cz.uhk.zlesak.threejslearningapp.models.entities.quickEntities.QuickModelEntity;
 import org.apache.commons.lang3.NotImplementedException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
@@ -125,7 +126,7 @@ public class ModelApiClient implements IFileApiClient {
      * @throws Exception if there is an error during the upload process or if the response is not successful.
      */
     @Override
-    public String uploadFileEntity(InputStreamMultipartFile inputStreamMultipartFile, IEntity fileEntity) throws Exception {
+    public QuickModelEntity uploadFileEntity(InputStreamMultipartFile inputStreamMultipartFile, IEntity fileEntity) throws Exception {
         String url = baseUrl + "upload";
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.MULTIPART_FORM_DATA);
@@ -148,7 +149,7 @@ public class ModelApiClient implements IFileApiClient {
                     String.class
             );
             if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
-                return response.getBody();
+                return objectMapper.readValue(response.getBody(), QuickModelEntity.class);
             } else {
                 throw new ApiCallException("Chyba při nahrávání modelu", null, request.toString(), response.getStatusCode(), response.getBody(), null);
             }
