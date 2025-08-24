@@ -14,6 +14,7 @@ public interface IChapterApiClient extends IApiClient {
     void updateChapter(String chapterId, ChapterEntity chapterEntity) throws Exception;
     void deleteChapter(String chapterId) throws Exception;
     ChapterEntity getChapterById(String chapterId) throws Exception;
+    List<ChapterEntity> getChapters() throws Exception;
     List<String> getChaptersByAuthor(String authorId) throws Exception;
     List<String> getAllChapters() throws Exception;
 }

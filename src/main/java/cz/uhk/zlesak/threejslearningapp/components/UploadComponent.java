@@ -43,8 +43,9 @@ public class UploadComponent extends Upload {
      * @param buffer            The memory buffer to store uploaded files.
      * @param acceptedFileTypes List of accepted file types for upload.
      * @param maxOneFile        If true, restricts the upload to a maximum of one file.
+     * @param canNameFiles      If true, display names can be entered by the user for individual files.
      */
-    public UploadComponent(MultiFileMemoryBuffer buffer, List<String> acceptedFileTypes, boolean maxOneFile) {
+    public UploadComponent(MultiFileMemoryBuffer buffer, List<String> acceptedFileTypes, boolean maxOneFile, boolean canNameFiles) {
         super(buffer);
         if (maxOneFile) {
             setMaxFiles(1);
@@ -67,8 +68,10 @@ public class UploadComponent extends Upload {
             if (uploadListener != null) {
                 uploadListener.accept(fileName, stream);
             }
-            HorizontalLayout fileRow = getHorizontalLayout(fileName, file);
-            fileListLayout.add(fileRow);
+            if(canNameFiles){
+                HorizontalLayout fileRow = getHorizontalLayout(fileName, file);
+                fileListLayout.add(fileRow);
+            }
         });
 
         addFileRemovedListener(event -> {

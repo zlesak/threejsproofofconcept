@@ -1,10 +1,10 @@
 package cz.uhk.zlesak.threejslearningapp.controllers;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import cz.uhk.zlesak.threejslearningapp.clients.ModelApiClient;
 import cz.uhk.zlesak.threejslearningapp.data.files.InputStreamMultipartFile;
 import cz.uhk.zlesak.threejslearningapp.models.entities.Entity;
 import cz.uhk.zlesak.threejslearningapp.models.entities.ModelEntity;
+import cz.uhk.zlesak.threejslearningapp.models.entities.quickEntities.QuickFile;
 import cz.uhk.zlesak.threejslearningapp.models.entities.quickEntities.QuickModelEntity;
 import cz.uhk.zlesak.threejslearningapp.models.entities.quickEntities.QuickTextureEntity;
 import lombok.extern.slf4j.Slf4j;
@@ -15,6 +15,7 @@ import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Controller for managing 3D models, including uploading and retrieving model files and textures.
@@ -87,12 +88,10 @@ public class ModelController {
      * @param csvInputStreamList           a map of input streams representing CSV files to be uploaded, where the key is the file name and the value is the InputStream of the file.
      * @return QuickModelEntity containing the details of the uploaded model and its textures.
      * @throws ApplicationContextException if the model name is empty, the model input stream is empty, or the main texture input stream is empty.
-     * @throws JsonProcessingException     if there is an error during JSON processing of the uploaded model entity.
      * @throws RuntimeException            if there is an error during the upload of the main texture or other textures.
      * @see TextureController
      */
     public QuickModelEntity uploadModel(String modelName, InputStreamMultipartFile modelInputStream, InputStreamMultipartFile mainTextureInputStream, List<InputStreamMultipartFile> otherTexturesInputStreamList, List<InputStreamMultipartFile> csvInputStreamList) throws ApplicationContextException, RuntimeException {
-
         if (modelName.isEmpty()) {
             throw new ApplicationContextException("Název modelu nesmí být prázdný.");
         }
@@ -152,7 +151,26 @@ public class ModelController {
         if (this.modelEntity == null || !this.modelEntity.getId().equals(modelId)) {
             this.getModel(modelId);
         }
-        log.info("Získávám base64 reprezentaci modelu: {}", modelId);
         return modelEntity.getBase64File();
+    }
+
+    /**
+     * Retrieves models saved in the BE.
+     * Currently, it retrieves only the first 10 models due to pagination (TODO).
+     *
+     * @return List of QuickModelEntity representing the models.
+     * @throws RuntimeException if there is an error during the retrieval of the models.
+     */
+    public List<QuickModelEntity> getModels() throws RuntimeException {
+        try {
+            List<QuickFile> files = modelApiClient.getFileEntities(0, 10);
+            return files.stream()
+                    .filter(f -> f instanceof QuickModelEntity)
+                    .map(f -> (QuickModelEntity) f)
+                    .collect(Collectors.toList());
+        } catch (Exception e) {
+            log.error("Chyba při získávání modelu: {}", e.getMessage(), e);
+            throw new RuntimeException("Chyba při získávání modelu: " + e.getMessage(), e);
+        }
     }
 }

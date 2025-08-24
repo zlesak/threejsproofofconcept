@@ -2,7 +2,9 @@ package cz.uhk.zlesak.threejslearningapp.components.selects;
 
 import com.vaadin.flow.component.ComponentEventListener;
 import cz.uhk.zlesak.threejslearningapp.events.TextureListingChangeEvent;
+import cz.uhk.zlesak.threejslearningapp.models.entities.quickEntities.QuickTextureEntity;
 import cz.uhk.zlesak.threejslearningapp.models.records.TextureListingForSelectRecord;
+import cz.uhk.zlesak.threejslearningapp.models.records.parsers.TextureListingDataParser;
 import org.springframework.context.annotation.Scope;
 
 import java.util.List;
@@ -40,9 +42,9 @@ public class TextureListingSelect extends GenericSelect<TextureListingForSelectR
      * This method is used to populate the select with texture listing records.
      * Calls the initialize method from the parent class to set the items.
      *
-     * @param textureListings the list of texture listing records to be displayed in the select
+     * @param quickTextureEntityList the list of quick texture entities to be displayed in the select
      */
-    public void initializeTextureListingSelect(List<TextureListingForSelectRecord> textureListings) {
-        initialize(textureListings, true);
+    public void initializeTextureListingSelect(List<QuickTextureEntity> quickTextureEntityList) {
+        initialize(TextureListingDataParser.textureListingForSelectDataParser(quickTextureEntityList), true);
     }
 }

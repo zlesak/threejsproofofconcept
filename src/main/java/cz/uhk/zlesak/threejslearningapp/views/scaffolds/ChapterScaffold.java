@@ -8,7 +8,6 @@ import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.Scroller;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
-import com.vaadin.flow.component.progressbar.ProgressBar;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.theme.lumo.LumoUtility.Gap;
 import cz.uhk.zlesak.threejslearningapp.components.EditorJsComponent;
@@ -16,8 +15,6 @@ import cz.uhk.zlesak.threejslearningapp.components.ModelDiv;
 import cz.uhk.zlesak.threejslearningapp.components.NavigationContentComponent;
 import cz.uhk.zlesak.threejslearningapp.components.ThreeJsComponent;
 import cz.uhk.zlesak.threejslearningapp.components.selects.ChapterSelect;
-import cz.uhk.zlesak.threejslearningapp.components.selects.TextureAreaSelect;
-import cz.uhk.zlesak.threejslearningapp.components.selects.TextureListingSelect;
 import cz.uhk.zlesak.threejslearningapp.data.enums.ViewTypeEnum;
 import cz.uhk.zlesak.threejslearningapp.i18n.CustomI18NProvider;
 import cz.uhk.zlesak.threejslearningapp.utils.SpringContextUtils;
@@ -25,10 +22,12 @@ import cz.uhk.zlesak.threejslearningapp.views.IView;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Scope;
 
-import java.util.Objects;
-
 /**
- * ChapterScaffold - základní layout pro kapitoly, znovupoužitelný pro různé situce (create, update, read).
+ * ChapterScaffold is an abstract base class for views related to chapter management, including creating, editing, and viewing chapters.
+ * It provides a common layout and components such as navigation, content editor, and 3D model display.
+ * The layout is responsive and adjusts based on the view type (create, edit, view).
+ * It includes a secondary navigation bar with chapter selection and search functionality.
+ * The class is designed to be extended by specific chapter-related views.
  */
 @Slf4j
 @Tag("chapter-scaffold")
@@ -38,33 +37,35 @@ public abstract class ChapterScaffold extends Composite<VerticalLayout> implemen
     protected final TextField searchInChapterTextField = new TextField();
     protected final ChapterSelect chapterSelect = new ChapterSelect();
     protected final NavigationContentComponent navigationContentLayout = new NavigationContentComponent();
-    protected final ProgressBar progressBar = new ProgressBar();
     protected final EditorJsComponent editorjs = new EditorJsComponent();
     protected final ThreeJsComponent renderer = new ThreeJsComponent();
     protected final TextField chapterNameTextField = new TextField();
-    protected final ModelDiv modelDiv = new ModelDiv(progressBar, renderer);
-    protected final HorizontalLayout secondaryNavigationBar = new HorizontalLayout();
-    protected final TextureListingSelect textureListingSelect = new TextureListingSelect();
-    protected final TextureAreaSelect textureAreaSelect = new TextureAreaSelect();
+    protected final ModelDiv modelDiv = new ModelDiv(renderer);
+    protected final HorizontalLayout secondaryNavigationBar;
 
     protected final VerticalLayout chapterContent = new VerticalLayout();
     protected final VerticalLayout chapterModel = new VerticalLayout();
     protected final CustomI18NProvider i18NProvider;
 
+    /**
+     * Constructor for ChapterScaffold.
+     * Initializes the layout and components based on the specified view type.
+     *
+     * @param viewType the type of view (CREATE, EDIT, VIEW) determining the layout and component behavior. (TODO move away)
+     */
     public ChapterScaffold(ViewTypeEnum viewType) {
         this.i18NProvider = SpringContextUtils.getBean(CustomI18NProvider.class);
-
         HorizontalLayout chapterPageLayout = new HorizontalLayout();
         VerticalLayout chapterNavigation = new VerticalLayout();
 
         Scroller chapterNavigationScroller = new Scroller(navigationContentLayout, Scroller.ScrollDirection.VERTICAL);
         Scroller chapterContentScroller = new Scroller(editorjs, Scroller.ScrollDirection.VERTICAL);
 
+        secondaryNavigationBar = new HorizontalLayout();
         Div firstDivider = new Div(new HorizontalLayout(chapterSelect, chapterNameTextField, searchInChapterTextField));
-        Div secondDivider = new Div(new HorizontalLayout(textureListingSelect, textureAreaSelect));
         firstDivider.setWidthFull();
-        secondDivider.setWidthFull();
-        secondaryNavigationBar.add(firstDivider, secondDivider);
+        secondaryNavigationBar.add(firstDivider);
+
         chapterPageLayout.add(chapterNavigation, chapterContent, chapterModel);
         chapterNavigation.add(chapterNavigationScroller);
         chapterContent.add(chapterContentScroller);
@@ -84,14 +85,11 @@ public abstract class ChapterScaffold extends Composite<VerticalLayout> implemen
             case VIEW -> editorjs.toggleReadOnlyMode(true);
         }
 
-//nastavení samostatných elementů
-
         chapterNameTextField.setMaxLength(255);
         chapterNameTextField.setRequired(true);
         chapterNameTextField.setRequiredIndicatorVisible(true);
         chapterNameTextField.setWidthFull();
 
-        // Nastavení vzhledu layoutu
         secondaryNavigationBar.setWidthFull();
         secondaryNavigationBar.addClassName(Gap.MEDIUM);
         secondaryNavigationBar.setAlignItems(FlexComponent.Alignment.CENTER);
@@ -135,10 +133,8 @@ public abstract class ChapterScaffold extends Composite<VerticalLayout> implemen
 
         renderer.getStyle().set("width", "100%");
         searchInChapterTextField.setPlaceholder("Vyhledat v textu kapitoly (NEIMPLEMENTOVÁNO)");
-        searchInChapterTextField.setMinWidth("450px");
+        searchInChapterTextField.setMinWidth("150px");
         chapterSelect.setMinWidth("10vw");
-
-        progressBar.setIndeterminate(true);
 
         getContent().add(secondaryNavigationBar, chapterPageLayout);
         getContent().setWidth("100%");
@@ -153,23 +149,6 @@ public abstract class ChapterScaffold extends Composite<VerticalLayout> implemen
             }
             if (newSelectedSubchapter != null) {
                 navigationContentLayout.showSubchapterNavigationContent(newSelectedSubchapter.id());
-            }
-        });
-
-        textureListingSelect.addTextureListingChangeListener(
-            event -> {
-                String textureId = event.getNewValue().id();
-                if (textureId != null && !Objects.equals(textureId, "")) {
-                    textureAreaSelect.showSelectedTextureAreas(textureId);
-                    renderer.switchOtherTexture(textureId);
-                }
-            }
-        );
-        textureAreaSelect.addTextureAreaChangeListener(event -> {
-            if (event.getNewValue() != null && !Objects.equals(event.getNewValue().textureId(), "")) {
-                renderer.applyMaskToMainTexture(event.getNewValue().textureId(), event.getNewValue().hexColor());
-            } else {
-                renderer.returnToLastSelectedTexture();
             }
         });
     }

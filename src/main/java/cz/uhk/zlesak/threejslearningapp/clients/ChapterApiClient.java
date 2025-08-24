@@ -129,6 +129,17 @@ public class ChapterApiClient implements IChapterApiClient {
     }
 
     /**
+     * API call function to get all chapters
+     * This method currently returns an empty list and does not perform any API call.
+     *
+     * @return Returns an empty list of ChapterEntity
+     */
+    @Override
+    public List<ChapterEntity> getChapters() { //TODO after BE implementation done, connect to BE and get real chapters
+        return List.of();
+    }
+
+    /**
      * API call function to get chapters by author ID
      * This method is not implemented yet and will throw NotImplementedException.
      *

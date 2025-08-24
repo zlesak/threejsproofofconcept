@@ -10,12 +10,14 @@ import java.util.List;
  * It includes the model file, the main texture file, and a list of other texture files.
  * @see QuickFileEntity
  */
+@EqualsAndHashCode(callSuper = true)
 @Data
 @AllArgsConstructor
 @Getter
 @Setter
 @Builder
-public class QuickModelEntity implements IQuickFile{
+public class QuickModelEntity extends QuickFile {
+    String metadataId;
     QuickFileEntity model;
     QuickTextureEntity mainTexture;
     List<QuickTextureEntity> otherTextures;

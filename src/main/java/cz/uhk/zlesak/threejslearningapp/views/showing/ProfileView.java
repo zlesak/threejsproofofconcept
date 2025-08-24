@@ -1,10 +1,12 @@
 package cz.uhk.zlesak.threejslearningapp.views.showing;
 
 import com.vaadin.flow.component.Composite;
+import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.dependency.Uses;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.*;
+import cz.uhk.zlesak.threejslearningapp.i18n.CustomI18NProvider;
 import cz.uhk.zlesak.threejslearningapp.views.IView;
 import org.springframework.context.annotation.Scope;
 
@@ -19,10 +21,19 @@ import org.springframework.context.annotation.Scope;
 @Uses(Icon.class)
 @Scope("prototype")
 public class ProfileView extends Composite<VerticalLayout> implements IView {
+    CustomI18NProvider i18NProvider;
 
+    public ProfileView(CustomI18NProvider i18NProvider) {
+        this.i18NProvider = i18NProvider;
+
+    }
     @Override
     public String getPageTitle() {
-        return "Můj účet";//TODO use i18n for the page title
+        try {
+            return this.i18NProvider.getTranslation("page.title.profileView", UI.getCurrent().getLocale());
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override

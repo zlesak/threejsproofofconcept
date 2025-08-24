@@ -3,6 +3,7 @@ package cz.uhk.zlesak.threejslearningapp;
 import com.vaadin.flow.component.page.AppShellConfigurator;
 import com.vaadin.flow.server.AppShellSettings;
 import com.vaadin.flow.theme.Theme;
+import cz.uhk.zlesak.threejslearningapp.i18n.CustomI18NProvider;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
@@ -24,6 +25,11 @@ public class Application implements AppShellConfigurator {
     @Bean
     public RestTemplate restTemplate() {
         return new RestTemplate();
+    }
+
+    @Bean
+    public CustomI18NProvider customI18NProvider() {
+        return new CustomI18NProvider();
     }
 
     /**

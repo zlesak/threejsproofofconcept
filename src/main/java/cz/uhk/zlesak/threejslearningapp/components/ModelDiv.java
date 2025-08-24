@@ -5,30 +5,23 @@ import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.progressbar.ProgressBar;
 
 /**
- * ModelDiv is a custom component that contains a layout for selecting textures and for ThreeJS renderer component
+ * ModelDiv is a custom Div component that contains a ThreeJsComponent for rendering 3D models,
+ * along with an overlay progress bar and description for loading actions coming back from the ThreeJsComponent.
  *
  * @see ThreeJsComponent
  */
 public class ModelDiv extends Div {
-
     private final ProgressBar overlayProgressBar;
     private final Div overlayBackground;
     private final Span actionDescription;
 
-
     /**
      * Constructor for ModelDiv component.
-     * It initializes the component with a horizontal layout containing texture selection combo boxes and a progress bar
-     * for loading models, along with a ThreeJsComponent for rendering the model.
      *
-     * @param progressBar the progress bar to indicate loading status
-     * @param renderer    the ThreeJsComponent responsible for rendering the 3D model
+     * @param renderer the ThreeJsComponent responsible for rendering the 3D model
      */
-    public ModelDiv(ProgressBar progressBar, ThreeJsComponent renderer) {
+    public ModelDiv(ThreeJsComponent renderer) {
         super();
-        add(progressBar, renderer);
-
-
         overlayBackground = new Div();
         overlayBackground.setVisible(false);
         overlayBackground.getStyle().set("position", "absolute");
@@ -38,7 +31,6 @@ public class ModelDiv extends Div {
         overlayBackground.getStyle().set("height", "100%");
         overlayBackground.getStyle().set("background", "rgba(0,0,0,0.3)");
         overlayBackground.getStyle().set("z-index", "10");
-        add(overlayBackground);
 
         overlayProgressBar = new ProgressBar();
         overlayProgressBar.setIndeterminate(true);
@@ -49,7 +41,6 @@ public class ModelDiv extends Div {
         overlayProgressBar.getStyle().set("transform", "translate(-50%, -50%)");
         overlayProgressBar.getStyle().set("z-index", "11");
         overlayProgressBar.setWidth("300px");
-        add(overlayProgressBar);
 
         actionDescription  = new Span();
         actionDescription.getStyle().set("position", "absolute");
@@ -58,14 +49,14 @@ public class ModelDiv extends Div {
         actionDescription.getStyle().set("transform", "translate(-50%, -50%)");
         actionDescription.getStyle().set("z-index", "11");
         actionDescription.setWidth("300px");
-        add(actionDescription);
+        add(renderer, overlayBackground, overlayProgressBar, actionDescription);
 
         //Nastavení divId, DŮLEŽITÉ PRO THREEJS
         setId("modelDiv");
         setWidthFull();
         setHeightFull();
         getStyle().set("position", "relative");
-        getStyle().remove("z-index"); // ModelDiv nemá z-index
+        getStyle().remove("z-index");
 
         renderer.addThreeJsDoingActionsListener(e -> {
             actionDescription.setText(e.getDescription());

@@ -7,11 +7,11 @@ import com.vaadin.flow.router.AfterNavigationEvent;
 import com.vaadin.flow.router.BeforeEnterEvent;
 import com.vaadin.flow.router.BeforeLeaveEvent;
 import com.vaadin.flow.router.Route;
+import com.vaadin.flow.server.VaadinSession;
 import cz.uhk.zlesak.threejslearningapp.components.BeforeLeaveActionDialog;
 import cz.uhk.zlesak.threejslearningapp.components.notifications.ErrorNotification;
 import cz.uhk.zlesak.threejslearningapp.components.notifications.InfoNotification;
 import cz.uhk.zlesak.threejslearningapp.controllers.ModelController;
-import cz.uhk.zlesak.threejslearningapp.data.enums.ViewTypeEnum;
 import cz.uhk.zlesak.threejslearningapp.i18n.CustomI18NProvider;
 import cz.uhk.zlesak.threejslearningapp.models.entities.quickEntities.QuickModelEntity;
 import cz.uhk.zlesak.threejslearningapp.views.scaffolds.ModelScaffold;
@@ -24,32 +24,41 @@ import org.springframework.context.annotation.Scope;
 @Tag("create-model")
 @Scope("prototype")
 public class CreateModelView extends ModelScaffold {
+    private final CustomI18NProvider i18nProvider;
     private boolean skipBeforeLeaveDialog = false;
 
     @Autowired
-    public CreateModelView(ModelController modelController, CustomI18NProvider i18nProvider) {
-        super(i18nProvider, ViewTypeEnum.CREATE);
+    public CreateModelView(ModelController modelController, CustomI18NProvider customI18NProvider) {
+        super();
+        this.i18nProvider = customI18NProvider;
 
         Button createButton = new Button("Vytvořit model");
 
         createButton.addClickListener(event -> {
             try {
                 QuickModelEntity quickModelEntity;
-                if (isAdvanced.getValue()) {
-                    quickModelEntity = modelController.uploadModel(modelName.getValue().trim(), objUploadComponent.getUploadedFiles().getFirst(), mainTextureUploadComponent.getUploadedFiles().getFirst(), otherTexturesUploadComponent.getUploadedFiles(), csvUploadComponent.getUploadedFiles());
-                    new InfoNotification("Model úspěšně nahrán.");
+                if (modelUploadFormScroller.getIsAdvanced().getValue()) {
+                    quickModelEntity = modelController.uploadModel(
+                            modelUploadFormScroller.getModelName().getValue().trim(),
+                            modelUploadFormScroller.getObjUploadComponent().getUploadedFiles().getFirst(),
+                            modelUploadFormScroller.getMainTextureUploadComponent().getUploadedFiles().getFirst(),
+                            modelUploadFormScroller.getOtherTexturesUploadComponent().getUploadedFiles(),
+                            modelUploadFormScroller.getCsvUploadComponent().getUploadedFiles());
                 } else {
-                    quickModelEntity = modelController.uploadModel(modelName.getValue().trim(), objUploadComponent.getUploadedFiles().getFirst());
-                    new InfoNotification("Model a textury úspěšně nahrány.");
+                    quickModelEntity = modelController.uploadModel(
+                            modelUploadFormScroller.getModelName().getValue().trim(),
+                            modelUploadFormScroller.getObjUploadComponent().getUploadedFiles().getFirst());
                 }
                 skipBeforeLeaveDialog = true;
+                new InfoNotification("Úspěšně nahráno");
+                VaadinSession.getCurrent().setAttribute("quickModelEntity", quickModelEntity);
                 UI.getCurrent().navigate("model/" + quickModelEntity.getModel().getId());
             } catch (Exception e) {
                 log.error("Error uploading model", e);
                 new ErrorNotification("Chyba při nahrávání modelu: " + e.getMessage());
             }
         });
-        modelProperties.add(createButton);
+        modelUploadFormScroller.getVl().add(createButton);
     }
 
     @Override

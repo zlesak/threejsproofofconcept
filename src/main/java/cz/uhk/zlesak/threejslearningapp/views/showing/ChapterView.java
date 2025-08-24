@@ -3,20 +3,24 @@ package cz.uhk.zlesak.threejslearningapp.views.showing;
 import com.vaadin.flow.component.Tag;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.dependency.JavaScript;
+import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.router.*;
 import cz.uhk.zlesak.threejslearningapp.components.notifications.ErrorNotification;
+import cz.uhk.zlesak.threejslearningapp.components.selects.TextureAreaSelect;
+import cz.uhk.zlesak.threejslearningapp.components.selects.TextureListingSelect;
 import cz.uhk.zlesak.threejslearningapp.controllers.ChapterController;
 import cz.uhk.zlesak.threejslearningapp.controllers.ModelController;
 import cz.uhk.zlesak.threejslearningapp.controllers.TextureController;
 import cz.uhk.zlesak.threejslearningapp.data.enums.ViewTypeEnum;
 import cz.uhk.zlesak.threejslearningapp.models.entities.quickEntities.QuickModelEntity;
-import cz.uhk.zlesak.threejslearningapp.models.records.parsers.TextureAreaForComboBoxParser;
-import cz.uhk.zlesak.threejslearningapp.models.records.parsers.TextureListingDataParser;
 import cz.uhk.zlesak.threejslearningapp.views.listing.ChapterListView;
 import cz.uhk.zlesak.threejslearningapp.views.scaffolds.ChapterScaffold;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
+
+import java.util.Objects;
 
 /**
  * ChapterView Class - Shows the requested chapter from URL parameter. Initializes all the necessary elements
@@ -31,6 +35,8 @@ public class ChapterView extends ChapterScaffold {
     private final ModelController modelController;
     private final TextureController textureController;
     private final ChapterController chapterController;
+    private final TextureListingSelect textureListingSelect;
+    private final TextureAreaSelect textureAreaSelect;
 
     private String chapterId;
 
@@ -46,6 +52,26 @@ public class ChapterView extends ChapterScaffold {
         this.textureController = textureController;
 
         chapterNameTextField.setReadOnly(true);
+        textureListingSelect = new TextureListingSelect();
+        textureAreaSelect = new TextureAreaSelect();
+        textureListingSelect.addTextureListingChangeListener(
+                event -> {
+                    String textureId = event.getNewValue().id();
+                    if (textureId != null && !Objects.equals(textureId, "")) {
+                        textureAreaSelect.showSelectedTextureAreas(textureId);
+                        renderer.switchOtherTexture(textureId);
+                    }
+                }
+        );
+        textureAreaSelect.addTextureAreaChangeListener(event -> {
+            if (event.getNewValue() != null && !Objects.equals(event.getNewValue().textureId(), "")) {
+                renderer.applyMaskToMainTexture(event.getNewValue().textureId(), event.getNewValue().hexColor());
+            } else {
+                renderer.returnToLastSelectedTexture();
+            }
+        });
+
+        secondaryNavigationBar.add(new Div(new HorizontalLayout(textureListingSelect, textureAreaSelect)));
     }
 
     /**
@@ -59,6 +85,12 @@ public class ChapterView extends ChapterScaffold {
         renderer.dispose(() -> UI.getCurrent().access(postponed::proceed));
     }
 
+    /**
+     * Overridden beforeEnter function to check if the chapterId parameter is present in the URL.
+     * If not, it redirects the user to the ChapterListView. If the chapterId is present, it stores it for later use.
+     *
+     * @param event before navigation event with event details
+     */
     @Override
     public void beforeEnter(BeforeEnterEvent event) {
         RouteParameters parameters = event.getRouteParameters();
@@ -73,6 +105,11 @@ public class ChapterView extends ChapterScaffold {
         }
     }
 
+    /**
+     * Overridden getPageTitle function to provide dynamic page title based on the chapter name.
+     *
+     * @return String - page title
+     */
     @Override
     public String getPageTitle() {
         try {
@@ -82,6 +119,11 @@ public class ChapterView extends ChapterScaffold {
         }
     }
 
+    /**
+     * Overridden afterNavigation function to initialize and load all the necessary data for the chapter view.
+     *
+     * @param event after navigation event with event details
+     */
     @Override
     public void afterNavigation(AfterNavigationEvent event) {
         try {
@@ -113,8 +155,8 @@ public class ChapterView extends ChapterScaffold {
                     throw new RuntimeException(e);
                 }
             });
-            textureAreaSelect.initializeTextureAreaSelect(TextureAreaForComboBoxParser.csvParse(chapterController.getTextureIdCsvMap(chapterId)));
-            textureListingSelect.initializeTextureListingSelect(TextureListingDataParser.textureListingForSelectDataParser(chapterController.getAllChapterTextures(chapterId)));
+            textureAreaSelect.initializeTextureAreaSelect(chapterController.getAllChapterTextures(chapterId));
+            textureListingSelect.initializeTextureListingSelect(chapterController.getAllChapterTextures(chapterId));
         } catch (Exception e) {
             log.error("Chyba při načítání kapitoly: {}", e.getMessage(), e);
             new ErrorNotification("Chyba při načítání kapitoly: " + e.getMessage(), 5000);

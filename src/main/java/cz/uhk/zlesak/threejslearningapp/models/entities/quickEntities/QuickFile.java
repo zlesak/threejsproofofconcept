@@ -1,4 +1,4 @@
 package cz.uhk.zlesak.threejslearningapp.models.entities.quickEntities;
 
-public interface IQuickFile {
+public abstract class QuickFile {
 }

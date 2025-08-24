@@ -3,13 +3,11 @@ package cz.uhk.zlesak.threejslearningapp.views.creating;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.dialog.Dialog;
-import com.vaadin.flow.i18n.I18NProvider;
 import com.vaadin.flow.router.AfterNavigationEvent;
 import com.vaadin.flow.theme.lumo.Lumo;
 import cz.uhk.zlesak.threejslearningapp.components.notifications.ErrorNotification;
 import cz.uhk.zlesak.threejslearningapp.components.notifications.InfoNotification;
 import cz.uhk.zlesak.threejslearningapp.controllers.ModelController;
-import cz.uhk.zlesak.threejslearningapp.data.enums.ViewTypeEnum;
 import cz.uhk.zlesak.threejslearningapp.models.entities.quickEntities.QuickModelEntity;
 import cz.uhk.zlesak.threejslearningapp.views.scaffolds.ModelScaffold;
 import lombok.Getter;
@@ -19,54 +17,15 @@ import lombok.extern.slf4j.Slf4j;
 import java.io.IOException;
 
 @Slf4j
+@Getter
 public class CreateModelDialog extends Dialog {
-    private final ModelScaffold scaffold;
-    @Getter
-    private QuickModelEntity createdModel;
-    @Setter
-    private ModelCreatedListener modelCreatedListener;
+    private final DialogModelScaffold scaffold;
 
-    public CreateModelDialog(ModelController modelController, I18NProvider i18nProvider) {
-        scaffold = new DialogModelScaffold(i18nProvider, ViewTypeEnum.CREATE);
-        Button createButton = new Button("Vytvořit model");
-        createButton.addClickListener(event -> {
-            try {
-                QuickModelEntity quickModelEntity;
-                if (scaffold.getIsAdvanced().getValue()) {
-                    quickModelEntity = modelController.uploadModel(
-                            scaffold.getModelName().getValue().trim(),
-                            scaffold.getObjUploadComponent().getUploadedFiles().getFirst(),
-                            scaffold.getMainTextureUploadComponent().getUploadedFiles().getFirst(),
-                            scaffold.getOtherTexturesUploadComponent().getUploadedFiles(),
-                            scaffold.getCsvUploadComponent().getUploadedFiles()
-                    );
-                    new InfoNotification("Model úspěšně nahrán.");
-                } else {
-                    quickModelEntity = modelController.uploadModel(
-                            scaffold.getModelName().getValue().trim(),
-                            scaffold.getObjUploadComponent().getUploadedFiles().getFirst()
-                    );
-                    new InfoNotification("Model a textury úspěšně nahrány.");
-                }
-                this.createdModel = quickModelEntity;
-                if (modelCreatedListener != null) {
-                    modelCreatedListener.modelCreated(quickModelEntity);
-                }
-                this.close();
-            } catch (Exception e) {
-                log.error("Error uploading model", e);
-                new ErrorNotification("Chyba při nahrávání modelu: " + e.getMessage());
-            }
-        });
-        scaffold.getModelProperties().add(createButton);
+    public CreateModelDialog(ModelController modelController) {
+        scaffold = new DialogModelScaffold(modelController);
         add(scaffold);
-
         setWidthFull();
         setHeight("auto");
-    }
-
-    public boolean isAdvanced() {
-        return scaffold.getIsAdvanced().getValue();
     }
 
     @Override
@@ -83,13 +42,58 @@ public class CreateModelDialog extends Dialog {
         });
     }
 
+    public void setModelCreatedListener(ModelCreatedListener listener) {
+        scaffold.setModelCreatedListener(listener);
+    }
+
+    public boolean isAdvanced() {
+        return scaffold.isAdvanced;
+    }
+
     public interface ModelCreatedListener {
         void modelCreated(QuickModelEntity entity) throws IOException;
     }
 
-    private static class DialogModelScaffold extends ModelScaffold {
-        public DialogModelScaffold(I18NProvider i18nProvider, ViewTypeEnum viewTypeEnum) {
-            super(i18nProvider, viewTypeEnum);
+    @Getter
+    private class DialogModelScaffold extends ModelScaffold {
+        private QuickModelEntity createdModel;
+        @Setter
+        private ModelCreatedListener modelCreatedListener;
+        private boolean isAdvanced;
+
+        public DialogModelScaffold(ModelController modelController) {
+            super();
+
+            Button createButton = new Button("Vytvořit model");
+            createButton.addClickListener(event -> {
+                try {
+                    isAdvanced = modelUploadFormScroller.getIsAdvanced().getValue();
+                    if (isAdvanced) {
+                        this.createdModel = modelController.uploadModel(
+                                modelUploadFormScroller.getModelName().getValue().trim(),
+                                modelUploadFormScroller.getObjUploadComponent().getUploadedFiles().getFirst(),
+                                modelUploadFormScroller.getMainTextureUploadComponent().getUploadedFiles().getFirst(),
+                                modelUploadFormScroller.getOtherTexturesUploadComponent().getUploadedFiles(),
+                                modelUploadFormScroller.getCsvUploadComponent().getUploadedFiles()
+                        );
+                        new InfoNotification("Model úspěšně nahrán.");
+                    } else {
+                        this.createdModel = modelController.uploadModel(
+                                modelUploadFormScroller.getModelName().getValue().trim(),
+                                modelUploadFormScroller.getObjUploadComponent().getUploadedFiles().getFirst()
+                        );
+                        new InfoNotification("Model a textury úspěšně nahrány.");
+                    }
+                    if (modelCreatedListener != null) {
+                        modelCreatedListener.modelCreated(this.createdModel);
+                        CreateModelDialog.this.close();
+                    }
+                } catch (Exception e) {
+                    log.error("Error uploading model", e);
+                    new ErrorNotification("Chyba při nahrávání modelu: " + e.getMessage());
+                }
+            });
+            modelUploadFormScroller.getVl().add(createButton);
         }
 
         @Override

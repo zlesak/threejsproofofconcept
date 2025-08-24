@@ -2,6 +2,13 @@
   "page.title.modelView" : "Zobrazit 3D model",
   "page.title.createChapterView" : "Vytvořit kapitolu",
   "page.title.chapterView" : "Kapitola",
-  "page.title.createModelView" : "Vytvořit model"
+  "page.title.createModelView" : "Vytvořit model",
+  "page.title.loginView" : "Přihlásit se",
+  "page.title.logoutView" : "Odhlásit se",
+  "page.title.mainPageView" : "Hlavní stránka",
+  "page.title.profileView" : "Můj účet",
+  "page.title.modelListView" : "Seznam nahraných modelů",
+  "page.title.chapterListView" : "Kapitoly"
+
 }
 

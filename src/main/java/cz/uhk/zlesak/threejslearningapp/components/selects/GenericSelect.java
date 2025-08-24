@@ -10,7 +10,8 @@ import lombok.Getter;
 import org.springframework.context.annotation.Scope;
 
 /**
- * GenericSelectionComboBox nyní rozšiřuje Select místo ComboBox, zachovává původní chování.
+ * GenericSelect abstract class extending Vaadin Select component.
+ * It provides a generic implementation for select components with custom event handling.
  * @param <T>
  * @param <E>
  */
@@ -22,11 +23,11 @@ public abstract class GenericSelect<T, E extends ComponentEvent<?>> extends Sele
     private List<T> items;
 
     /**
-     * Konstruktor s parametry label, itemLabelGenerator, eventType a eventFactory.
-     * @param label popisek Selectu
-     * @param itemLabelGenerator generátor textu pro položky (Vaadin ItemLabelGenerator)
-     * @param eventType typ události
-     * @param eventFactory továrna na události
+     * Constructor for GenericSelect.
+     * @param label Select label
+     * @param itemLabelGenerator label generator for items
+     * @param eventType event class type
+     * @param eventFactory event factory function to create events
      */
     public GenericSelect(String label, com.vaadin.flow.component.ItemLabelGenerator<T> itemLabelGenerator,
                          Class<E> eventType,
@@ -41,8 +42,8 @@ public abstract class GenericSelect<T, E extends ComponentEvent<?>> extends Sele
     }
 
     /**
-     * Vyvolá generickou událost při změně hodnoty Selectu.
-     * @param event událost změny hodnoty
+     * Fires a generic change event if the value has changed.
+     * @param event value change event
      */
     private void fireGenericChangeEvent(ValueChangeEvent<T> event) {
         if ((event.getOldValue() == null && event.getValue() != null) ||
@@ -52,16 +53,17 @@ public abstract class GenericSelect<T, E extends ComponentEvent<?>> extends Sele
     }
 
     /**
-     * Přidá posluchač generické události.
-     * @param listener posluchač
+     * Registers a generic change listener for the select component.
+     * @param listener the listener to be added
      */
     public void addGenericChangeListener(ComponentEventListener<E> listener) {
         addListener(eventType, listener);
     }
 
     /**
-     * Nastaví položky Selectu a inicializuje hodnotu, pokud je seznam neprázdný.
-     * @param items seznam položek
+     * Sets the items for the select component and optionally sets the first item as the selected value.
+     * @param items list of items to set
+     * @param setFirstAsValue if true, sets the first item as the selected value
      */
     protected void initialize(List<T> items, boolean setFirstAsValue) {
         this.items = items;

@@ -1,10 +1,11 @@
 package cz.uhk.zlesak.threejslearningapp.controllers;
 
 import cz.uhk.zlesak.threejslearningapp.clients.ChapterApiClient;
-import cz.uhk.zlesak.threejslearningapp.models.entities.quickEntities.QuickTextureEntity;
-import cz.uhk.zlesak.threejslearningapp.models.records.SubChapterForSelectRecord;
 import cz.uhk.zlesak.threejslearningapp.models.entities.ChapterEntity;
 import cz.uhk.zlesak.threejslearningapp.models.entities.quickEntities.QuickModelEntity;
+import cz.uhk.zlesak.threejslearningapp.models.entities.quickEntities.QuickTextureEntity;
+import cz.uhk.zlesak.threejslearningapp.models.records.SubChapterForSelectRecord;
+import cz.uhk.zlesak.threejslearningapp.utils.TextureMapHelper;
 import elemental.json.Json;
 import elemental.json.JsonArray;
 import elemental.json.JsonObject;
@@ -15,7 +16,10 @@ import org.springframework.context.ApplicationContextException;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 
 /**
  * Controller for managing chapters in the application.
@@ -33,6 +37,7 @@ public class ChapterController {
 
     /**
      * Constructor for ChapterController that initializes the ChapterApiClient.
+     *
      * @param chapterApiClient The API client used to interact with chapter-related operations.
      */
     @Autowired
@@ -45,8 +50,9 @@ public class ChapterController {
      * Validates the inputs to ensure that the chapter name and content are not empty, and that a model is uploaded.
      * If any validation fails, an ApplicationContextException is thrown with an appropriate message.
      * If the chapter is successfully created, it returns the created ChapterEntity.
-     * @param name the name of the chapter
-     * @param content  the content of the chapter in JSON format
+     *
+     * @param name    the name of the chapter
+     * @param content the content of the chapter in JSON format
      * @return the created ChapterEntity coming back from BE as proof of successful creation
      * @throws Exception if there is an error during chapter creation or if validation fails
      */
@@ -82,6 +88,7 @@ public class ChapterController {
      * Retrieves a chapter by its ID via chapterApiClient from the BE.
      * This method fetches the chapter details from the ChapterApiClient and stores it in the chapterEntity field.
      * If an error occurs during the retrieval, it logs the error and throws an Exception with a message indicating the failure.
+     *
      * @param chapterId the ID of the chapter to be retrieved
      * @throws Exception if there is an error retrieving the chapter or if the chapter does not exist
      * @see ChapterApiClient#getChapterById(String)
@@ -99,12 +106,13 @@ public class ChapterController {
      * Retrieves the name of a chapter by its ID.
      * If the chapterEntity is not set or does not match the provided chapterId, it fetches the chapter details using the getChapter method.
      * This method saves network calls by caching the chapterEntity after the first retrieval.
+     *
      * @param chapterId the ID of the chapter whose name is to be retrieved
      * @return the name of the chapter
      * @throws Exception if there is an error retrieving the chapter or if the chapter does not exist
      */
     public String getChapterName(String chapterId) throws Exception {
-        if(chapterEntity == null || !Objects.equals(chapterEntity.getId(), chapterId)) {
+        if (chapterEntity == null || !Objects.equals(chapterEntity.getId(), chapterId)) {
             getChapter(chapterId);
         }
         return chapterEntity.getName();
@@ -113,10 +121,11 @@ public class ChapterController {
     /**
      * Retrieves the content of a chapter.
      * If the chapterEntity is not set or does not match the provided chapterId, it fetches the chapter details using the getChapter method.
+     *
      * @return the content of the chapter as a JSON string
      */
     public String getChapterContent(String chapterId) throws Exception {
-        if(chapterEntity == null || !Objects.equals(chapterEntity.getId(), chapterId)) {
+        if (chapterEntity == null || !Objects.equals(chapterEntity.getId(), chapterId)) {
             getChapter(chapterId);
         }
         return chapterEntity.getContent();
@@ -127,12 +136,13 @@ public class ChapterController {
      * It parses the chapter content to extract sub-chapter headers (level 1 headers).
      * Each sub-chapter is represented by its ID and text.
      * If an error occurs during the parsing, it logs the error and throws an Exception.
+     *
      * @return a list of SubChapterForComboBoxRecord objects containing sub-chapter IDs and names
      * @throws Exception if there is an error retrieving the sub-chapter names or if the chapter does not exist
      * @see SubChapterForSelectRecord
      */
     public List<SubChapterForSelectRecord> getSubChaptersNames(String chapterId) throws Exception {
-        if(chapterEntity == null || !Objects.equals(chapterEntity.getId(), chapterId)) {
+        if (chapterEntity == null || !Objects.equals(chapterEntity.getId(), chapterId)) {
             getChapter(chapterId);
         }
 
@@ -158,11 +168,12 @@ public class ChapterController {
     /**
      * Retrieves the content of sub-chapters from the chapter content.
      * It parses the chapter content to extract sub-chapter headers (level 1 headers)
+     *
      * @return a JsonArray containing sub-chapter content, where each sub-chapter is represented by its header and content blocks
      * @throws Exception if there is an error retrieving the sub-chapter content or if the chapter does not exist
      */
     public JsonArray getSubChaptersContent(String chapterId) throws Exception {
-        if(chapterEntity == null || !Objects.equals(chapterEntity.getId(), chapterId)) {
+        if (chapterEntity == null || !Objects.equals(chapterEntity.getId(), chapterId)) {
             getChapter(chapterId);
         }
 
@@ -254,6 +265,7 @@ public class ChapterController {
      * It parses the chapter content to find the blocks associated with the specified sub-chapter header (level 1 header).
      * If the header with the specified ID does not exist, it returns the entire chapter content.
      * If the header exists, it collects all blocks until the next header of the same level (level 1) is found.
+     *
      * @param id the ID of the sub-chapter header to retrieve content for
      * @return the content of the selected sub-chapter as a JSON string
      */
@@ -292,12 +304,13 @@ public class ChapterController {
     /**
      * Retrieves the first QuickModelEntity from the chapter's models (there is just one model as of this time for each chapter).
      * If the chapterEntity is not set or does not match the provided chapterId, it fetches the chapter details using the getChapter method.
+     *
      * @param chapterId the ID of the chapter from which to retrieve the first QuickModelEntity
      * @return the first QuickModelEntity of the chapter
      * @throws Exception if there is an error retrieving the model data or if the chapter does not exist
      */
     public QuickModelEntity getChapterFirstQuickModelEntity(String chapterId) throws Exception {
-        if(chapterEntity == null || !Objects.equals(chapterEntity.getId(), chapterId)) {
+        if (chapterEntity == null || !Objects.equals(chapterEntity.getId(), chapterId)) {
             getChapter(chapterId);
         }
         try {
@@ -308,8 +321,17 @@ public class ChapterController {
         }
     }
 
+    /**
+     * Retrieves all textures associated with the chapter's model.
+     * It combines the main texture and other textures of the chapter's first QuickModelEntity into a single list.
+     * If the chapterEntity is not set or does not match the provided chapterId, it fetches the chapter details using the getChapter method.
+     *
+     * @param chapterId the ID of the chapter from which to retrieve all textures
+     * @return a list of all QuickTextureEntity objects associated with the chapter's model
+     * @throws Exception if there is an error retrieving the textures or if the chapter does not exist
+     */
     public List<QuickTextureEntity> getAllChapterTextures(String chapterId) throws Exception {
-        if(chapterEntity == null || !Objects.equals(chapterEntity.getId(), chapterId)) {
+        if (chapterEntity == null || !Objects.equals(chapterEntity.getId(), chapterId)) {
             getChapter(chapterId);
         }
         QuickModelEntity quickModelEntity = getChapterFirstQuickModelEntity(chapterId);
@@ -322,25 +344,30 @@ public class ChapterController {
         return allModelTextures;
     }
 
-    public Map<String, String> getTextureIdCsvMap(String chapterId) throws Exception {
-        List<QuickTextureEntity> allModelTextures = getAllChapterTextures(chapterId);
-        Map<String, String> textureIdCsvMap = new HashMap<>();
-        for(QuickTextureEntity textureEntity : allModelTextures) {
-            String textureId = textureEntity.getTextureFileId();
-            if (!textureEntity.getCsvContent().isEmpty()) {
-                textureIdCsvMap.put(textureId, textureEntity.getCsvContent());
-            }
-        }
-        return textureIdCsvMap;
-    }
-
+    /**
+     * Retrieves a map of other textures associated with the chapter's model.
+     * It uses the TextureMapHelper to convert the list of other textures into a map format suitable for use in the Three.js renderer.
+     * If the chapterEntity is not set or does not match the provided chapterId, it fetches the chapter details using the getChapter method.
+     *
+     * @param chapterId the ID of the chapter from which to retrieve other textures
+     * @param textureController the TextureController used to assist in mapping textures
+     * @return a map of texture names to their corresponding base64 representations
+     * @throws Exception if there is an error retrieving the textures or if the chapter does not exist
+     * @see TextureMapHelper#otherTexturesMap(List, TextureController)
+     */
     public Map<String, String> getOtherTextures(String chapterId, TextureController textureController) throws Exception {
         QuickModelEntity quickModelEntity = getChapterFirstQuickModelEntity(chapterId);
-        Map<String, String> otherTextures = new HashMap<>();
-        for (var texture : quickModelEntity.getOtherTextures()) {
-            String otherTextureBase64 = textureController.getTextureBase64(texture.getTextureFileId());
-            otherTextures.put(texture.getTextureFileId(), "data:application/octet-stream;base64," + otherTextureBase64);
-        }
-        return otherTextures;
+        return TextureMapHelper.otherTexturesMap(quickModelEntity.getOtherTextures(), textureController);
+    }
+
+    /**
+     * Retrieves a list of all chapters from the backend service.
+     * This method uses the ChapterApiClient to fetch the list of chapters.
+     * If there is an error during the retrieval, it throws an Exception with details about the error.
+     * @return a list of ChapterEntity objects representing all chapters
+     * @see ChapterApiClient#getChapters()
+     */
+    public List<ChapterEntity> getChapters() {
+        return chapterApiClient.getChapters();
     }
 }

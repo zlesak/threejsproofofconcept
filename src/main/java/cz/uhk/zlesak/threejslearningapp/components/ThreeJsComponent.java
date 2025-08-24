@@ -2,11 +2,11 @@ package cz.uhk.zlesak.threejslearningapp.components;
 
 import com.vaadin.flow.component.ClientCallable;
 import com.vaadin.flow.component.Component;
+import com.vaadin.flow.component.ComponentEventListener;
 import com.vaadin.flow.component.Tag;
 import com.vaadin.flow.component.dependency.JsModule;
 import com.vaadin.flow.component.dependency.NpmPackage;
 import com.vaadin.flow.function.SerializableRunnable;
-import com.vaadin.flow.component.ComponentEventListener;
 import cz.uhk.zlesak.threejslearningapp.events.ThreeJsDoingActions;
 import cz.uhk.zlesak.threejslearningapp.events.ThreeJsFinishedActions;
 import lombok.extern.slf4j.Slf4j;
@@ -24,7 +24,7 @@ import java.util.Map;
 @NpmPackage(value = "three", version = "0.172.0")
 @Tag("canvas")
 @Scope("prototype")
-public class ThreeJsComponent extends Component{
+public class ThreeJsComponent extends Component {
 
     private Runnable onDisposedCallback;
 
@@ -43,14 +43,14 @@ public class ThreeJsComponent extends Component{
      */
     public void init() {
         getElement().executeJs("""
-            try {
-                if (typeof window.initThree === 'function') {
-                    window.initThree($0);
+                try {
+                    if (typeof window.initThree === 'function') {
+                        window.initThree($0);
+                    }
+                } catch (e) {
+                    console.error('[JS] Error in initThree:', e);
                 }
-            } catch (e) {
-                console.error('[JS] Error in initThree:', e);
-            }
-            """, this);
+                """, this);
     }
 
     /**
@@ -58,17 +58,19 @@ public class ThreeJsComponent extends Component{
      * This is crucial for cleaning up resources and preventing memory leaks and memory blockages.
      * It calls the JavaScript function to dispose of the Three.js scene and renderer.
      * After the disposal is complete, it triggers a server-side callback to notify that the component has been disposed of.
+     *
      * @param onDisposed a callback that will be executed after the component is disposed of.
      */
     public void dispose(SerializableRunnable onDisposed) {
         this.onDisposedCallback = onDisposed;
         getElement().executeJs("""
-            window.disposeThree().then(() => {
-                $0.$server.notifyDisposed();
-            })
-            """, this);
+                window.disposeThree().then(() => {
+                    $0.$server.notifyDisposed();
+                })
+                """, this);
     }
-/**
+
+    /**
      * This method is called from the JavaScript side to notify the server that the component has been disposed of.
      * It executes the onDisposedCallback if it is set, allowing for any additional cleanup or actions to be performed after disposal.
      * There aro no other cleanup actions set up that would be needed to be done to properly dispose of the component as of now.
@@ -90,14 +92,14 @@ public class ThreeJsComponent extends Component{
      */
     public void doAction(String href) { //TODO: Change method to appropriate method, or use switching for different actions when defined and available
         getElement().executeJs("""
-        try {
-            if (typeof window.doAction === 'function') {
-                window.doAction($0);
-            }
-        } catch (e) {
-            console.error('[JS] Error in doAction:', e);
-        }
-        """, href);
+                try {
+                    if (typeof window.doAction === 'function') {
+                        window.doAction($0);
+                    }
+                } catch (e) {
+                    console.error('[JS] Error in doAction:', e);
+                }
+                """, href);
     }
 
     /**
@@ -111,14 +113,14 @@ public class ThreeJsComponent extends Component{
      */
     private void loadModel(String base64Model) {
         getElement().executeJs("""
-            try {
-                if (typeof window.loadModel === 'function') {
-                    window.loadModel($0);
+                try {
+                    if (typeof window.loadModel === 'function') {
+                        window.loadModel($0);
+                    }
+                } catch (e) {
+                    console.error('[JS] Error in loadModel:', e);
                 }
-            } catch (e) {
-                console.error('[JS] Error in loadModel:', e);
-            }
-            """, "data:application/octet-stream;base64," + base64Model);
+                """, "data:application/octet-stream;base64," + base64Model);
     }
 
     /**
@@ -130,22 +132,22 @@ public class ThreeJsComponent extends Component{
      * This loading methods needs only the main texture, as other may not be provided.
      * Other textures can be added later using the addOtherTexture method.
      *
-     * @param objectUrl   the base64 encoded string of the object data.
-     * @param textureUrl  the base64 encoded string of the texture data.
+     * @param objectUrl  the base64 encoded string of the object data.
+     * @param textureUrl the base64 encoded string of the texture data.
      */
     public void loadModel(String objectUrl, String textureUrl) {
-        if(textureUrl == null || textureUrl.isBlank()){
+        if (textureUrl == null || textureUrl.isBlank()) {
             loadModel(objectUrl);
-        }else{
+        } else {
             getElement().executeJs("""
-            try {
-                if (typeof window.loadAdvancedModel === 'function') {
-                    window.loadAdvancedModel($0, $1);
-                }
-            } catch (e) {
-                console.error('[JS] Error in loadAdvancedModel:', e);
-            }
-            """, "data:application/octet-stream;base64," + objectUrl, "data:application/octet-stream;base64," + textureUrl);
+                    try {
+                        if (typeof window.loadAdvancedModel === 'function') {
+                            window.loadAdvancedModel($0, $1);
+                        }
+                    } catch (e) {
+                        console.error('[JS] Error in loadAdvancedModel:', e);
+                    }
+                    """, "data:application/octet-stream;base64," + objectUrl, "data:application/octet-stream;base64," + textureUrl);
         }
     }
 
@@ -156,14 +158,14 @@ public class ThreeJsComponent extends Component{
      */
     public void clear() {
         getElement().executeJs("""
-            try {
-                if (typeof window.clear === 'function') {
-                    window.clear();
+                try {
+                    if (typeof window.clear === 'function') {
+                        window.clear();
+                    }
+                } catch (e) {
+                    console.error('[JS] Error in clearModel:', e);
                 }
-            } catch (e) {
-                console.error('[JS] Error in clearModel:', e);
-            }
-            """);
+                """);
     }
 
     /**
@@ -175,17 +177,17 @@ public class ThreeJsComponent extends Component{
      * @param base64Textures the base64 encoded string of the texture data.
      */
     public void addOtherTextures(Map<String, String> base64Textures) {
-        if(base64Textures.isEmpty()) return;
+        if (base64Textures.isEmpty()) return;
         String jsonTextures = new com.google.gson.Gson().toJson(base64Textures);
         getElement().executeJs("""
-            try {
-                if (typeof window.addOtherTextures === 'function') {
-                    window.addOtherTextures($0);
+                try {
+                    if (typeof window.addOtherTextures === 'function') {
+                        window.addOtherTextures($0);
+                    }
+                } catch (e) {
+                    console.error('[JS] Error in addOtherTexture:', e);
                 }
-            } catch (e) {
-                console.error('[JS] Error in addOtherTexture:', e);
-            }
-            """, jsonTextures);
+                """, jsonTextures);
     }
 
     /**
@@ -193,16 +195,16 @@ public class ThreeJsComponent extends Component{
      * This method calls the JavaScript function switchOtherTexture to handle the switching process.
      * It is used to change the texture of the currently selected model or object in the scene.
      */
-    public void switchOtherTexture(String textureId){
+    public void switchOtherTexture(String textureId) {
         getElement().executeJs("""
-            try {
-                if (typeof window.switchOtherTexture === 'function') {
-                    window.switchOtherTexture($0);
+                try {
+                    if (typeof window.switchOtherTexture === 'function') {
+                        window.switchOtherTexture($0);
+                    }
+                } catch (e) {
+                    console.error('[JS] Error in switchOtherTexture:', e);
                 }
-            } catch (e) {
-                console.error('[JS] Error in switchOtherTexture:', e);
-            }
-            """, textureId);
+                """, textureId);
     }
 
     /**
@@ -210,16 +212,16 @@ public class ThreeJsComponent extends Component{
      * This method calls the JavaScript function switchMainTexture to handle the switching process.
      * It is used to change the main texture of the currently selected model or object in the scene to quickly switch back from any other texture to the main one.
      */
-    public void switchMainTexture(){
+    public void switchMainTexture() {
         getElement().executeJs("""
-            try {
-                if (typeof window.switchMainTexture === 'function') {
-                    window.switchMainTexture();
+                try {
+                    if (typeof window.switchMainTexture === 'function') {
+                        window.switchMainTexture();
+                    }
+                } catch (e) {
+                    console.error('[JS] Error in switchToMainTexture:', e);
                 }
-            } catch (e) {
-                console.error('[JS] Error in switchToMainTexture:', e);
-            }
-            """);
+                """);
     }
 
     /**
@@ -231,27 +233,28 @@ public class ThreeJsComponent extends Component{
      *
      * @param maskColor the color to be applied as a mask to the main texture.
      */
-    public void applyMaskToMainTexture(String textureId, String maskColor){
+    public void applyMaskToMainTexture(String textureId, String maskColor) {
         getElement().executeJs("""
-            try {
-                if (typeof window.applyMaskToMainTexture === 'function') {
-                    window.applyMaskToMainTexture($0, $1);
+                try {
+                    if (typeof window.applyMaskToMainTexture === 'function') {
+                        window.applyMaskToMainTexture($0, $1);
+                    }
+                } catch (e) {
+                    console.error('[JS] Error in applyMaskToMainTexture:', e);
                 }
-            } catch (e) {
-                console.error('[JS] Error in applyMaskToMainTexture:', e);
-            }
-            """, textureId,maskColor);
+                """, textureId, maskColor);
     }
-    public void returnToLastSelectedTexture(){
+
+    public void returnToLastSelectedTexture() {
         getElement().executeJs("""
-            try {
-                if (typeof window.returnToLastSelectedTexture === 'function') {
-                    window.returnToLastSelectedTexture();
+                try {
+                    if (typeof window.returnToLastSelectedTexture === 'function') {
+                        window.returnToLastSelectedTexture();
+                    }
+                } catch (e) {
+                    console.error('[JS] Error in returnToLastSelectedTexture:', e);
                 }
-            } catch (e) {
-                console.error('[JS] Error in returnToLastSelectedTexture:', e);
-            }
-            """);
+                """);
     }
 
     /**
@@ -285,6 +288,7 @@ public class ThreeJsComponent extends Component{
     /**
      * Adds a listener for the ThreeJsDoingActions event.
      * This allows other components to react when the Three.js renderer starts performing actions.
+     *
      * @param listener the listener to be added for ThreeJsDoingActions events.
      */
     public void addThreeJsDoingActionsListener(ComponentEventListener<ThreeJsDoingActions> listener) {
@@ -294,6 +298,7 @@ public class ThreeJsComponent extends Component{
     /**
      * Adds a listener for the ThreeJsFinishedActions event.
      * This allows other components to react when the Three.js renderer finishes performing actions.
+     *
      * @param listener the listener to be added for ThreeJsFinishedActions events.
      */
     public void addThreeJsFinishedActionsListener(ComponentEventListener<ThreeJsFinishedActions> listener) {

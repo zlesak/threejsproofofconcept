@@ -2,6 +2,7 @@ package cz.uhk.zlesak.threejslearningapp.views.showing;
 
 import com.vaadin.flow.component.Composite;
 import com.vaadin.flow.component.Tag;
+import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.html.H1;
 import com.vaadin.flow.component.html.Hr;
 import com.vaadin.flow.component.html.Paragraph;
@@ -13,7 +14,9 @@ import com.vaadin.flow.router.AfterNavigationEvent;
 import com.vaadin.flow.router.BeforeEnterEvent;
 import com.vaadin.flow.router.BeforeLeaveEvent;
 import com.vaadin.flow.router.Route;
+import cz.uhk.zlesak.threejslearningapp.i18n.CustomI18NProvider;
 import cz.uhk.zlesak.threejslearningapp.views.IView;
+import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * Main page view of the application.
@@ -23,8 +26,11 @@ import cz.uhk.zlesak.threejslearningapp.views.IView;
 @Route("")
 @Tag("main-page-view")
 public class MainPageView extends Composite<VerticalLayout> implements IView {
+    private final CustomI18NProvider i18NProvider;
 
-    public MainPageView() {
+    @Autowired
+    public MainPageView(CustomI18NProvider i18NProvider) {
+        this.i18NProvider = i18NProvider;
 /// content
         Paragraph textSmall = new Paragraph();
         Icon icon = new Icon();
@@ -56,7 +62,11 @@ public class MainPageView extends Composite<VerticalLayout> implements IView {
 
     @Override
     public String getPageTitle() {
-        return "Domovská stránka"; //TODO use i18n for the page title
+        try {
+            return this.i18NProvider.getTranslation("page.title.mainPageView", UI.getCurrent().getLocale());
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override

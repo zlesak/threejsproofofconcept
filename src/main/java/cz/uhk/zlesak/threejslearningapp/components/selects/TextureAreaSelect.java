@@ -2,7 +2,10 @@ package cz.uhk.zlesak.threejslearningapp.components.selects;
 
 import com.vaadin.flow.component.ComponentEventListener;
 import cz.uhk.zlesak.threejslearningapp.events.TextureAreaChangeEvent;
+import cz.uhk.zlesak.threejslearningapp.models.entities.quickEntities.QuickTextureEntity;
 import cz.uhk.zlesak.threejslearningapp.models.records.TextureAreaForSelectRecord;
+import cz.uhk.zlesak.threejslearningapp.models.records.parsers.TextureAreaForComboBoxParser;
+import cz.uhk.zlesak.threejslearningapp.utils.TextureMapHelper;
 import org.springframework.context.annotation.Scope;
 
 import java.util.ArrayList;
@@ -41,12 +44,17 @@ public class TextureAreaSelect extends GenericSelect<TextureAreaForSelectRecord,
      * This method is used to populate the select with texture area records.
      * Calls the initialize method from the parent class to set the items.
      *
-     * @param textureAreas the list of texture area records to be displayed in the select
+     * @param quickTextureEntityList the list of quick texture entities to be displayed in the select
      */
-    public void initializeTextureAreaSelect(List<TextureAreaForSelectRecord> textureAreas) {
-        initialize(textureAreas, false);
+    public void initializeTextureAreaSelect(List<QuickTextureEntity> quickTextureEntityList) {
+        initialize(TextureAreaForComboBoxParser.csvParse(TextureMapHelper.createCsvMap(quickTextureEntityList)), false);
     }
 
+    /**
+     * Filters the displayed texture areas based on the provided texture ID.
+     * If the texture ID is null, all items are shown.
+     * @param textureId the ID of the texture to filter by
+     */
     public void showSelectedTextureAreas(String textureId) {
         if (textureId == null) {
             setItems(this.getItems());
