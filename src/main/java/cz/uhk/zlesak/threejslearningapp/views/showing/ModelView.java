@@ -47,7 +47,7 @@ public class ModelView extends ModelScaffold {
 
         try {
             String base64Model = modelController.getModelBase64(modelId); //TODO
-            renderer.loadModel(base64Model);
+            renderer.loadModel(base64Model, null);
         } catch (IOException e) {
             log.error(e.getMessage());
             new ErrorNotification("Nepovedlo se načíst model: " + e.getMessage());

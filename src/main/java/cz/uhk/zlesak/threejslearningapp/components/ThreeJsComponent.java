@@ -6,10 +6,13 @@ import com.vaadin.flow.component.Tag;
 import com.vaadin.flow.component.dependency.JsModule;
 import com.vaadin.flow.component.dependency.NpmPackage;
 import com.vaadin.flow.function.SerializableRunnable;
-import cz.uhk.zlesak.threejslearningapp.events.ModelLoadedEvent;
 import com.vaadin.flow.component.ComponentEventListener;
+import cz.uhk.zlesak.threejslearningapp.events.ThreeJsDoingActions;
+import cz.uhk.zlesak.threejslearningapp.events.ThreeJsFinishedActions;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Scope;
+
+import java.util.Map;
 
 /**
  * This component integrates Three.js into a Vaadin application.
@@ -106,7 +109,7 @@ public class ThreeJsComponent extends Component{
      *
      * @param base64Model the base64 encoded string of the model data.
      */
-    public void loadModel(String base64Model) {
+    private void loadModel(String base64Model) {
         getElement().executeJs("""
             try {
                 if (typeof window.loadModel === 'function') {
@@ -130,8 +133,11 @@ public class ThreeJsComponent extends Component{
      * @param objectUrl   the base64 encoded string of the object data.
      * @param textureUrl  the base64 encoded string of the texture data.
      */
-    public void loadAdvancedModel(String objectUrl, String textureUrl) {
-        getElement().executeJs("""
+    public void loadModel(String objectUrl, String textureUrl) {
+        if(textureUrl == null || textureUrl.isBlank()){
+            loadModel(objectUrl);
+        }else{
+            getElement().executeJs("""
             try {
                 if (typeof window.loadAdvancedModel === 'function') {
                     window.loadAdvancedModel($0, $1);
@@ -140,27 +146,7 @@ public class ThreeJsComponent extends Component{
                 console.error('[JS] Error in loadAdvancedModel:', e);
             }
             """, "data:application/octet-stream;base64," + objectUrl, "data:application/octet-stream;base64," + textureUrl);
-    }
-
-    /**
-     * This method is called from the JavaScript side when the model is loaded.
-     * It fires a ModelLoadedEvent to notify listeners that the model has been successfully loaded into the scene.
-     * This is useful for triggering any actions that depend on the model being ready, such as updating the UI or enabling user interactions.
-     */
-    @ClientCallable
-    public void modelLoadedEvent() { //TODO use to make the loading asynchronous as possible, so that the user can interact with the frontend while the model is loading
-        fireEvent(new ModelLoadedEvent(this));
-    }
-
-    /**
-     * Adds a listener for the ModelLoadedEvent.
-     * This allows other components to react when a model is loaded into the Three.js scene.
-     * The listener will be notified whenever the modelLoadedEvent method is called from the JavaScript side.
-     *
-     * @param listener the listener to be added for model loaded events.
-     */
-    public void addModelLoadedEventListener(ComponentEventListener<ModelLoadedEvent> listener) {
-        addListener(ModelLoadedEvent.class, listener);
+        }
     }
 
     /**
@@ -186,18 +172,20 @@ public class ThreeJsComponent extends Component{
      * It calls the JavaScript function addTexture to handle the addition of the texture.
      * This is used to apply textures to models in the scene.
      *
-     * @param base64Texture the base64 encoded string of the texture data.
+     * @param base64Textures the base64 encoded string of the texture data.
      */
-    public void addOtherTexture(String base64Texture) {
+    public void addOtherTextures(Map<String, String> base64Textures) {
+        if(base64Textures.isEmpty()) return;
+        String jsonTextures = new com.google.gson.Gson().toJson(base64Textures);
         getElement().executeJs("""
             try {
-                if (typeof window.addOtherTexture === 'function') {
-                    window.addOtherTexture($0);
+                if (typeof window.addOtherTextures === 'function') {
+                    window.addOtherTextures($0);
                 }
             } catch (e) {
                 console.error('[JS] Error in addOtherTexture:', e);
             }
-            """, "data:application/octet-stream;base64," + base64Texture);
+            """, jsonTextures);
     }
 
     /**
@@ -205,16 +193,16 @@ public class ThreeJsComponent extends Component{
      * This method calls the JavaScript function switchOtherTexture to handle the switching process.
      * It is used to change the texture of the currently selected model or object in the scene.
      */
-    public void switchOtherTexture(){ //TODO ADD THE PARAMETER TO SWITCH BETWEEN TEXTURES String textureName
+    public void switchOtherTexture(String textureId){
         getElement().executeJs("""
             try {
                 if (typeof window.switchOtherTexture === 'function') {
-                    window.switchOtherTexture();
+                    window.switchOtherTexture($0);
                 }
             } catch (e) {
                 console.error('[JS] Error in switchOtherTexture:', e);
             }
-            """);
+            """, textureId);
     }
 
     /**
@@ -243,16 +231,27 @@ public class ThreeJsComponent extends Component{
      *
      * @param maskColor the color to be applied as a mask to the main texture.
      */
-    public void applyMaskToMainTexture(String maskColor){
+    public void applyMaskToMainTexture(String textureId, String maskColor){
         getElement().executeJs("""
             try {
                 if (typeof window.applyMaskToMainTexture === 'function') {
-                    window.applyMaskToMainTexture($0);//TODO CHANGE AFTER PROPER DEBUG DONE AND DOD accomplished
+                    window.applyMaskToMainTexture($0, $1);
                 }
             } catch (e) {
                 console.error('[JS] Error in applyMaskToMainTexture:', e);
             }
-            """, maskColor);
+            """, textureId,maskColor);
+    }
+    public void returnToLastSelectedTexture(){
+        getElement().executeJs("""
+            try {
+                if (typeof window.returnToLastSelectedTexture === 'function') {
+                    window.returnToLastSelectedTexture();
+                }
+            } catch (e) {
+                console.error('[JS] Error in returnToLastSelectedTexture:', e);
+            }
+            """);
     }
 
     /**
@@ -265,5 +264,39 @@ public class ThreeJsComponent extends Component{
     @ClientCallable
     public void onColorPicked(String hexColor) { //TODO implement proper functionality based on chosen logic of transferring color to the JAVA side when properly thought through
         log.info("Vybraná barva: {}", hexColor);
+    }
+
+    /**
+     * This method is called from the JavaScript side when the renderer starts performing actions.
+     */
+    @ClientCallable
+    public void doingActions(String actionDescription) {
+        fireEvent(new ThreeJsDoingActions(this, actionDescription));
+    }
+
+    /**
+     * This method is called from the JavaScript side when the renderer finishes performing actions.
+     */
+    @ClientCallable
+    public void finishedActions() {
+        fireEvent(new ThreeJsFinishedActions(this));
+    }
+
+    /**
+     * Adds a listener for the ThreeJsDoingActions event.
+     * This allows other components to react when the Three.js renderer starts performing actions.
+     * @param listener the listener to be added for ThreeJsDoingActions events.
+     */
+    public void addThreeJsDoingActionsListener(ComponentEventListener<ThreeJsDoingActions> listener) {
+        addListener(ThreeJsDoingActions.class, listener);
+    }
+
+    /**
+     * Adds a listener for the ThreeJsFinishedActions event.
+     * This allows other components to react when the Three.js renderer finishes performing actions.
+     * @param listener the listener to be added for ThreeJsFinishedActions events.
+     */
+    public void addThreeJsFinishedActionsListener(ComponentEventListener<ThreeJsFinishedActions> listener) {
+        addListener(ThreeJsFinishedActions.class, listener);
     }
 }

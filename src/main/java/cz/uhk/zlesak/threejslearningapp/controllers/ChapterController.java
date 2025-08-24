@@ -1,6 +1,7 @@
 package cz.uhk.zlesak.threejslearningapp.controllers;
 
 import cz.uhk.zlesak.threejslearningapp.clients.ChapterApiClient;
+import cz.uhk.zlesak.threejslearningapp.models.entities.quickEntities.QuickTextureEntity;
 import cz.uhk.zlesak.threejslearningapp.models.records.SubChapterForSelectRecord;
 import cz.uhk.zlesak.threejslearningapp.models.entities.ChapterEntity;
 import cz.uhk.zlesak.threejslearningapp.models.entities.quickEntities.QuickModelEntity;
@@ -14,9 +15,7 @@ import org.springframework.context.ApplicationContextException;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 /**
  * Controller for managing chapters in the application.
@@ -87,7 +86,7 @@ public class ChapterController {
      * @throws Exception if there is an error retrieving the chapter or if the chapter does not exist
      * @see ChapterApiClient#getChapterById(String)
      */
-    public void getChapter(String chapterId) throws Exception {
+    private void getChapter(String chapterId) throws Exception {
         try {
             chapterEntity = chapterApiClient.getChapterById(chapterId);
         } catch (Exception e) {
@@ -141,7 +140,6 @@ public class ChapterController {
         try {
             JsonArray blocks = Json.parse(chapterEntity.getContent()).getArray("blocks");
 
-            subChapters.add(new SubChapterForSelectRecord("", "Vyberte podkapitolu"));
             for (int i = 0; i < blocks.length(); i++) {
                 JsonObject block = blocks.getObject(i);
                 if ("header".equals(block.getString("type")) && block.getObject("data").getNumber("level") == 1) {
@@ -308,5 +306,41 @@ public class ChapterController {
             log.error("Chyba při čtení dat modelu kapitoly: {}", e.getMessage(), e);
             throw new Exception("Chyba při čtení dat modelu kapitoly: " + e.getMessage());
         }
+    }
+
+    public List<QuickTextureEntity> getAllChapterTextures(String chapterId) throws Exception {
+        if(chapterEntity == null || !Objects.equals(chapterEntity.getId(), chapterId)) {
+            getChapter(chapterId);
+        }
+        QuickModelEntity quickModelEntity = getChapterFirstQuickModelEntity(chapterId);
+
+        List<QuickTextureEntity> allModelTextures = new ArrayList<>(quickModelEntity.getOtherTextures());
+        QuickTextureEntity mainTexture = quickModelEntity.getMainTexture();
+        if (mainTexture != null) {
+            allModelTextures.addFirst(mainTexture);
+        }
+        return allModelTextures;
+    }
+
+    public Map<String, String> getTextureIdCsvMap(String chapterId) throws Exception {
+        List<QuickTextureEntity> allModelTextures = getAllChapterTextures(chapterId);
+        Map<String, String> textureIdCsvMap = new HashMap<>();
+        for(QuickTextureEntity textureEntity : allModelTextures) {
+            String textureId = textureEntity.getTextureFileId();
+            if (!textureEntity.getCsvContent().isEmpty()) {
+                textureIdCsvMap.put(textureId, textureEntity.getCsvContent());
+            }
+        }
+        return textureIdCsvMap;
+    }
+
+    public Map<String, String> getOtherTextures(String chapterId, TextureController textureController) throws Exception {
+        QuickModelEntity quickModelEntity = getChapterFirstQuickModelEntity(chapterId);
+        Map<String, String> otherTextures = new HashMap<>();
+        for (var texture : quickModelEntity.getOtherTextures()) {
+            String otherTextureBase64 = textureController.getTextureBase64(texture.getTextureFileId());
+            otherTextures.put(texture.getTextureFileId(), "data:application/octet-stream;base64," + otherTextureBase64);
+        }
+        return otherTextures;
     }
 }

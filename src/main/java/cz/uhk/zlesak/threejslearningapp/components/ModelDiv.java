@@ -1,14 +1,8 @@
 package cz.uhk.zlesak.threejslearningapp.components;
 
 import com.vaadin.flow.component.html.Div;
-import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.progressbar.ProgressBar;
-import cz.uhk.zlesak.threejslearningapp.components.selects.TextureAreaSelect;
-import cz.uhk.zlesak.threejslearningapp.components.selects.TextureListingSelect;
-import cz.uhk.zlesak.threejslearningapp.models.records.TextureAreaForSelectRecord;
-import cz.uhk.zlesak.threejslearningapp.models.records.TextureListingForSelectRecord;
-
-import java.util.List;
 
 /**
  * ModelDiv is a custom component that contains a layout for selecting textures and for ThreeJS renderer component
@@ -16,8 +10,11 @@ import java.util.List;
  * @see ThreeJsComponent
  */
 public class ModelDiv extends Div {
-    private final TextureListingSelect textureListingSelect = new TextureListingSelect();
-    private final TextureAreaSelect textureAreaSelect = new TextureAreaSelect();
+
+    private final ProgressBar overlayProgressBar;
+    private final Div overlayBackground;
+    private final Span actionDescription;
+
 
     /**
      * Constructor for ModelDiv component.
@@ -29,23 +26,63 @@ public class ModelDiv extends Div {
      */
     public ModelDiv(ProgressBar progressBar, ThreeJsComponent renderer) {
         super();
+        add(progressBar, renderer);
 
-        HorizontalLayout comboBoxHorizontalLayout = new HorizontalLayout();
-        comboBoxHorizontalLayout.add(textureListingSelect, textureAreaSelect);
-        comboBoxHorizontalLayout.setWidth("100%");
-        add(comboBoxHorizontalLayout, progressBar, renderer);
+
+        overlayBackground = new Div();
+        overlayBackground.setVisible(false);
+        overlayBackground.getStyle().set("position", "absolute");
+        overlayBackground.getStyle().set("top", "0");
+        overlayBackground.getStyle().set("left", "0");
+        overlayBackground.getStyle().set("width", "100%");
+        overlayBackground.getStyle().set("height", "100%");
+        overlayBackground.getStyle().set("background", "rgba(0,0,0,0.3)");
+        overlayBackground.getStyle().set("z-index", "10");
+        add(overlayBackground);
+
+        overlayProgressBar = new ProgressBar();
+        overlayProgressBar.setIndeterminate(true);
+        overlayProgressBar.setVisible(false);
+        overlayProgressBar.getStyle().set("position", "absolute");
+        overlayProgressBar.getStyle().set("top", "50%");
+        overlayProgressBar.getStyle().set("left", "50%");
+        overlayProgressBar.getStyle().set("transform", "translate(-50%, -50%)");
+        overlayProgressBar.getStyle().set("z-index", "11");
+        overlayProgressBar.setWidth("300px");
+        add(overlayProgressBar);
+
+        actionDescription  = new Span();
+        actionDescription.getStyle().set("position", "absolute");
+        actionDescription.getStyle().set("top", "55%");
+        actionDescription.getStyle().set("left", "50%");
+        actionDescription.getStyle().set("transform", "translate(-50%, -50%)");
+        actionDescription.getStyle().set("z-index", "11");
+        actionDescription.setWidth("300px");
+        add(actionDescription);
 
         //Nastavení divId, DŮLEŽITÉ PRO THREEJS
         setId("modelDiv");
         setWidthFull();
         setHeightFull();
+        getStyle().set("position", "relative");
+        getStyle().remove("z-index"); // ModelDiv nemá z-index
+
+        renderer.addThreeJsDoingActionsListener(e -> {
+            actionDescription.setText(e.getDescription());
+            showOverlayProgressBar();
+        });
+        renderer.addThreeJsFinishedActionsListener(e -> hideOverlayProgressBar());
     }
 
-    public void initializeTextureListingSelectData(List<TextureListingForSelectRecord> textureListingForSelect) {
-        textureListingSelect.initializeTextureListingSelect(textureListingForSelect);
+    private void showOverlayProgressBar() {
+        overlayBackground.setVisible(true);
+        overlayProgressBar.setVisible(true);
+        actionDescription.setVisible(true);
     }
 
-    public void initializeTextureAreaSelect(List<TextureAreaForSelectRecord> textureAreaForSelect) {
-        textureAreaSelect.initializeTextureAreaSelect(textureAreaForSelect);
+    private void hideOverlayProgressBar() {
+        overlayBackground.setVisible(false);
+        overlayProgressBar.setVisible(false);
+        actionDescription.setVisible(false);
     }
 }

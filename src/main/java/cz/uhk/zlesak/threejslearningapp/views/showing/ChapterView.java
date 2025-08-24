@@ -1,9 +1,7 @@
 package cz.uhk.zlesak.threejslearningapp.views.showing;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.vaadin.flow.component.Tag;
 import com.vaadin.flow.component.UI;
-import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.dependency.JavaScript;
 import com.vaadin.flow.router.*;
 import cz.uhk.zlesak.threejslearningapp.components.notifications.ErrorNotification;
@@ -12,15 +10,13 @@ import cz.uhk.zlesak.threejslearningapp.controllers.ModelController;
 import cz.uhk.zlesak.threejslearningapp.controllers.TextureController;
 import cz.uhk.zlesak.threejslearningapp.data.enums.ViewTypeEnum;
 import cz.uhk.zlesak.threejslearningapp.models.entities.quickEntities.QuickModelEntity;
-import cz.uhk.zlesak.threejslearningapp.models.entities.quickEntities.QuickTextureEntity;
+import cz.uhk.zlesak.threejslearningapp.models.records.parsers.TextureAreaForComboBoxParser;
 import cz.uhk.zlesak.threejslearningapp.models.records.parsers.TextureListingDataParser;
 import cz.uhk.zlesak.threejslearningapp.views.listing.ChapterListView;
 import cz.uhk.zlesak.threejslearningapp.views.scaffolds.ChapterScaffold;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
-
-import java.util.List;
 
 /**
  * ChapterView Class - Shows the requested chapter from URL parameter. Initializes all the necessary elements
@@ -49,12 +45,7 @@ public class ChapterView extends ChapterScaffold {
         this.modelController = modelController;
         this.textureController = textureController;
 
-
-        //TODO remove after proper logic and layout implemented after DOD
-        Button applyMaskToMainTextureButton = new Button("Aplikovat maskování hlavní textury #0000fe", addClickListener -> renderer.applyMaskToMainTexture("#0000fe"));
-        modelDiv.add(applyMaskToMainTextureButton);
-
-
+        chapterNameTextField.setReadOnly(true);
     }
 
     /**
@@ -80,8 +71,6 @@ public class ChapterView extends ChapterScaffold {
             new ErrorNotification("Nelze načíst kapitolu bez ID", 5000);
             UI.getCurrent().navigate(ChapterListView.class);
         }
-
-
     }
 
     @Override
@@ -97,42 +86,21 @@ public class ChapterView extends ChapterScaffold {
     public void afterNavigation(AfterNavigationEvent event) {
         try {
             chapterNameTextField.setValue(chapterController.getChapterName(chapterId));
-            chapterNameTextField.setReadOnly(true);
-
-            QuickModelEntity quickModelEntity = chapterController.getChapterFirstQuickModelEntity(chapterId);
-
-            String json = new ObjectMapper().writeValueAsString(quickModelEntity);
-            log.info(json);
 
             try {
+                QuickModelEntity quickModelEntity = chapterController.getChapterFirstQuickModelEntity(chapterId);
                 String base64Model = modelController.getModelBase64(quickModelEntity.getModel().getId());
+                String base64Texture = null;
                 if (quickModelEntity.getMainTexture() != null) {
-                    String base64Texture = textureController.getTextureBase64(quickModelEntity.getMainTexture().getTextureFileId());
-                    renderer.loadAdvancedModel(base64Model, base64Texture);
-                } else {
-                    renderer.loadModel(base64Model);
+                    base64Texture = textureController.getTextureBase64(quickModelEntity.getMainTexture().getTextureFileId());
                 }
-                log.info("Počet vedlejších textur: {}", (long) quickModelEntity.getOtherTextures().size());
-                if (!quickModelEntity.getOtherTextures().isEmpty()) {
-                    for (var texture : quickModelEntity.getOtherTextures()) {
-                        String otherTextureBase64 = textureController.getTextureBase64(texture.getTextureFileId());
-                        renderer.addOtherTexture(otherTextureBase64);
-                    }
-                }
+                renderer.loadModel(base64Model, base64Texture);
+                renderer.addOtherTextures(chapterController.getOtherTextures(chapterId, textureController));
             } catch (Exception e) {
                 log.error(e.getMessage());
                 new ErrorNotification("Nepovedlo se načíst model: " + e.getMessage(), 5000);
                 throw e;
             }
-
-            //TODO move to controller?
-            List<QuickTextureEntity> allModelTextures = quickModelEntity.getOtherTextures();
-            QuickTextureEntity mainTexture = quickModelEntity.getMainTexture();
-            if (mainTexture != null) {
-                allModelTextures.addFirst(mainTexture);
-            }
-            modelDiv.initializeTextureListingSelectData(TextureListingDataParser.textureListingForSelectDataParser(allModelTextures));
-
 
             editorjs.setChapterContentData(chapterController.getChapterContent(chapterId));
             chapterSelect.initializeChapterSelectionSelect(chapterController.getSubChaptersNames(chapterId));
@@ -145,8 +113,8 @@ public class ChapterView extends ChapterScaffold {
                     throw new RuntimeException(e);
                 }
             });
-
-
+            textureAreaSelect.initializeTextureAreaSelect(TextureAreaForComboBoxParser.csvParse(chapterController.getTextureIdCsvMap(chapterId)));
+            textureListingSelect.initializeTextureListingSelect(TextureListingDataParser.textureListingForSelectDataParser(chapterController.getAllChapterTextures(chapterId)));
         } catch (Exception e) {
             log.error("Chyba při načítání kapitoly: {}", e.getMessage(), e);
             new ErrorNotification("Chyba při načítání kapitoly: " + e.getMessage(), 5000);

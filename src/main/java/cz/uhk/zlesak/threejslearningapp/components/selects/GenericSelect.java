@@ -6,6 +6,7 @@ import com.vaadin.flow.component.ComponentEvent;
 import com.vaadin.flow.data.renderer.TextRenderer;
 import java.util.List;
 import java.util.function.BiFunction;
+import lombok.Getter;
 import org.springframework.context.annotation.Scope;
 
 /**
@@ -17,6 +18,8 @@ import org.springframework.context.annotation.Scope;
 public abstract class GenericSelect<T, E extends ComponentEvent<?>> extends Select<T> {
     private final BiFunction<GenericSelect<T, E>, ValueChangeEvent<T>, E> eventFactory;
     private final Class<E> eventType;
+    @Getter
+    private List<T> items;
 
     /**
      * Konstruktor s parametry label, itemLabelGenerator, eventType a eventFactory.
@@ -42,7 +45,8 @@ public abstract class GenericSelect<T, E extends ComponentEvent<?>> extends Sele
      * @param event událost změny hodnoty
      */
     private void fireGenericChangeEvent(ValueChangeEvent<T> event) {
-        if (event.getOldValue() == null || (event.getValue() != null && !event.getValue().equals(event.getOldValue()))) {
+        if ((event.getOldValue() == null && event.getValue() != null) ||
+            (event.getOldValue() != null && !event.getOldValue().equals(event.getValue()))) {
             fireEvent(eventFactory.apply(this, event));
         }
     }
@@ -59,9 +63,10 @@ public abstract class GenericSelect<T, E extends ComponentEvent<?>> extends Sele
      * Nastaví položky Selectu a inicializuje hodnotu, pokud je seznam neprázdný.
      * @param items seznam položek
      */
-    protected void initialize(List<T> items) {
-        setItems(items);
-        if (!items.isEmpty()) {
+    protected void initialize(List<T> items, boolean setFirstAsValue) {
+        this.items = items;
+        setItems(this.items);
+        if (!items.isEmpty() && setFirstAsValue) {
             setValue(items.getFirst());
         }
     }

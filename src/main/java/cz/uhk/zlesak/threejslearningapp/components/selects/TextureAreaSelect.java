@@ -5,9 +5,8 @@ import cz.uhk.zlesak.threejslearningapp.events.TextureAreaChangeEvent;
 import cz.uhk.zlesak.threejslearningapp.models.records.TextureAreaForSelectRecord;
 import org.springframework.context.annotation.Scope;
 
+import java.util.ArrayList;
 import java.util.List;
-
-//TODO finish the logic based on the BE implementation
 
 /**
  * TextureAreaSelect is a custom select implementation for selecting texture areas to be shown in the renderer.
@@ -23,6 +22,9 @@ public class TextureAreaSelect extends GenericSelect<TextureAreaForSelectRecord,
         super("", TextureAreaForSelectRecord::areaName,
                 TextureAreaChangeEvent.class,
                 (select, event) -> new TextureAreaChangeEvent((TextureAreaSelect) select, event.isFromClient(), event.getOldValue(), event.getValue()));
+        setEmptySelectionAllowed(true);
+        setEmptySelectionCaption("Vyberte oblast textury");
+        setWidthFull();
     }
 
     /**
@@ -42,6 +44,20 @@ public class TextureAreaSelect extends GenericSelect<TextureAreaForSelectRecord,
      * @param textureAreas the list of texture area records to be displayed in the select
      */
     public void initializeTextureAreaSelect(List<TextureAreaForSelectRecord> textureAreas) {
-        initialize(textureAreas);
+        initialize(textureAreas, false);
+    }
+
+    public void showSelectedTextureAreas(String textureId) {
+        if (textureId == null) {
+            setItems(this.getItems());
+            return;
+        }
+        List<TextureAreaForSelectRecord> itemsToShow = new ArrayList<>();
+        for (TextureAreaForSelectRecord item : this.getItems()) {
+            if (item.textureId().equals(textureId)) {
+                itemsToShow.add(item);
+            }
+        }
+        setItems(itemsToShow);
     }
 }

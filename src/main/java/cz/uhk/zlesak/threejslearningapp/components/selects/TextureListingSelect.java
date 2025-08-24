@@ -22,6 +22,8 @@ public class TextureListingSelect extends GenericSelect<TextureListingForSelectR
         super("", TextureListingForSelectRecord::textureName,
                 TextureListingChangeEvent.class,
                 (select, event) -> new TextureListingChangeEvent((TextureListingSelect) select, event.isFromClient(), event.getOldValue(), event.getValue()));
+        setEmptySelectionAllowed(false);
+        setWidthFull();
     }
 
     /**
@@ -41,6 +43,6 @@ public class TextureListingSelect extends GenericSelect<TextureListingForSelectR
      * @param textureListings the list of texture listing records to be displayed in the select
      */
     public void initializeTextureListingSelect(List<TextureListingForSelectRecord> textureListings) {
-        initialize(textureListings);
+        initialize(textureListings, true);
     }
 }

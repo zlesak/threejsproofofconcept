@@ -53,12 +53,12 @@ public class CreateChapterView extends ChapterScaffold {
             createModelButton.setEnabled(false);
 
             String base64ModelFile = modelController.getModelBase64(entity.getModel().getId());
+            String textureFileEntity = null;
             if (dialog.isAdvanced()) {
-                String textureFileEntity = textureController.getTextureBase64(entity.getMainTexture().getTextureFileId());
-                renderer.loadAdvancedModel(base64ModelFile, textureFileEntity);
-            } else {
-                renderer.loadModel(base64ModelFile);
+                textureFileEntity = textureController.getTextureBase64(entity.getMainTexture().getTextureFileId());
             }
+            renderer.loadModel(base64ModelFile, textureFileEntity);
+
             renderer.setVisible(true);
         });
 

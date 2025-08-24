@@ -2,20 +2,30 @@ package cz.uhk.zlesak.threejslearningapp.models.records.parsers;
 
 import cz.uhk.zlesak.threejslearningapp.models.records.TextureAreaForSelectRecord;
 
+import java.util.ArrayList;
 import java.util.List;
-//TODO WIP - wait for the BE side to provide the CSV for textures
+import java.util.Map;
+
 public abstract class TextureAreaForComboBoxParser {
 
-    public static List<TextureAreaForSelectRecord> csvParse(String csv){
-        return List.of(csv.split(";")).stream()
-                .map(line -> {
-                    String[] parts = line.split(",");
-                    if (parts.length == 2) {
-                        return new TextureAreaForSelectRecord(parts[0].trim(), parts[1].trim());
-                    } else {
-                        throw new IllegalArgumentException("Invalid CSV format for TextureAreaForComboBoxRecord: " + line);
-                    }
-                })
-                .toList();
+    public static List<TextureAreaForSelectRecord> csvParse(Map<String ,String> csvMap) {
+        if(csvMap == null || csvMap.isEmpty()) {
+            return List.of();
+        }
+        List<TextureAreaForSelectRecord> result = new ArrayList<>();
+        for (Map.Entry<String, String> entry : csvMap.entrySet()) {
+            String[] rows = entry.getValue().split("\\r?\\n|\\r");
+            for (String row : rows) {
+                row = row.trim();
+                if (row.isEmpty()) continue;
+                String[] parts = row.split(";");
+                if (parts.length == 2) {
+                    result.add(new TextureAreaForSelectRecord(entry.getKey(), parts[0].trim(), parts[1].trim()));
+                } else {
+                    throw new IllegalArgumentException("Invalid CSV format for TextureAreaForComboBoxRecord: " + row);
+                }
+            }
+        }
+        return result;
     }
 }

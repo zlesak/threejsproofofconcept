@@ -4,6 +4,7 @@ import com.vaadin.flow.component.Composite;
 import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.component.orderedlayout.Scroller;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.progressbar.ProgressBar;
 import com.vaadin.flow.component.textfield.TextField;
@@ -44,6 +45,7 @@ public abstract class ModelScaffold extends Composite<VerticalLayout> implements
     protected final TextField modelName;
     @Getter
     protected final VerticalLayout modelProperties;
+    protected final Scroller modelPropertiesScroller;
 
     private final Div uploadOtherTexturesDiv;
     private final Div uploadModelDiv, uploadMainTextureDiv, csvOtherTexturesDiv;
@@ -62,12 +64,13 @@ public abstract class ModelScaffold extends Composite<VerticalLayout> implements
         HorizontalLayout modelPageLayout = new HorizontalLayout();
         modelProperties = new VerticalLayout();
         VerticalLayout model = new VerticalLayout();
+        modelPropertiesScroller = new Scroller(modelProperties, Scroller.ScrollDirection.VERTICAL);
 
         modelPageLayout.setClassName("modelPageLayout");
         modelPageLayout.addClassName(LumoUtility.Gap.MEDIUM);
         modelPageLayout.setFlexGrow(1, modelProperties);
         modelPageLayout.setFlexGrow(1, model);
-        modelPageLayout.add(modelProperties, model);
+        modelPageLayout.add(modelPropertiesScroller, model);
         modelPageLayout.setSizeFull();
 
         modelDiv.setId("modelDiv");
@@ -82,7 +85,6 @@ public abstract class ModelScaffold extends Composite<VerticalLayout> implements
         csvOtherTexturesDiv = new UploadLabelDiv(csvUploadComponent, "CSV soubor s popisem textur");
 
         modelProperties.add(modelName, isAdvanced, uploadModelDiv, uploadMainTextureDiv, uploadOtherTexturesDiv, csvOtherTexturesDiv);
-
         model.add(modelDiv);
 
         switch (viewTypeEnum) {
@@ -90,7 +92,6 @@ public abstract class ModelScaffold extends Composite<VerticalLayout> implements
                 modelName.setLabel("Název modelu");
                 modelName.setPlaceholder("Zadejte název modelu");
                 hideAdvancedModelUpload();
-                showProgressBar(false);
             }
             case EDIT -> {
 
@@ -116,7 +117,7 @@ public abstract class ModelScaffold extends Composite<VerticalLayout> implements
                     try {
                         byte[] bytes = inputStream.readAllBytes();
                         base64Model = Base64.getEncoder().encodeToString(bytes);
-                        renderer.loadModel(base64Model);
+                        renderer.loadModel(base64Model, null);
                     } catch (Exception ex) {
                         log.error("Chyba při zpracování modelu", ex);
                     }
@@ -129,7 +130,7 @@ public abstract class ModelScaffold extends Composite<VerticalLayout> implements
                         byte[] bytes = inputStream.readAllBytes();
                         base64Model = Base64.getEncoder().encodeToString(bytes);
                         if (base64Texture != null) {
-                            renderer.loadAdvancedModel(base64Model, base64Texture);
+                            renderer.loadModel(base64Model, base64Texture);
                         }
                     } catch (Exception ex) {
                         log.error("Chyba při zpracování modelu", ex);
@@ -158,7 +159,7 @@ public abstract class ModelScaffold extends Composite<VerticalLayout> implements
                     byte[] bytes = inputStream.readAllBytes();
                     base64Texture = Base64.getEncoder().encodeToString(bytes);
                     if (base64Model != null) {
-                        renderer.loadAdvancedModel(base64Model, base64Texture);
+                        renderer.loadModel(base64Model, base64Texture);
                     }
                 } catch (Exception ex) {
                     log.error("Chyba při zpracování hlavní textury", ex);
@@ -246,24 +247,6 @@ public abstract class ModelScaffold extends Composite<VerticalLayout> implements
         uploadMainTextureDiv.setVisible(false);
         uploadOtherTexturesDiv.setVisible(false);
         csvOtherTexturesDiv.setVisible(false);
-    }
-
-
-    public void showRendererAndProgressBar(Boolean show) {
-        renderer.setVisible(show);
-        progressBar.setVisible(show);
-    }
-
-    protected void showProgressBar(Boolean show) {
-        progressBar.setVisible(show);
-        if (show) {
-            progressBar.setIndeterminate(true);
-            progressBar.setWidthFull();
-        }
-    }
-
-    protected void showRenderer(Boolean show) {
-        renderer.setVisible(show);
     }
 }
 

@@ -1,7 +1,6 @@
 package cz.uhk.zlesak.threejslearningapp.controllers;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import cz.uhk.zlesak.threejslearningapp.clients.ModelApiClient;
 import cz.uhk.zlesak.threejslearningapp.data.files.InputStreamMultipartFile;
 import cz.uhk.zlesak.threejslearningapp.models.entities.Entity;
@@ -31,7 +30,6 @@ import java.util.List;
 public class ModelController {
     private final TextureController textureController;
     private final ModelApiClient modelApiClient;
-    private final ObjectMapper objectMapper;
     private ModelEntity modelEntity = null;
 
     /**
@@ -40,13 +38,11 @@ public class ModelController {
      *
      * @param textureController the controller for managing textures associated with models.
      * @param modelApiClient    the API client for interacting with model-related endpoints.
-     * @param objectMapper      the ObjectMapper for JSON serialization and deserialization.
      */
     @Autowired
-    public ModelController(TextureController textureController, ModelApiClient modelApiClient, ObjectMapper objectMapper) {
+    public ModelController(TextureController textureController, ModelApiClient modelApiClient) {
         this.textureController = textureController;
         this.modelApiClient = modelApiClient;
-        this.objectMapper = objectMapper;
     }
 
     /**
@@ -95,7 +91,7 @@ public class ModelController {
      * @throws RuntimeException            if there is an error during the upload of the main texture or other textures.
      * @see TextureController
      */
-    public QuickModelEntity uploadModel(String modelName, InputStreamMultipartFile modelInputStream, InputStreamMultipartFile mainTextureInputStream, List<InputStreamMultipartFile> otherTexturesInputStreamList, List<InputStreamMultipartFile> csvInputStreamList) throws ApplicationContextException, JsonProcessingException, RuntimeException {
+    public QuickModelEntity uploadModel(String modelName, InputStreamMultipartFile modelInputStream, InputStreamMultipartFile mainTextureInputStream, List<InputStreamMultipartFile> otherTexturesInputStreamList, List<InputStreamMultipartFile> csvInputStreamList) throws ApplicationContextException, RuntimeException {
 
         if (modelName.isEmpty()) {
             throw new ApplicationContextException("Název modelu nesmí být prázdný.");
@@ -123,8 +119,6 @@ public class ModelController {
             log.error("Chyba při nahrávání vedlejších textur: {}", e.getMessage(), e);
             throw new RuntimeException("Chyba při nahrávání vedlejších textur: " + e.getMessage(), e);
         }
-        String json = new com.fasterxml.jackson.databind.ObjectMapper().writeValueAsString(uploadedModel);//TODO change to proper object mapper
-        log.info(json);
         return uploadedModel;
     }
 

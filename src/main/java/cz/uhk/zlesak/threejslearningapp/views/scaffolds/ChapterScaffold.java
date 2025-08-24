@@ -3,6 +3,7 @@ package cz.uhk.zlesak.threejslearningapp.views.scaffolds;
 import com.vaadin.flow.component.Composite;
 import com.vaadin.flow.component.Tag;
 import com.vaadin.flow.component.dependency.JavaScript;
+import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.Scroller;
@@ -10,14 +11,21 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.progressbar.ProgressBar;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.theme.lumo.LumoUtility.Gap;
-import cz.uhk.zlesak.threejslearningapp.components.*;
+import cz.uhk.zlesak.threejslearningapp.components.EditorJsComponent;
+import cz.uhk.zlesak.threejslearningapp.components.ModelDiv;
+import cz.uhk.zlesak.threejslearningapp.components.NavigationContentComponent;
+import cz.uhk.zlesak.threejslearningapp.components.ThreeJsComponent;
 import cz.uhk.zlesak.threejslearningapp.components.selects.ChapterSelect;
+import cz.uhk.zlesak.threejslearningapp.components.selects.TextureAreaSelect;
+import cz.uhk.zlesak.threejslearningapp.components.selects.TextureListingSelect;
 import cz.uhk.zlesak.threejslearningapp.data.enums.ViewTypeEnum;
 import cz.uhk.zlesak.threejslearningapp.i18n.CustomI18NProvider;
 import cz.uhk.zlesak.threejslearningapp.utils.SpringContextUtils;
 import cz.uhk.zlesak.threejslearningapp.views.IView;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Scope;
+
+import java.util.Objects;
 
 /**
  * ChapterScaffold - základní layout pro kapitoly, znovupoužitelný pro různé situce (create, update, read).
@@ -36,6 +44,8 @@ public abstract class ChapterScaffold extends Composite<VerticalLayout> implemen
     protected final TextField chapterNameTextField = new TextField();
     protected final ModelDiv modelDiv = new ModelDiv(progressBar, renderer);
     protected final HorizontalLayout secondaryNavigationBar = new HorizontalLayout();
+    protected final TextureListingSelect textureListingSelect = new TextureListingSelect();
+    protected final TextureAreaSelect textureAreaSelect = new TextureAreaSelect();
 
     protected final VerticalLayout chapterContent = new VerticalLayout();
     protected final VerticalLayout chapterModel = new VerticalLayout();
@@ -44,18 +54,20 @@ public abstract class ChapterScaffold extends Composite<VerticalLayout> implemen
     public ChapterScaffold(ViewTypeEnum viewType) {
         this.i18NProvider = SpringContextUtils.getBean(CustomI18NProvider.class);
 
-        // Main layout components
         HorizontalLayout chapterPageLayout = new HorizontalLayout();
         VerticalLayout chapterNavigation = new VerticalLayout();
 
         Scroller chapterNavigationScroller = new Scroller(navigationContentLayout, Scroller.ScrollDirection.VERTICAL);
-//        Scroller chapterContentScroller = new Scroller(editorjs, Scroller.ScrollDirection.VERTICAL);
+        Scroller chapterContentScroller = new Scroller(editorjs, Scroller.ScrollDirection.VERTICAL);
 
-        // Sestavení layoutu
-        secondaryNavigationBar.add(chapterSelect, chapterNameTextField, searchInChapterTextField);
+        Div firstDivider = new Div(new HorizontalLayout(chapterSelect, chapterNameTextField, searchInChapterTextField));
+        Div secondDivider = new Div(new HorizontalLayout(textureListingSelect, textureAreaSelect));
+        firstDivider.setWidthFull();
+        secondDivider.setWidthFull();
+        secondaryNavigationBar.add(firstDivider, secondDivider);
         chapterPageLayout.add(chapterNavigation, chapterContent, chapterModel);
         chapterNavigation.add(chapterNavigationScroller);
-        chapterContent.add(editorjs);
+        chapterContent.add(chapterContentScroller);
         chapterModel.add(modelDiv);
 
         switch (viewType) {
@@ -65,7 +77,6 @@ public abstract class ChapterScaffold extends Composite<VerticalLayout> implemen
                 chapterNameTextField.setPlaceholder("Název kapitoly");
                 chapterNavigation.setVisible(false);
                 editorjs.toggleReadOnlyMode(false);
-                modelDiv.setVisible(false);
             }
             case EDIT -> {
 
@@ -105,12 +116,12 @@ public abstract class ChapterScaffold extends Composite<VerticalLayout> implemen
 
         chapterContent.setHeightFull();
         chapterContent.getStyle().set("flex-grow", "1");
-//        chapterContent.setFlexGrow(1, chapterContentScroller);
+        chapterContent.setFlexGrow(1, chapterContentScroller);
         chapterContent.setPadding(false);
         chapterContent.getStyle().set("min-width", "0");
 
-//        chapterContentScroller.setWidthFull();
-//        chapterContentScroller.setHeightFull();
+        chapterContentScroller.setWidthFull();
+        chapterContentScroller.setHeightFull();
 
         chapterModel.setHeightFull();
         chapterModel.setWidthFull();
@@ -145,9 +156,21 @@ public abstract class ChapterScaffold extends Composite<VerticalLayout> implemen
             }
         });
 
-        renderer.addModelLoadedEventListener(event -> {
-            progressBar.setVisible(false);
-            renderer.setVisible(true);
+        textureListingSelect.addTextureListingChangeListener(
+            event -> {
+                String textureId = event.getNewValue().id();
+                if (textureId != null && !Objects.equals(textureId, "")) {
+                    textureAreaSelect.showSelectedTextureAreas(textureId);
+                    renderer.switchOtherTexture(textureId);
+                }
+            }
+        );
+        textureAreaSelect.addTextureAreaChangeListener(event -> {
+            if (event.getNewValue() != null && !Objects.equals(event.getNewValue().textureId(), "")) {
+                renderer.applyMaskToMainTexture(event.getNewValue().textureId(), event.getNewValue().hexColor());
+            } else {
+                renderer.returnToLastSelectedTexture();
+            }
         });
     }
 }

@@ -22,6 +22,9 @@ public class ChapterSelect extends GenericSelect<SubChapterForSelectRecord, SubC
         super("", SubChapterForSelectRecord::text,
                 SubChapterChangeEvent.class,
                 (select, event) -> new SubChapterChangeEvent((ChapterSelect) select, event.isFromClient(), event.getOldValue(), event.getValue()));
+        setEmptySelectionAllowed(true);
+        setEmptySelectionCaption("Vyberte podkapitolu");
+        setWidthFull();
     }
 
     /**
@@ -41,6 +44,6 @@ public class ChapterSelect extends GenericSelect<SubChapterForSelectRecord, SubC
      * @param subChapters the list of sub-chapter records to be displayed in the select
      */
     public void initializeChapterSelectionSelect(List<SubChapterForSelectRecord> subChapters) {
-        initialize(subChapters);
+        initialize(subChapters,false);
     }
 }
