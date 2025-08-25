@@ -21,8 +21,6 @@ import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestTemplate;
 
 import java.io.ByteArrayInputStream;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 /**
@@ -118,8 +116,18 @@ public class ModelApiClient implements IFileApiClient {
         throw new NotImplementedException("Tato metoda není implementována pro modely.");
     }
 
+    /**
+     * API call function to retrieve a paginated list of model entities.
+     * This method fetches a list of models from the backend service based on the specified page and limit.
+     * It uses the RestTemplate to make a GET request and returns a list of QuickFile objects.
+     *
+     * @param page  the page number to retrieve
+     * @param limit the maximum number of items per page
+     * @return a list of QuickFile objects representing the model entities
+     * @throws Exception if there is an error during the retrieval process or if the response is not successful.
+     */
     @Override
-    public List<QuickFile> getFileEntities(int page, int limit) throws Exception {
+    public PageResult<QuickFile> getFileEntities(int page, int limit) throws Exception {
         String url = baseUrl + "list-by?limit=" + limit + "&page=" + page;
         try {
             ResponseEntity<String> response = restTemplate.exchange(
@@ -129,12 +137,7 @@ public class ModelApiClient implements IFileApiClient {
                     String.class
             );
             if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
-                PageResult<QuickModelEntity> quickModelEntitiesPageResult = objectMapper.readValue(response.getBody(), objectMapper.getTypeFactory().constructParametricType(PageResult.class, QuickModelEntity.class));
-                if (quickModelEntitiesPageResult != null && quickModelEntitiesPageResult.elements() != null) {
-                    return new ArrayList<>(quickModelEntitiesPageResult.elements());
-                } else {
-                    return Collections.emptyList();
-                }
+                return objectMapper.readValue(response.getBody(), objectMapper.getTypeFactory().constructParametricType(PageResult.class, QuickModelEntity.class));
             } else {
                 throw new ApiCallException("Chyba při získávání seznamu modelů", null, null, response.getStatusCode(), response.getBody(), null);
             }

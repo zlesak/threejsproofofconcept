@@ -15,15 +15,15 @@ import org.springframework.context.annotation.Scope;
 @Scope("prototype")
 @Tag("listing-scaffold")
 public abstract class ListingScaffold extends Composite<VerticalLayout> implements IView {
-    protected final VerticalLayout verticalLayout;
+    protected final VerticalLayout listingLayout;
 
     /**
      * Constructor for ListingScaffold.
      * Initializes the layout with a vertical layout inside a scroller for displaying listing content.
      */
     public ListingScaffold() {
-        this.verticalLayout = new VerticalLayout();
-        Scroller modelListScroller = new Scroller(verticalLayout, Scroller.ScrollDirection.VERTICAL);
+        this.listingLayout = new VerticalLayout();
+        Scroller modelListScroller = new Scroller(listingLayout, Scroller.ScrollDirection.VERTICAL);
         modelListScroller.setSizeFull();
 
         getContent().setPadding(false);

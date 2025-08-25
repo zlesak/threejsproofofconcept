@@ -1,6 +1,7 @@
 package cz.uhk.zlesak.threejslearningapp.clients.interfaces;
 
 import cz.uhk.zlesak.threejslearningapp.models.entities.ChapterEntity;
+import cz.uhk.zlesak.threejslearningapp.models.records.PageResult;
 
 import java.util.List;
 
@@ -14,7 +15,7 @@ public interface IChapterApiClient extends IApiClient {
     void updateChapter(String chapterId, ChapterEntity chapterEntity) throws Exception;
     void deleteChapter(String chapterId) throws Exception;
     ChapterEntity getChapterById(String chapterId) throws Exception;
-    List<ChapterEntity> getChapters() throws Exception;
+    PageResult<ChapterEntity> getChapters(int page, int limit) throws Exception;
     List<String> getChaptersByAuthor(String authorId) throws Exception;
     List<String> getAllChapters() throws Exception;
 }

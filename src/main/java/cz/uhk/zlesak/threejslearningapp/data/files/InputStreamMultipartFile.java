@@ -17,7 +17,6 @@ import java.io.InputStream;
  */
 @Builder
 public class InputStreamMultipartFile implements MultipartFile {
-
     private final InputStream inputStream;
     private final String fileName;
     private String displayName;

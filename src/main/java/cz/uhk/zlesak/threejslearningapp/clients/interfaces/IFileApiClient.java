@@ -4,6 +4,7 @@ import cz.uhk.zlesak.threejslearningapp.models.entities.IEntity;
 import cz.uhk.zlesak.threejslearningapp.models.entities.Entity;
 import cz.uhk.zlesak.threejslearningapp.data.files.InputStreamMultipartFile;
 import cz.uhk.zlesak.threejslearningapp.models.entities.quickEntities.QuickFile;
+import cz.uhk.zlesak.threejslearningapp.models.records.PageResult;
 
 import java.util.List;
 
@@ -17,7 +18,7 @@ public interface IFileApiClient extends IApiClient {
     void createFileEntity(Entity entity) throws Exception;
     Entity getFileEntityById(String fileEntityId) throws Exception;
     List<Entity> getFileEntitiesByAuthor(String authorId) throws Exception;
-    List<QuickFile> getFileEntities(int page, int limit) throws Exception;
+    PageResult<QuickFile> getFileEntities(int page, int limit) throws Exception;
     QuickFile uploadFileEntity(InputStreamMultipartFile inputStream, IEntity entity) throws Exception;
     Entity downloadFileEntityById(String fileEntityId) throws Exception;
     void deleteFileEntity(String modelId) throws Exception;

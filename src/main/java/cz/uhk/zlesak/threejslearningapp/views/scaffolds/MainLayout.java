@@ -7,6 +7,7 @@ import com.vaadin.flow.component.avatar.Avatar;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.html.*;
+import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
@@ -19,37 +20,15 @@ import com.vaadin.flow.theme.lumo.LumoUtility.*;
 import cz.uhk.zlesak.threejslearningapp.components.AvatarItemComponent;
 import cz.uhk.zlesak.threejslearningapp.views.creating.CreateChapterView;
 import cz.uhk.zlesak.threejslearningapp.views.creating.CreateModelView;
+import cz.uhk.zlesak.threejslearningapp.views.listing.ChapterListView;
+import cz.uhk.zlesak.threejslearningapp.views.listing.ModelListView;
 import cz.uhk.zlesak.threejslearningapp.views.showing.MainPageView;
 import org.springframework.context.annotation.Scope;
-import org.vaadin.lineawesome.LineAwesomeIcon;
 
-@Layout
 @AnonymousAllowed
 @Scope("prototype")
+@Layout
 public class MainLayout extends AppLayout {
-    public static class MenuItemInfo extends ListItem {
-
-        private final Class<? extends Component> view;
-
-        public MenuItemInfo(String menuTitle, Component icon, Class<? extends Component> view) {
-            this.view = view;
-            RouterLink link = new RouterLink();
-            link.addClassNames(Display.FLEX, Gap.XSMALL, Height.MEDIUM, AlignItems.CENTER, Padding.Horizontal.SMALL, TextColor.BODY);
-            link.setRoute(view);
-            Span text = new Span(menuTitle);
-            text.addClassNames(FontWeight.MEDIUM, FontSize.MEDIUM, Whitespace.NOWRAP);
-            if (icon != null) {
-                link.add(icon);
-            }
-            link.add(text);
-            add(link);
-        }
-
-        public Class<?> getView() {
-            return view;
-        }
-    }
-
     public MainLayout() {
         addToNavbar(createHeaderContent());
     }
@@ -120,9 +99,11 @@ public class MainLayout extends AppLayout {
     /// Function for creating menu items to appear at the top navigation
     private MenuItemInfo[] createMenuItems() {
         return new MenuItemInfo[]{
-                new MenuItemInfo("Domovská stránka", LineAwesomeIcon.HOME_SOLID.create(), MainPageView.class),
-                new MenuItemInfo("Vytvořit kapitolu", LineAwesomeIcon.PEN_ALT_SOLID.create(), CreateChapterView.class),
-                new MenuItemInfo("Nahrát model", LineAwesomeIcon.OBJECT_GROUP.create(), CreateModelView.class)
+                new MenuItemInfo("Domovská stránka", VaadinIcon.HOME.create(), MainPageView.class),
+                new MenuItemInfo("Vytvořit kapitolu", VaadinIcon.PENCIL.create(), CreateChapterView.class),
+                new MenuItemInfo("Nahrát model", VaadinIcon.FILE_ZIP.create(), CreateModelView.class),
+                new MenuItemInfo("Modely", VaadinIcon.FILE_TREE.create(), ModelListView.class),
+                new MenuItemInfo("Kapitoly", VaadinIcon.MODAL_LIST.create(), ChapterListView.class)
         };
     }
 
@@ -164,6 +145,29 @@ public class MainLayout extends AppLayout {
 
         notification.add(layout);
         notification.open();
+    }
+
+    public static class MenuItemInfo extends ListItem {
+
+        private final Class<? extends Component> view;
+
+        public MenuItemInfo(String menuTitle, Component icon, Class<? extends Component> view) {
+            this.view = view;
+            RouterLink link = new RouterLink();
+            link.addClassNames(Display.FLEX, Gap.XSMALL, Height.MEDIUM, AlignItems.CENTER, Padding.Horizontal.SMALL, TextColor.BODY);
+            link.setRoute(view);
+            Span text = new Span(menuTitle);
+            text.addClassNames(FontWeight.MEDIUM, FontSize.MEDIUM, Whitespace.NOWRAP);
+            if (icon != null) {
+                link.add(icon);
+            }
+            link.add(text);
+            add(link);
+        }
+
+        public Class<?> getView() {
+            return view;
+        }
     }
 
 }

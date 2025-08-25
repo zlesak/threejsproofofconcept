@@ -5,6 +5,7 @@ import cz.uhk.zlesak.threejslearningapp.clients.interfaces.IApiClient;
 import cz.uhk.zlesak.threejslearningapp.clients.interfaces.IChapterApiClient;
 import cz.uhk.zlesak.threejslearningapp.exceptions.ApiCallException;
 import cz.uhk.zlesak.threejslearningapp.models.entities.ChapterEntity;
+import cz.uhk.zlesak.threejslearningapp.models.records.PageResult;
 import org.apache.commons.lang3.NotImplementedException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
@@ -132,11 +133,29 @@ public class ChapterApiClient implements IChapterApiClient {
      * API call function to get all chapters
      * This method currently returns an empty list and does not perform any API call.
      *
+     * @param limit Number of chapters to retrieve per page
+     * @param page  Page number to retrieve
      * @return Returns an empty list of ChapterEntity
+     * @throws Exception Throws an exception if there is an error during the API call
      */
     @Override
-    public List<ChapterEntity> getChapters() { //TODO after BE implementation done, connect to BE and get real chapters
-        return List.of();
+    public PageResult<ChapterEntity> getChapters(int page, int limit) throws Exception {
+        String url = baseUrl + "list?limit=" + limit + "&page=" + page;
+        try {
+            ResponseEntity<String> response = restTemplate.exchange(
+                    url,
+                    HttpMethod.GET,
+                    null,
+                    String.class
+            );
+            if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
+                return objectMapper.readValue(response.getBody(), objectMapper.getTypeFactory().constructParametricType(PageResult.class, ChapterEntity.class));
+            } else {
+                throw new ApiCallException("Chyba při získávání seznamu kapitol", null, null, response.getStatusCode(), response.getBody(), null);
+            }
+        } catch (HttpStatusCodeException ex) {
+            throw new ApiCallException("Chyba při získávání seznamu kapitol", null, null, ex.getStatusCode(), ex.getResponseBodyAsString(), ex);
+        }
     }
 
     /**

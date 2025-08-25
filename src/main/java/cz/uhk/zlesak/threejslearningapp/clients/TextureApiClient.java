@@ -10,6 +10,7 @@ import cz.uhk.zlesak.threejslearningapp.models.entities.IEntity;
 import cz.uhk.zlesak.threejslearningapp.models.entities.TextureEntity;
 import cz.uhk.zlesak.threejslearningapp.models.entities.quickEntities.QuickFile;
 import cz.uhk.zlesak.threejslearningapp.models.entities.quickEntities.QuickTextureEntity;
+import cz.uhk.zlesak.threejslearningapp.models.records.PageResult;
 import org.apache.commons.lang3.NotImplementedException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
@@ -113,13 +114,14 @@ public class TextureApiClient implements IFileApiClient {
 
     /**
      * This method is not implemented as the textures are not needed to be retrieved in a paginated way, or other.
-     * @param page page number.
+     *
+     * @param page  page number.
      * @param limit number of items per page.
      * @return an empty list as this method is not implemented for textures.
      */
     @Override
-    public List<QuickFile> getFileEntities(int page, int limit) {
-        return List.of();
+    public PageResult<QuickFile> getFileEntities(int page, int limit) {
+        throw new NotImplementedException();
     }
 
     /**

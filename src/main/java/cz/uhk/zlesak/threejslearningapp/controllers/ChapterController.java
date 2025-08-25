@@ -1,9 +1,11 @@
 package cz.uhk.zlesak.threejslearningapp.controllers;
 
 import cz.uhk.zlesak.threejslearningapp.clients.ChapterApiClient;
+import cz.uhk.zlesak.threejslearningapp.clients.interfaces.IChapterApiClient;
 import cz.uhk.zlesak.threejslearningapp.models.entities.ChapterEntity;
 import cz.uhk.zlesak.threejslearningapp.models.entities.quickEntities.QuickModelEntity;
 import cz.uhk.zlesak.threejslearningapp.models.entities.quickEntities.QuickTextureEntity;
+import cz.uhk.zlesak.threejslearningapp.models.records.PageResult;
 import cz.uhk.zlesak.threejslearningapp.models.records.SubChapterForSelectRecord;
 import cz.uhk.zlesak.threejslearningapp.utils.TextureMapHelper;
 import elemental.json.Json;
@@ -365,9 +367,15 @@ public class ChapterController {
      * This method uses the ChapterApiClient to fetch the list of chapters.
      * If there is an error during the retrieval, it throws an Exception with details about the error.
      * @return a list of ChapterEntity objects representing all chapters
-     * @see ChapterApiClient#getChapters()
+     * @throws RuntimeException if there is an error during the retrieval of chapters
+     * @see IChapterApiClient#getChapters(int, int)
      */
-    public List<ChapterEntity> getChapters() {
-        return chapterApiClient.getChapters();
+    public PageResult<ChapterEntity> getChapters(int page, int limit) throws RuntimeException {
+        try {
+            return chapterApiClient.getChapters(page, limit);
+        } catch (Exception e) {
+            log.error("Chyba při získávání stránkování kapitol pro page {}, limit {}, error message: {}", page, limit, e.getMessage(),  e);
+            throw new RuntimeException("Chyba při získávání modelu: " + e.getMessage(), e);
+        }
     }
 }

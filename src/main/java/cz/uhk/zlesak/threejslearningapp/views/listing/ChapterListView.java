@@ -1,15 +1,17 @@
 package cz.uhk.zlesak.threejslearningapp.views.listing;
 
+import com.vaadin.flow.component.Tag;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.router.AfterNavigationEvent;
 import com.vaadin.flow.router.BeforeEnterEvent;
 import com.vaadin.flow.router.BeforeLeaveEvent;
 import com.vaadin.flow.router.Route;
 import cz.uhk.zlesak.threejslearningapp.components.ChapterListItemComponent;
-import cz.uhk.zlesak.threejslearningapp.components.notifications.ErrorNotification;
+import cz.uhk.zlesak.threejslearningapp.components.PaginationComponent;
 import cz.uhk.zlesak.threejslearningapp.controllers.ChapterController;
 import cz.uhk.zlesak.threejslearningapp.i18n.CustomI18NProvider;
 import cz.uhk.zlesak.threejslearningapp.models.entities.ChapterEntity;
+import cz.uhk.zlesak.threejslearningapp.models.records.PageResult;
 import cz.uhk.zlesak.threejslearningapp.views.scaffolds.ListingScaffold;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,6 +26,7 @@ import java.util.List;
 @Slf4j
 @Route("chapters")
 @Scope("prototype")
+@Tag("chapters-listing")
 public class ChapterListView extends ListingScaffold {
     private final ChapterController chapterController;
     private final CustomI18NProvider customI18NProvider;
@@ -65,17 +68,15 @@ public class ChapterListView extends ListingScaffold {
      */
     @Override
     public void afterNavigation(AfterNavigationEvent event) {
-        try {
-            List<ChapterEntity> chapters = chapterController.getChapters();
-            for (ChapterEntity chapter : chapters) {
-                ChapterListItemComponent itemComponent = new ChapterListItemComponent(chapter);
-                verticalLayout.add(itemComponent);
-            }
-        } catch (Exception e) {
-            log.error("Error loading chapters", e);
-            new ErrorNotification("Chyba při načítání kapitol" + e.getMessage());
-            throw new RuntimeException(e);
+        int page = 1;
+        int limit = 10;
+        if (event.getLocation().getQueryParameters().getParameters().containsKey("page")) {
+            page = Integer.parseInt(event.getLocation().getQueryParameters().getParameters().get("page").getFirst());
         }
+        if (event.getLocation().getQueryParameters().getParameters().containsKey("limit")) {
+            limit = Integer.parseInt(event.getLocation().getQueryParameters().getParameters().get("limit").getFirst());
+        }
+        listChapters(page, limit);
     }
 
     /**
@@ -98,5 +99,32 @@ public class ChapterListView extends ListingScaffold {
     @Override
     public void beforeLeave(BeforeLeaveEvent event) {
 
+    }
+
+    /**
+     * Fetches the list of chapters from the ChapterController and populates the vertical layout with ChapterListItemComponents.
+     * It also adds a PaginationComponent at the end of the list for navigating through pages of chapters.
+     * @param page current page number
+     * @param limit number of chapters to display per page
+     */
+    public void listChapters(int page, int limit) {
+        clearList();
+        PageResult<ChapterEntity> chapterEntityPageResult = chapterController.getChapters(page-1, limit);
+
+        List<ChapterEntity> chapterEntities = chapterEntityPageResult.elements().stream().toList();
+
+        for (ChapterEntity chapter : chapterEntities) {
+            ChapterListItemComponent itemComponent = new ChapterListItemComponent(chapter);
+            listingLayout.add(itemComponent);
+        }
+        listingLayout.add(new PaginationComponent(page, limit, chapterEntityPageResult.total(), p -> UI.getCurrent().navigate("chapters?page=" + p + "&limit=" + limit)));
+    }
+
+    /**
+     * Clears all components from the vertical layout.
+     * This method is used to reset the list before populating it with new components.
+     */
+    private void clearList() {
+        listingLayout.removeAll();
     }
 }

@@ -1,19 +1,25 @@
 package cz.uhk.zlesak.threejslearningapp.views.listing;
 
+import com.vaadin.flow.component.Tag;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.router.AfterNavigationEvent;
 import com.vaadin.flow.router.BeforeEnterEvent;
 import com.vaadin.flow.router.BeforeLeaveEvent;
 import com.vaadin.flow.router.Route;
 import cz.uhk.zlesak.threejslearningapp.components.ModelListItemComponent;
+import cz.uhk.zlesak.threejslearningapp.components.PaginationComponent;
 import cz.uhk.zlesak.threejslearningapp.controllers.ModelController;
 import cz.uhk.zlesak.threejslearningapp.i18n.CustomI18NProvider;
+import cz.uhk.zlesak.threejslearningapp.models.entities.quickEntities.QuickFile;
 import cz.uhk.zlesak.threejslearningapp.models.entities.quickEntities.QuickModelEntity;
+import cz.uhk.zlesak.threejslearningapp.models.records.PageResult;
 import cz.uhk.zlesak.threejslearningapp.views.scaffolds.ListingScaffold;
+import lombok.Setter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 
 import java.util.List;
+import java.util.function.Consumer;
 
 /**
  * ModelListView is a view that displays a list of 3D models available in the application.
@@ -22,14 +28,18 @@ import java.util.List;
  */
 @Route("models")
 @Scope("prototype")
+@Tag("models-listing")
 public class ModelListView extends ListingScaffold {
     private final ModelController modelController;
     private final CustomI18NProvider customI18NProvider;
+    @Setter
+    private Consumer<QuickModelEntity> modelSelectedListener;
 
     /**
      * Constructor for ModelListView.
      * It initializes the view with the necessary controllers and providers.
-     * @param modelController controller for handling model-related operations
+     *
+     * @param modelController    controller for handling model-related operations
      * @param customI18NProvider provider for internationalization and localization
      */
     @Autowired
@@ -55,22 +65,27 @@ public class ModelListView extends ListingScaffold {
 
     /**
      * Called after the navigation to this view is complete.
-     * It retrieves the list of models from the ModelController and populates the vertical layout with ModelListItemComponent instances for each model.
+     * This method populates the list of models by calling listComponents.
+     *
      * @param event after navigation event with event details
      */
     @Override
     public void afterNavigation(AfterNavigationEvent event) {
-        List<QuickModelEntity> quickModels = modelController.getModels();
-
-        for (QuickModelEntity model : quickModels) {
-            ModelListItemComponent itemComponent = new ModelListItemComponent(model);
-            verticalLayout.add(itemComponent);
+        int page = 1;
+        int limit = 10;
+        if (event.getLocation().getQueryParameters().getParameters().containsKey("page")) {
+            page = Integer.parseInt(event.getLocation().getQueryParameters().getParameters().get("page").getFirst());
         }
+        if (event.getLocation().getQueryParameters().getParameters().containsKey("limit")) {
+            limit = Integer.parseInt(event.getLocation().getQueryParameters().getParameters().get("limit").getFirst());
+        }
+        listModels(page, limit, true);
     }
 
     /**
      * Called before entering the view.
      * Currently, this method does not perform any actions but can be used for pre-navigation logic if needed.
+     *
      * @param event before navigation event with event details
      */
     @Override
@@ -81,10 +96,48 @@ public class ModelListView extends ListingScaffold {
     /**
      * Called before leaving the view.
      * Currently, this method does not perform any actions but can be used for pre-navigation logic if needed.
+     *
      * @param event before navigation event with event details
      */
     @Override
     public void beforeLeave(BeforeLeaveEvent event) {
 
+    }
+
+    /**
+     * Lists the model components in the view.
+     * It retrieves the list of models from the ModelController and creates a ModelListItemComponent for each model.
+     * Based on listView parameter, it displays the item based on the specified view format.
+     *
+     * @param page     the page number to retrieve
+     * @param limit    the number of models to retrieve per page
+     * @param listView boolean indicating whether to display the models in a list view format
+     */
+    public void listModels(int page, int limit, boolean listView) {
+        clearList();
+        PageResult<QuickFile> quickFilePageResult = modelController.getModels(page - 1, limit);
+
+        List<QuickModelEntity> quickModelEntities = quickFilePageResult.elements().stream()
+                .filter(f -> f instanceof QuickModelEntity)
+                .map(f -> (QuickModelEntity) f)
+                .toList();
+        for (QuickModelEntity model : quickModelEntities) {
+            ModelListItemComponent itemComponent = new ModelListItemComponent(model, listView);
+            itemComponent.setSelectButtonClickListener(e -> {
+                if (modelSelectedListener != null) {
+                    modelSelectedListener.accept(model);
+                }
+            });
+            listingLayout.add(itemComponent);
+        }
+        listingLayout.add(new PaginationComponent(page, limit, quickFilePageResult.total(), p -> UI.getCurrent().navigate("models?page=" + p + "&limit=" + limit)));
+    }
+
+    /**
+     * Clears all components from the vertical layout.
+     * This method is used to reset the list before populating it with new components.
+     */
+    private void clearList() {
+        listingLayout.removeAll();
     }
 }

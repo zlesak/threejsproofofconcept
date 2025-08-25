@@ -7,6 +7,7 @@ import cz.uhk.zlesak.threejslearningapp.models.entities.ModelEntity;
 import cz.uhk.zlesak.threejslearningapp.models.entities.quickEntities.QuickFile;
 import cz.uhk.zlesak.threejslearningapp.models.entities.quickEntities.QuickModelEntity;
 import cz.uhk.zlesak.threejslearningapp.models.entities.quickEntities.QuickTextureEntity;
+import cz.uhk.zlesak.threejslearningapp.models.records.PageResult;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContextException;
@@ -15,7 +16,6 @@ import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * Controller for managing 3D models, including uploading and retrieving model files and textures.
@@ -156,20 +156,16 @@ public class ModelController {
 
     /**
      * Retrieves models saved in the BE.
-     * Currently, it retrieves only the first 10 models due to pagination (TODO).
+     * Currently, it retrieves only the first 10 models due to pagination.
      *
      * @return List of QuickModelEntity representing the models.
      * @throws RuntimeException if there is an error during the retrieval of the models.
      */
-    public List<QuickModelEntity> getModels() throws RuntimeException {
+    public PageResult<QuickFile> getModels(int page, int limit) throws RuntimeException {
         try {
-            List<QuickFile> files = modelApiClient.getFileEntities(0, 10);
-            return files.stream()
-                    .filter(f -> f instanceof QuickModelEntity)
-                    .map(f -> (QuickModelEntity) f)
-                    .collect(Collectors.toList());
+            return modelApiClient.getFileEntities(page, limit);
         } catch (Exception e) {
-            log.error("Chyba při získávání modelu: {}", e.getMessage(), e);
+            log.error("Chyba při získávání stránkování modelů pro page {}, limit {}, error message: {}", page, limit, e.getMessage(),  e);
             throw new RuntimeException("Chyba při získávání modelu: " + e.getMessage(), e);
         }
     }
