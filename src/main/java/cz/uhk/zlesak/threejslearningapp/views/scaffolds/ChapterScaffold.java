@@ -37,10 +37,10 @@ public abstract class ChapterScaffold extends Composite<VerticalLayout> implemen
     protected final TextField searchInChapterTextField = new TextField();
     protected final ChapterSelect chapterSelect = new ChapterSelect();
     protected final NavigationContentComponent navigationContentLayout = new NavigationContentComponent();
-    protected final EditorJsComponent editorjs = new EditorJsComponent();
-    protected final ThreeJsComponent renderer = new ThreeJsComponent();
+    protected final EditorJsComponent editorjs;
+    protected final ThreeJsComponent renderer;
     protected final TextField chapterNameTextField = new TextField();
-    protected final ModelDiv modelDiv = new ModelDiv(renderer);
+    protected final ModelDiv modelDiv;
     protected final HorizontalLayout secondaryNavigationBar;
 
     protected final VerticalLayout chapterContent = new VerticalLayout();
@@ -55,6 +55,11 @@ public abstract class ChapterScaffold extends Composite<VerticalLayout> implemen
      */
     public ChapterScaffold(ViewTypeEnum viewType) {
         this.i18NProvider = SpringContextUtils.getBean(CustomI18NProvider.class);
+
+        editorjs = new EditorJsComponent();
+        renderer = new ThreeJsComponent();
+        modelDiv = new ModelDiv(renderer);
+
         HorizontalLayout chapterPageLayout = new HorizontalLayout();
         VerticalLayout chapterNavigation = new VerticalLayout();
 

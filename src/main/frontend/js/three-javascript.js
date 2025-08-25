@@ -19,8 +19,8 @@ class ThreeTest {
   }
 
   init = (element) => {
-    this.doingActions("Initializing Three.js");
     this.element = element;
+    this.doingActions("Initializing Three.js");
     // Camera
     this.camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.25, 50);
     this.camera.position.set(-1.8, 0.6, 2.7);
@@ -52,6 +52,15 @@ class ThreeTest {
     window.addEventListener('resize', this.onWindowResize);
 
     // Initial setup
+
+    const modelDivElement = document.getElementById('modelDiv');
+    if (modelDivElement && window.ResizeObserver) {
+      this._resizeObserver = new ResizeObserver(() => {
+        this.onWindowResize();
+      });
+      this._resizeObserver.observe(modelDivElement);
+    }
+
     this.onWindowResize();
     this.startAnimation();
     this.addClickListener();
@@ -111,7 +120,6 @@ class ThreeTest {
 
     const canvasElement = this.element;
     const parent = canvasElement.parentElement;
-
     if (!parent) return;
 
     canvasElement.width = parent.clientWidth;
@@ -149,7 +157,7 @@ class ThreeTest {
         undefined,
         (error) => {
           console.error('Error loading model:', error);
-          resolve();
+          reject();
         }
       );
     });
@@ -191,7 +199,7 @@ class ThreeTest {
         resolve();
       }, undefined, (error) => {
         console.error('Error loading advanced model:', error);
-        resolve();
+        reject();
       });
     });
     this.finishedActions();
@@ -214,7 +222,6 @@ class ThreeTest {
       return;
     }
     const textureLoader = new THREE.TextureLoader();
-    let loadedCount = 0;
     const entries = Object.entries(textureMap);
     if (entries.length === 0) {
       this.finishedActions();
@@ -317,6 +324,10 @@ class ThreeTest {
     // Chrome only
     if (window.gc) {
       window.gc();
+    }
+    if (this._resizeObserver) {
+      this._resizeObserver.disconnect();
+      this._resizeObserver = null;
     }
   };
 

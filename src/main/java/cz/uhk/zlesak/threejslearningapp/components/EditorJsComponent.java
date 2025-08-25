@@ -1,14 +1,23 @@
 package cz.uhk.zlesak.threejslearningapp.components;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.HasSize;
 import com.vaadin.flow.component.HasStyle;
 import com.vaadin.flow.component.Tag;
 import com.vaadin.flow.component.dependency.JsModule;
 import com.vaadin.flow.component.dependency.NpmPackage;
+import cz.uhk.zlesak.threejslearningapp.models.entities.quickEntities.QuickTextureEntity;
+import cz.uhk.zlesak.threejslearningapp.models.records.TextureAreaForSelectRecord;
+import cz.uhk.zlesak.threejslearningapp.models.records.TextureListingForSelectRecord;
+import cz.uhk.zlesak.threejslearningapp.models.records.parsers.TextureAreaDataParser;
+import cz.uhk.zlesak.threejslearningapp.models.records.parsers.TextureListingDataParser;
+import cz.uhk.zlesak.threejslearningapp.utils.TextureMapHelper;
 import elemental.json.JsonValue;
 import org.springframework.context.annotation.Scope;
 
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -77,4 +86,25 @@ public class EditorJsComponent extends Component implements HasSize, HasStyle {
     public void setSelectedSubchapterData(String jsonData) {
         getElement().callJsFunction("setSelectedSubchapterData", jsonData);
     }
+
+    /**
+     * Initializes texture selection options in the Editor.js instance.
+     * This method takes a list of QuickTextureEntity objects, processes them,
+     * and passes the relevant data to the JavaScript side for initializing custom TextureColorLinkTool inline tool.
+     *
+     * @param quickModelEntityList list of QuickTextureEntity objects to be processed for texture selection.
+     */
+    public void initializeTextureSelects(List<QuickTextureEntity> quickModelEntityList) {
+        List<TextureListingForSelectRecord> otherTexturesMap = TextureListingDataParser.textureListingForSelectDataParser(quickModelEntityList);
+        List<TextureAreaForSelectRecord> textureAreaForSelectRecord = TextureAreaDataParser.csvParse(TextureMapHelper.createCsvMap(quickModelEntityList));
+        ObjectMapper mapper = new ObjectMapper();
+        try {
+            String texturesJson = mapper.writeValueAsString(otherTexturesMap);
+            String areasJson = mapper.writeValueAsString(textureAreaForSelectRecord);
+            getElement().callJsFunction("initializeTextureSelects", texturesJson, areasJson);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("Chyba při serializaci texture dat: " + e.getMessage());
+        }
+    }
+
 }

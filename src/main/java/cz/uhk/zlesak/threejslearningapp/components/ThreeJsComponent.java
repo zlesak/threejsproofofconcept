@@ -1,9 +1,6 @@
 package cz.uhk.zlesak.threejslearningapp.components;
 
-import com.vaadin.flow.component.ClientCallable;
-import com.vaadin.flow.component.Component;
-import com.vaadin.flow.component.ComponentEventListener;
-import com.vaadin.flow.component.Tag;
+import com.vaadin.flow.component.*;
 import com.vaadin.flow.component.dependency.JsModule;
 import com.vaadin.flow.component.dependency.NpmPackage;
 import com.vaadin.flow.function.SerializableRunnable;
@@ -30,7 +27,6 @@ public class ThreeJsComponent extends Component {
 
     /**
      * Default constructor for ThreeJsComponent.
-     * Initializes the component via init() method.
      */
     public ThreeJsComponent() {
         init();
@@ -208,23 +204,6 @@ public class ThreeJsComponent extends Component {
     }
 
     /**
-     * Switches the main texture of the currently displayed model in the Three.js scene.
-     * This method calls the JavaScript function switchMainTexture to handle the switching process.
-     * It is used to change the main texture of the currently selected model or object in the scene to quickly switch back from any other texture to the main one.
-     */
-    public void switchMainTexture() {
-        getElement().executeJs("""
-                try {
-                    if (typeof window.switchMainTexture === 'function') {
-                        window.switchMainTexture();
-                    }
-                } catch (e) {
-                    console.error('[JS] Error in switchToMainTexture:', e);
-                }
-                """);
-    }
-
-    /**
      * Applies a mask to the main texture of the currently displayed model in the Three.js scene.
      * This method calls the JavaScript function applyMaskToMainTexture to handle the masking process.
      * The maskColor parameter is expected to be a string representing the color to be applied as a mask.
@@ -245,6 +224,13 @@ public class ThreeJsComponent extends Component {
                 """, textureId, maskColor);
     }
 
+    /**
+     * Used to return to the last selected texture in the Three.js scene.
+     * This method calls the JavaScript function returnToLastSelectedTexture to handle the process.
+     * It is used to revert any changes made to the texture selection, allowing the user to go back to the previously selected texture.
+     * This is useful in scenarios where the user wants to undo a texture change and return to the last known good state.
+     * This is a precondition to functionality of exercises.
+     */
     public void returnToLastSelectedTexture() {
         getElement().executeJs("""
                 try {

@@ -4,7 +4,7 @@ import com.vaadin.flow.component.ComponentEventListener;
 import cz.uhk.zlesak.threejslearningapp.events.TextureAreaChangeEvent;
 import cz.uhk.zlesak.threejslearningapp.models.entities.quickEntities.QuickTextureEntity;
 import cz.uhk.zlesak.threejslearningapp.models.records.TextureAreaForSelectRecord;
-import cz.uhk.zlesak.threejslearningapp.models.records.parsers.TextureAreaForComboBoxParser;
+import cz.uhk.zlesak.threejslearningapp.models.records.parsers.TextureAreaDataParser;
 import cz.uhk.zlesak.threejslearningapp.utils.TextureMapHelper;
 import org.springframework.context.annotation.Scope;
 
@@ -47,7 +47,7 @@ public class TextureAreaSelect extends GenericSelect<TextureAreaForSelectRecord,
      * @param quickTextureEntityList the list of quick texture entities to be displayed in the select
      */
     public void initializeTextureAreaSelect(List<QuickTextureEntity> quickTextureEntityList) {
-        initialize(TextureAreaForComboBoxParser.csvParse(TextureMapHelper.createCsvMap(quickTextureEntityList)), false);
+        initialize(TextureAreaDataParser.csvParse(TextureMapHelper.createCsvMap(quickTextureEntityList)), false);
     }
 
     /**

@@ -22,6 +22,10 @@ public class ModelDiv extends Div {
      */
     public ModelDiv(ThreeJsComponent renderer) {
         super();
+
+        //Nastavení divId, DŮLEŽITÉ PRO THREEJS
+        setId("modelDiv");
+
         overlayBackground = new Div();
         overlayBackground.setVisible(false);
         overlayBackground.getStyle().set("position", "absolute");
@@ -51,8 +55,6 @@ public class ModelDiv extends Div {
         actionDescription.setWidth("300px");
         add(renderer, overlayBackground, overlayProgressBar, actionDescription);
 
-        //Nastavení divId, DŮLEŽITÉ PRO THREEJS
-        setId("modelDiv");
         setWidthFull();
         setHeightFull();
         getStyle().set("position", "relative");

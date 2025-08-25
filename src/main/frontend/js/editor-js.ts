@@ -225,7 +225,6 @@ export class EditorJs extends LitElement {
         onReady: () => {
           this.resolveEditorReadyPromise();
           this.dispatchEvent(new CustomEvent('editor-js-ready', { bubbles: true, composed: true }));
-          this.initializeCsv();
         },
         onChange: () => {
         }
@@ -324,25 +323,25 @@ export class EditorJs extends LitElement {
     this.editor.clear();
   }
 
-  public async initializeCsv() : Promise<void>{
+  // @ts-ignore - Method is used by external components
+  public async initializeTextureSelects(texturesJson?: string, areasJson?: string): Promise<void> {
     await this.editorReadyPromise;
     if (!this.editor || !this.editor.blocks) {
-      console.error('initializeCsv: Editor or editor.blocks not fully initialized even after promise resolved.');
+      console.error('initializeTextureSelects: Editor or editor.blocks not fully initialized even after promise resolved.');
       return;
     }
     try {
-      const textures = [
-        { name: 'Textura 1', id: 't1' },
-        { name: 'Textura 2', id: 't2' }
-      ];
-      const colors = [
-        { name: 'Červená', id: 'red' },
-        { name: 'Modrá', id: 'blue' }
-      ];
-      console.info("setting");
+      let textures = [];
+      let colors = [];
+      if (texturesJson) {
+        textures = JSON.parse(texturesJson);
+      }
+      if (areasJson) {
+        colors = JSON.parse(areasJson);
+      }
       TextureColorLinkTool.setGlobalTexturesAndColors(textures, colors);
-    }catch (error) {
-      console.error('Error initializing csv data:', error);
+    } catch (error) {
+      console.error('Error initializing texture selects:', error);
       throw error;
     }
   }

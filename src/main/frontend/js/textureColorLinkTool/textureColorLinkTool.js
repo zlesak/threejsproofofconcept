@@ -56,24 +56,36 @@ export default class TextureColorLinkTool {
   }
 
   renderActions() {
+    const selection = window.getSelection();
+    if (selection && selection.rangeCount > 0) {
+      this._selectedRange = selection.getRangeAt(0).cloneRange();
+    } else {
+      this._selectedRange = null;
+    }
+
     this.nodes.div = document.createElement('div');
 
     this.nodes.inputLabel = document.createElement('label');
     this.nodes.input = document.createElement('input');
 
+    if (this._selectedRange) {
+      this.nodes.input.value = this._selectedRange.toString();
+    } else {
+      this.nodes.input.value = '';
+    }
+
     this.nodes.selectTextureLabel = document.createElement('label');
     this.nodes.selectTexture = document.createElement('select');
     this.addOption(this.nodes.selectTexture, this.i18n.t('Vyberte texturu'), '');
     this.textures.forEach((texture) => {
-      console.log(texture, texture.name, texture.id);
-      this.addOption(this.nodes.selectTexture, texture.name, texture.id);
+      this.addOption(this.nodes.selectTexture, texture.textureName, texture.id);
     });
 
     this.nodes.selectColorLabel = document.createElement('label');
     this.nodes.selectColor = document.createElement('select');
     this.addOption(this.nodes.selectColor, this.i18n.t('Vyberte barvu'), '');
     this.colors.forEach((color) => {
-      this.addOption(this.nodes.selectColor, color.name, color.id);
+      this.addOption(this.nodes.selectColor, color.areaName, color.hexColor);
     });
 
     this.nodes.buttonSave = document.createElement('button');
@@ -87,7 +99,6 @@ export default class TextureColorLinkTool {
     this.nodes.div.appendChild(this.nodes.selectTexture);
     this.nodes.div.appendChild(this.nodes.selectColor);
     this.nodes.div.appendChild(this.nodes.buttonSave);
-
     return this.nodes.div;
   }
 
@@ -100,7 +111,28 @@ export default class TextureColorLinkTool {
     let texture = this.nodes.selectTexture.value || '';
     let color = this.nodes.selectColor.value || '';
 
-    console.log(text, texture, color);
+    this._savedText = text;
+    this._savedTexture = texture;
+    this._savedColor = color;
+
+    const range = this._selectedRange;
+    this.surround(range);
+  }
+
+  surround(range) {
+    if (range && this._savedText && this._savedTexture && this._savedColor) {
+      const a = document.createElement('a');
+      a.href = '#';
+      a.setAttribute('data-texture-id', this._savedTexture || '');
+      a.setAttribute('data-hex-color', this._savedColor || '');
+      a.textContent = this._savedText || range.toString();
+      range.deleteContents();
+      range.insertNode(a);
+
+      this._savedText = null;
+      this._savedTexture = null;
+      this._savedColor = null;
+    }
   }
 
   addOption(element, text, value = null) {
@@ -110,12 +142,6 @@ export default class TextureColorLinkTool {
     element.add(option);
   }
 
-
-  surround(range) {
-    if (range) {
-
-    }
-  }
 
   get title() {
     return 'Texture Color Link Tool';

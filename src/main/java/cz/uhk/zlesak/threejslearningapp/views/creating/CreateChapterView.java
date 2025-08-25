@@ -11,18 +11,24 @@ import com.vaadin.flow.router.BeforeEnterEvent;
 import com.vaadin.flow.router.BeforeLeaveEvent;
 import com.vaadin.flow.router.Route;
 import cz.uhk.zlesak.threejslearningapp.components.BeforeLeaveActionDialog;
+import cz.uhk.zlesak.threejslearningapp.components.ModelListDialog;
 import cz.uhk.zlesak.threejslearningapp.components.notifications.ErrorNotification;
 import cz.uhk.zlesak.threejslearningapp.controllers.ChapterController;
 import cz.uhk.zlesak.threejslearningapp.controllers.ModelController;
 import cz.uhk.zlesak.threejslearningapp.controllers.TextureController;
 import cz.uhk.zlesak.threejslearningapp.data.enums.ViewTypeEnum;
+import cz.uhk.zlesak.threejslearningapp.i18n.CustomI18NProvider;
 import cz.uhk.zlesak.threejslearningapp.models.entities.ChapterEntity;
+import cz.uhk.zlesak.threejslearningapp.models.entities.quickEntities.QuickModelEntity;
+import cz.uhk.zlesak.threejslearningapp.views.listing.ModelListView;
 import cz.uhk.zlesak.threejslearningapp.views.scaffolds.ChapterScaffold;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContextException;
 import org.springframework.context.annotation.Scope;
+
+import java.io.IOException;
 
 /**
  * CreateChapterView for creating a new chapter.
@@ -34,6 +40,9 @@ import org.springframework.context.annotation.Scope;
 @Tag("create-chapter")
 @Scope("prototype")
 public class CreateChapterView extends ChapterScaffold {
+    private final TextureController textureController;
+    private final ModelController modelController;
+    private final ChapterController chapterController;
     private boolean skipBeforeLeaveDialog = false;
 
     /**
@@ -41,12 +50,15 @@ public class CreateChapterView extends ChapterScaffold {
      * Initializes the view with necessary controllers and providers.
      *
      * @param chapterController controller for handling chapter-related operations
-     * @param modelController controller for handling model-related operations
+     * @param modelController   controller for handling model-related operations
      * @param textureController controller for handling texture-related operations
      */
     @Autowired
-    public CreateChapterView(ChapterController chapterController, ModelController modelController, TextureController textureController) {
+    public CreateChapterView(ChapterController chapterController, ModelController modelController, TextureController textureController, CustomI18NProvider customI18NProvider) {
         super(ViewTypeEnum.CREATE);
+        this.modelController = modelController;
+        this.textureController = textureController;
+        this.chapterController = chapterController;
 
         Button createChapterButton = new Button("Vytvořit kapitolu");
         createChapterButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
@@ -54,9 +66,27 @@ public class CreateChapterView extends ChapterScaffold {
 
         chapterContent.add(createChapterButton);
 
-        Button createModelButton = getButton(chapterController, modelController, textureController);
+        Button createModelButton = getCreateModelButton();
+        Button chooseAlreadyCreatedModelButton = new Button("Přidat existující model");
 
-        secondaryNavigationBar.add(createModelButton);
+        ModelListView modelListView = new ModelListView(modelController, customI18NProvider);
+        modelListView.listModels(1, 10, false);
+        ModelListDialog modelListDialog = new ModelListDialog(modelListView);
+        modelListDialog.setModelSelectedListener(entity -> {
+            chapterController.setUploadedModel(entity);
+            createModelButton.setText("Model přidán: " + entity.getModel().getName());
+            createModelButton.setIcon(new Icon(VaadinIcon.CHECK));
+            createModelButton.setEnabled(false);
+            chooseAlreadyCreatedModelButton.setEnabled(false);
+            try {
+                rendererAndEditorPreparation(entity);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        });
+        chooseAlreadyCreatedModelButton.addClickListener(e -> modelListDialog.open());
+
+        secondaryNavigationBar.add(createModelButton, chooseAlreadyCreatedModelButton);
 
         createChapterButton.addClickListener(e -> editorjs.getData().whenComplete((body, error) -> {
             try {
@@ -84,34 +114,22 @@ public class CreateChapterView extends ChapterScaffold {
     /**
      * Creates and returns a button for creating a model.
      * When clicked, it opens a CreateModelDialog for model creation.
-     * Once a model is created, it updates the button text and icon, disables the button,
-     * and loads the model into the renderer.
+     * Once a model is created, it updates the button text and icon, disables the button, and loads the model into the renderer.
      *
-     * @param chapterController controller for handling chapter-related operations
-     * @param modelController controller for handling model-related operations
-     * @param textureController controller for handling texture-related operations
      * @return the button for creating a model
      */
     @NotNull
-    private Button getButton(ChapterController chapterController, ModelController modelController, TextureController textureController) {
-        CreateModelDialog dialog = new CreateModelDialog(modelController);
+    private Button getCreateModelButton() {
+        CreateModelDialog dialog = new CreateModelDialog(this.modelController);
         Button createModelButton = new Button("Vytvořit model");
 
         createModelButton.addClickListener(e -> dialog.open());
         dialog.setModelCreatedListener(entity -> {
-            chapterController.setUploadedModel(entity);
+            this.chapterController.setUploadedModel(entity);
             createModelButton.setText("Model přidán: " + entity.getModel().getName());
             createModelButton.setIcon(new Icon(VaadinIcon.CHECK));
             createModelButton.setEnabled(false);
-
-            String base64ModelFile = modelController.getModelBase64(entity.getModel().getId());
-            String textureFileEntity = null;
-            if (dialog.isAdvanced()) {
-                textureFileEntity = textureController.getTextureBase64(entity.getMainTexture().getTextureFileId());
-            }
-            renderer.loadModel(base64ModelFile, textureFileEntity);
-
-            renderer.setVisible(true);
+            rendererAndEditorPreparation(entity);
         });
         return createModelButton;
     }
@@ -166,5 +184,24 @@ public class CreateChapterView extends ChapterScaffold {
     @Override
     public void afterNavigation(AfterNavigationEvent event) {
 
+    }
+
+    /**
+     * Prepares the renderer and editor with the provided QuickModelEntity.
+     * Loads the model and main texture into the renderer and initializes the editor with other textures.
+     *
+     * @param quickModelEntity the QuickModelEntity containing model and texture information
+     * @throws IOException if there is an error loading the model or textures
+     */
+    private void rendererAndEditorPreparation(QuickModelEntity quickModelEntity) throws IOException {
+        String base64ModelFile = modelController.getModelBase64(quickModelEntity.getModel().getId());
+        String textureFileEntity = null;
+        if(quickModelEntity.getMainTexture() != null)
+        {
+            textureFileEntity = textureController.getTextureBase64(quickModelEntity.getMainTexture().getTextureFileId());
+        }
+        renderer.loadModel(base64ModelFile, textureFileEntity);
+        renderer.setVisible(true);
+        editorjs.initializeTextureSelects(quickModelEntity.getOtherTextures());
     }
 }

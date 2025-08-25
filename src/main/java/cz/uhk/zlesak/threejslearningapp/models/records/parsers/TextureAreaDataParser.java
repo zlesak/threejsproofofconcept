@@ -6,7 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-public abstract class TextureAreaForComboBoxParser {
+public abstract class TextureAreaDataParser {
 
     public static List<TextureAreaForSelectRecord> csvParse(Map<String ,String> csvMap) {
         if(csvMap == null || csvMap.isEmpty()) {
