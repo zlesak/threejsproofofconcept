@@ -1,4 +1,4 @@
-package cz.uhk.zlesak.threejslearningapp.components.blocks;
+package cz.uhk.zlesak.threejslearningapp.components.compositions;
 
 import com.vaadin.flow.component.ComponentEventListener;
 import com.vaadin.flow.component.checkbox.Checkbox;
@@ -28,7 +28,7 @@ import java.util.List;
  * It also includes event handling for successful uploads and file removals, allowing integration with other parts of the application.
  */
 @Slf4j
-public class ModelUploadFormScroller extends Scroller {
+public class ModelUploadFormScrollerComposition extends Scroller {
     @Getter
     protected final VerticalLayout vl = new VerticalLayout();
     @Getter
@@ -52,7 +52,7 @@ public class ModelUploadFormScroller extends Scroller {
      * Initializes the form components, sets up event listeners for upload success and file removal,
      * and configures the layout and visibility of the form elements.
      */
-    public ModelUploadFormScroller() {
+    public ModelUploadFormScrollerComposition() {
         super(Scroller.ScrollDirection.VERTICAL);
         setContent(vl);
 

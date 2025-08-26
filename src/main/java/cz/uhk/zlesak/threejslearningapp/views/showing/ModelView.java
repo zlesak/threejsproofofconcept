@@ -5,6 +5,7 @@ import com.vaadin.flow.component.UI;
 import com.vaadin.flow.function.SerializableRunnable;
 import com.vaadin.flow.router.*;
 import com.vaadin.flow.server.VaadinSession;
+import cz.uhk.zlesak.threejslearningapp.components.ThreeJsComponent;
 import cz.uhk.zlesak.threejslearningapp.components.notifications.ErrorNotification;
 import cz.uhk.zlesak.threejslearningapp.controllers.ModelController;
 import cz.uhk.zlesak.threejslearningapp.controllers.TextureController;
@@ -88,20 +89,6 @@ public class ModelView extends ModelScaffold {
             VaadinSession.getCurrent().setAttribute("quickModelEntity", null);
         } else {
             //todo implement logic of loading model when not using session
-//            try {
-//                String base64Model = modelController.getModelBase64(modelId);
-//                String mainTextureId = modelController.getModelMainTextureId(modelId);
-//                String base64Texture = textureController.getTextureBase64(mainTextureId);
-//                renderer.loadModel(base64Model, base64Texture);
-//            } catch (IOException e) {
-//                log.error(e.getMessage());
-//                new ErrorNotification("Nepovedlo se načíst model: " + e.getMessage());
-//                event.forwardTo(ModelListView.class);
-//            } catch (Exception e) {
-//                log.error("Neočekávaná chyba při načítání modelu: {}", e.getMessage(), e);
-//                new ErrorNotification("Neočekávaná chyba při načítání modelu: " + e.getMessage());
-//                event.forwardTo(ModelListView.class);
-//            }
         }
     }
 
@@ -135,24 +122,24 @@ public class ModelView extends ModelScaffold {
      */
     @Override
     public void afterNavigation(AfterNavigationEvent event) {
-        modelUploadFormScroller.listingMode();
+        modelUploadFormScrollerComposition.listingMode();
         if (quickModelEntity != null) {
-            modelUploadFormScroller.getModelName().setValue(quickModelEntity.getModel().getName());
+            modelUploadFormScrollerComposition.getModelName().setValue(quickModelEntity.getModel().getName());
             if (quickModelEntity.getMainTexture() != null) {
-                modelUploadFormScroller.showTextureSelectors(true);
-                modelUploadFormScroller.getIsAdvanced().setValue(true);
+                modelUploadFormScrollerComposition.showTextureSelectors(true);
+                modelUploadFormScrollerComposition.getIsAdvanced().setValue(true);
                 try {
                     Map<String, String> otherTexturesMap = TextureMapHelper.otherTexturesMap(quickModelEntity.getOtherTextures(), textureController);
                     renderer.addOtherTextures(otherTexturesMap);
 
-                    modelUploadFormScroller.initializeSelectors(quickModelEntity.getOtherTextures());
+                    modelUploadFormScrollerComposition.initializeSelectors(quickModelEntity.getOtherTextures());
                 } catch (IOException e) {
                     log.error(e.getMessage(), e);
                     throw new ApplicationContextException(e.getMessage());
                 }
             }
             else{
-                modelUploadFormScroller.showTextureSelectors(false);
+                modelUploadFormScrollerComposition.showTextureSelectors(false);
             }
         }
     }

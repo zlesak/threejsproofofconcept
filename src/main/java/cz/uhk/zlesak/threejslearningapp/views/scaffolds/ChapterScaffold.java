@@ -3,17 +3,11 @@ package cz.uhk.zlesak.threejslearningapp.views.scaffolds;
 import com.vaadin.flow.component.Composite;
 import com.vaadin.flow.component.Tag;
 import com.vaadin.flow.component.dependency.JavaScript;
-import com.vaadin.flow.component.html.Div;
-import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.Scroller;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
-import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.theme.lumo.LumoUtility.Gap;
-import cz.uhk.zlesak.threejslearningapp.components.EditorJsComponent;
-import cz.uhk.zlesak.threejslearningapp.components.ModelDiv;
-import cz.uhk.zlesak.threejslearningapp.components.NavigationContentComponent;
-import cz.uhk.zlesak.threejslearningapp.components.ThreeJsComponent;
+import cz.uhk.zlesak.threejslearningapp.components.*;
 import cz.uhk.zlesak.threejslearningapp.components.selects.ChapterSelect;
 import cz.uhk.zlesak.threejslearningapp.data.enums.ViewTypeEnum;
 import cz.uhk.zlesak.threejslearningapp.i18n.CustomI18NProvider;
@@ -34,17 +28,16 @@ import org.springframework.context.annotation.Scope;
 @JavaScript("./js/scroll-to-element-data-id.js")
 @Scope("prototype")
 public abstract class ChapterScaffold extends Composite<VerticalLayout> implements IView {
-    protected final TextField searchInChapterTextField = new TextField();
+    protected final SearchTextField searchTextField = new SearchTextField("Hledat v kapitole");
     protected final ChapterSelect chapterSelect = new ChapterSelect();
     protected final NavigationContentComponent navigationContentLayout = new NavigationContentComponent();
-    protected final EditorJsComponent editorjs;
-    protected final ThreeJsComponent renderer;
-    protected final TextField chapterNameTextField = new TextField();
-    protected final ModelDiv modelDiv;
-    protected final HorizontalLayout secondaryNavigationBar;
+    protected final EditorJsComponent editorjs = new EditorJsComponent();
+    protected ThreeJsComponent renderer;
+    protected final NameTextField nameTextField = new NameTextField("Název kapitoly");
+    protected final ModelDiv modelDiv = new ModelDiv();
 
-    protected final VerticalLayout chapterContent = new VerticalLayout();
-    protected final VerticalLayout chapterModel = new VerticalLayout();
+    protected final VerticalLayout chapterNavigation, chapterContent, chapterModel;
+    protected HorizontalLayout selectsLayout;
     protected final CustomI18NProvider i18NProvider;
 
     /**
@@ -56,53 +49,13 @@ public abstract class ChapterScaffold extends Composite<VerticalLayout> implemen
     public ChapterScaffold(ViewTypeEnum viewType) {
         this.i18NProvider = SpringContextUtils.getBean(CustomI18NProvider.class);
 
-        editorjs = new EditorJsComponent();
-        renderer = new ThreeJsComponent();
-        modelDiv = new ModelDiv(renderer);
-
+        //Main page layout
         HorizontalLayout chapterPageLayout = new HorizontalLayout();
-        VerticalLayout chapterNavigation = new VerticalLayout();
-
-        Scroller chapterNavigationScroller = new Scroller(navigationContentLayout, Scroller.ScrollDirection.VERTICAL);
-        Scroller chapterContentScroller = new Scroller(editorjs, Scroller.ScrollDirection.VERTICAL);
-
-        secondaryNavigationBar = new HorizontalLayout();
-        Div firstDivider = new Div(new HorizontalLayout(chapterSelect, chapterNameTextField, searchInChapterTextField));
-        firstDivider.setWidthFull();
-        secondaryNavigationBar.add(firstDivider);
-
+        chapterNavigation = new VerticalLayout();
+        chapterContent = new VerticalLayout();
+        chapterModel = new VerticalLayout();
         chapterPageLayout.add(chapterNavigation, chapterContent, chapterModel);
-        chapterNavigation.add(chapterNavigationScroller);
-        chapterContent.add(chapterContentScroller);
-        chapterModel.add(modelDiv);
-
-        switch (viewType) {
-            case CREATE -> {
-                chapterSelect.setVisible(false);
-                searchInChapterTextField.setVisible(false);
-                chapterNameTextField.setPlaceholder("Název kapitoly");
-                chapterNavigation.setVisible(false);
-                editorjs.toggleReadOnlyMode(false);
-            }
-            case EDIT -> {
-
-            }
-            case VIEW -> editorjs.toggleReadOnlyMode(true);
-        }
-
-        chapterNameTextField.setMaxLength(255);
-        chapterNameTextField.setRequired(true);
-        chapterNameTextField.setRequiredIndicatorVisible(true);
-        chapterNameTextField.setWidthFull();
-
-        secondaryNavigationBar.setWidthFull();
-        secondaryNavigationBar.addClassName(Gap.MEDIUM);
-        secondaryNavigationBar.setAlignItems(FlexComponent.Alignment.CENTER);
-        secondaryNavigationBar.setFlexGrow(0, chapterSelect);
-        secondaryNavigationBar.setFlexGrow(1, chapterNameTextField);
-        secondaryNavigationBar.setFlexGrow(0, searchInChapterTextField);
-
-        chapterPageLayout.setWidthFull();
+        chapterPageLayout.setSizeFull();
         chapterPageLayout.setClassName("chapterPageLayout");
         chapterPageLayout.addClassName(Gap.MEDIUM);
         chapterPageLayout.setFlexGrow(0, chapterNavigation);
@@ -110,41 +63,55 @@ public abstract class ChapterScaffold extends Composite<VerticalLayout> implemen
         chapterPageLayout.setFlexGrow(1, chapterModel);
         chapterPageLayout.getStyle().set("min-width", "0");
         chapterPageLayout.getStyle().set("min-height", "0");
-        chapterPageLayout.setHeightFull();
 
-        chapterNavigation.addClassName(Gap.MEDIUM);
-        chapterNavigation.setMinWidth("10vw");
-        chapterNavigation.setWidth("min-content");
-        chapterNavigation.setPadding(false);
-
-        chapterContent.setHeightFull();
-        chapterContent.getStyle().set("flex-grow", "1");
-        chapterContent.setFlexGrow(1, chapterContentScroller);
-        chapterContent.setPadding(false);
-        chapterContent.getStyle().set("min-width", "0");
-
-        chapterContentScroller.setWidthFull();
-        chapterContentScroller.setHeightFull();
-
-        chapterModel.setHeightFull();
-        chapterModel.setWidthFull();
-        chapterModel.addClassName(Gap.MEDIUM);
-        chapterModel.setPadding(false);
-        chapterModel.getStyle().set("min-width", "0");
-
+        //Navigation layout
+        Scroller chapterNavigationScroller = new Scroller(navigationContentLayout, Scroller.ScrollDirection.VERTICAL);
         navigationContentLayout.setPadding(false);
         navigationContentLayout.setSpacing(false);
         navigationContentLayout.getThemeList().add("spacing-s");
+        chapterNavigationScroller.setSizeFull();
+        chapterNavigation.add(chapterSelect, chapterNavigationScroller, searchTextField);
+        chapterNavigation.addClassName(Gap.MEDIUM);
+        chapterNavigation.setMinWidth("12vw");
+        chapterNavigation.setWidth("min-content");
+        chapterNavigation.setPadding(false);
 
-        renderer.getStyle().set("width", "100%");
-        searchInChapterTextField.setPlaceholder("Vyhledat v textu kapitoly (NEIMPLEMENTOVÁNO)");
-        searchInChapterTextField.setMinWidth("150px");
-        chapterSelect.setMinWidth("10vw");
+        //Content layout
+        Scroller chapterContentScroller = new Scroller(editorjs, Scroller.ScrollDirection.VERTICAL);
+        chapterContentScroller.setSizeFull();
+        chapterContent.add(nameTextField, chapterContentScroller);
+        chapterContent.addClassName(Gap.MEDIUM);
+        chapterContent.setFlexGrow(1, chapterContentScroller);
+        chapterContent.setSizeFull();
+        chapterContent.setPadding(false);
+        chapterContent.getStyle().set("min-width", "0");
+        chapterContent.getStyle().set("flex-grow", "1");
 
-        getContent().add(secondaryNavigationBar, chapterPageLayout);
-        getContent().setWidth("100%");
-        getContent().setHeightFull();
-        getContent().setMinHeight("0");
+        //Model layout
+        selectsLayout = new HorizontalLayout();
+        selectsLayout.setWidthFull();
+
+        chapterModel.add(selectsLayout, modelDiv);
+        chapterModel.addClassName(Gap.MEDIUM);
+        chapterModel.setSizeFull();
+        chapterModel.setPadding(false);
+        chapterModel.getStyle().set("min-width", "0");
+        chapterModel.getStyle().set("flex-grow", "1");
+
+        getContent().add(chapterPageLayout);
+        getContent().setSizeFull();
+
+        switch (viewType) {
+            case CREATE -> {
+                chapterSelect.setVisible(false);
+                searchTextField.setVisible(false);
+                chapterNavigation.setVisible(false);
+                editorjs.toggleReadOnlyMode(false);
+            }
+            case EDIT -> {
+
+            }
+        }
 
         chapterSelect.addValueChangeListener(event -> {
             var oldSelectedSubchapter = event.getOldValue();
@@ -156,5 +123,11 @@ public abstract class ChapterScaffold extends Composite<VerticalLayout> implemen
                 navigationContentLayout.showSubchapterNavigationContent(newSelectedSubchapter.id());
             }
         });
+    }
+    public void setRenderer(ThreeJsComponent renderer) {
+        this.renderer = renderer;
+        modelDiv.setRenderer(renderer);
+        chapterModel.removeAll();
+        chapterModel.add(selectsLayout, modelDiv);
     }
 }

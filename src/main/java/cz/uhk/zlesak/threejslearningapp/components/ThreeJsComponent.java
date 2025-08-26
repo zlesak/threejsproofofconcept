@@ -1,13 +1,22 @@
 package cz.uhk.zlesak.threejslearningapp.components;
 
-import com.vaadin.flow.component.*;
+import com.vaadin.flow.component.ClientCallable;
+import com.vaadin.flow.component.Component;
+import com.vaadin.flow.component.ComponentEventListener;
+import com.vaadin.flow.component.Tag;
 import com.vaadin.flow.component.dependency.JsModule;
 import com.vaadin.flow.component.dependency.NpmPackage;
 import com.vaadin.flow.function.SerializableRunnable;
 import cz.uhk.zlesak.threejslearningapp.components.notifications.InfoNotification;
 import cz.uhk.zlesak.threejslearningapp.events.ThreeJsDoingActions;
 import cz.uhk.zlesak.threejslearningapp.events.ThreeJsFinishedActions;
+import cz.uhk.zlesak.threejslearningapp.events.toThreeJs.ApplyMaskToMainTextureEvent;
+import cz.uhk.zlesak.threejslearningapp.events.toThreeJs.ReturnToLastSelectedTextureEvent;
+import cz.uhk.zlesak.threejslearningapp.events.toThreeJs.SwitchOtherTextureEvent;
+import cz.uhk.zlesak.threejslearningapp.events.toThreeJs.ThreeJsInEvent;
 import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.NotNull;
+import org.springframework.context.ApplicationListener;
 import org.springframework.context.annotation.Scope;
 
 import java.util.Map;
@@ -16,13 +25,16 @@ import java.util.Map;
  * This component integrates Three.js into a Vaadin application.
  * It allows for rendering 3D models and handling user interactions.
  * This class main purpose is to provide a bridge between the Java backend and the JavaScript Three.js library.
+ * It includes methods for initializing the Three.js scene, loading models, applying textures, and handling events.
+ * It also implements ApplicationListener to respond to specific events related to Three.js rendering.
  */
 @Slf4j
 @JsModule("./js/three-javascript.js")
 @NpmPackage(value = "three", version = "0.172.0")
 @Tag("canvas")
+@org.springframework.stereotype.Component
 @Scope("prototype")
-public class ThreeJsComponent extends Component {
+public class ThreeJsComponent extends Component implements ApplicationListener<ThreeJsInEvent> {
 
     private Runnable onDisposedCallback;
 
@@ -30,6 +42,7 @@ public class ThreeJsComponent extends Component {
      * Default constructor for ThreeJsComponent.
      */
     public ThreeJsComponent() {
+        getStyle().set("width", "100%");
         init();
     }
 
@@ -270,5 +283,22 @@ public class ThreeJsComponent extends Component {
      */
     public void addThreeJsFinishedActionsListener(ComponentEventListener<ThreeJsFinishedActions> listener) {
         addListener(ThreeJsFinishedActions.class, listener);
+    }
+
+    /**
+     * Overridden method from ApplicationListener to handle incoming ThreeJsInEvent events.
+     * This method processes different types of events and calls the appropriate methods to handle them.
+     * It uses a switch statement to determine the type of event and execute the corresponding action.
+     *
+     * @param event the event to respond to
+     */
+    @Override
+    public void onApplicationEvent(@NotNull ThreeJsInEvent event) {
+        switch (event) {
+            case SwitchOtherTextureEvent e -> switchOtherTexture(e.getTextureId());
+            case ApplyMaskToMainTextureEvent e -> applyMaskToMainTexture(e.getTextureId(), e.getHexColor());
+            case ReturnToLastSelectedTextureEvent ignored -> returnToLastSelectedTexture();
+            default -> throw new IllegalStateException("Unexpected value: " + event);
+        }
     }
 }

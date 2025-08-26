@@ -6,40 +6,42 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.theme.lumo.LumoUtility;
 import cz.uhk.zlesak.threejslearningapp.components.ModelDiv;
 import cz.uhk.zlesak.threejslearningapp.components.ThreeJsComponent;
-import cz.uhk.zlesak.threejslearningapp.components.blocks.ModelUploadFormScroller;
+import cz.uhk.zlesak.threejslearningapp.components.compositions.ModelUploadFormScrollerComposition;
+import cz.uhk.zlesak.threejslearningapp.utils.SpringContextUtils;
 import cz.uhk.zlesak.threejslearningapp.views.IView;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Scope;
 
 @Slf4j
 @Scope("prototype")
 public abstract class ModelScaffold extends Composite<VerticalLayout> implements IView {
-    protected final ModelDiv modelDiv;
+    protected final ModelDiv modelDiv = new ModelDiv();;
     protected final ThreeJsComponent renderer;
-    protected final ModelUploadFormScroller modelUploadFormScroller;
+    protected final ModelUploadFormScrollerComposition modelUploadFormScrollerComposition;
 
     public ModelScaffold() {
         HorizontalLayout modelPageLayout = new HorizontalLayout();
-        renderer = new ThreeJsComponent();
-        modelDiv = new ModelDiv(renderer);
-        modelUploadFormScroller = new ModelUploadFormScroller();
+        this.renderer = new ThreeJsComponent();
+        modelDiv.setRenderer(renderer);
+        modelUploadFormScrollerComposition = new ModelUploadFormScrollerComposition();
 
-        modelUploadFormScroller.addModelLoadEventListener(
-                event -> renderer.loadModel(event.getBase64Model(), event.getBase64Texture())
+        modelUploadFormScrollerComposition.addModelLoadEventListener(
+                event -> this.renderer.loadModel(event.getBase64Model(), event.getBase64Texture())
         );
-        modelUploadFormScroller.addModelClearEventListener(
-                event -> renderer.clear()
+        modelUploadFormScrollerComposition.addModelClearEventListener(
+                event -> this.renderer.clear()
         );
 
-        renderer.getStyle().set("width", "100%");
+        this.renderer.getStyle().set("width", "100%");
         modelDiv.setId("modelDiv");
         modelDiv.setSizeFull();
 
         modelPageLayout.setClassName("modelPageLayout");
         modelPageLayout.addClassName(LumoUtility.Gap.MEDIUM);
-        modelPageLayout.setFlexGrow(1, modelUploadFormScroller);
+        modelPageLayout.setFlexGrow(1, modelUploadFormScrollerComposition);
         modelPageLayout.setFlexGrow(1, modelDiv);
-        modelPageLayout.add(modelUploadFormScroller, modelDiv);
+        modelPageLayout.add(modelUploadFormScrollerComposition, modelDiv);
         modelPageLayout.setSizeFull();
 
         getContent().add(modelPageLayout);

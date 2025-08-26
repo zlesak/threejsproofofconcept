@@ -15,6 +15,7 @@ public class ModelListDialog extends Dialog {
         setWidth("800px");
         setHeight("600px");
         add(modelListView);
+        modelListView.listModels(1, 6, false);
         modelListView.setModelSelectedListener(this::onModelSelected);
     }
 

@@ -67,20 +67,20 @@ public class CreateModelDialog extends Dialog {
             Button createButton = new Button("Vytvořit model");
             createButton.addClickListener(event -> {
                 try {
-                    isAdvanced = modelUploadFormScroller.getIsAdvanced().getValue();
+                    isAdvanced = modelUploadFormScrollerComposition.getIsAdvanced().getValue();
                     if (isAdvanced) {
                         this.createdModel = modelController.uploadModel(
-                                modelUploadFormScroller.getModelName().getValue().trim(),
-                                modelUploadFormScroller.getObjUploadComponent().getUploadedFiles().getFirst(),
-                                modelUploadFormScroller.getMainTextureUploadComponent().getUploadedFiles().getFirst(),
-                                modelUploadFormScroller.getOtherTexturesUploadComponent().getUploadedFiles(),
-                                modelUploadFormScroller.getCsvUploadComponent().getUploadedFiles()
+                                modelUploadFormScrollerComposition.getModelName().getValue().trim(),
+                                modelUploadFormScrollerComposition.getObjUploadComponent().getUploadedFiles().getFirst(),
+                                modelUploadFormScrollerComposition.getMainTextureUploadComponent().getUploadedFiles().getFirst(),
+                                modelUploadFormScrollerComposition.getOtherTexturesUploadComponent().getUploadedFiles(),
+                                modelUploadFormScrollerComposition.getCsvUploadComponent().getUploadedFiles()
                         );
                         new InfoNotification("Model úspěšně nahrán.");
                     } else {
                         this.createdModel = modelController.uploadModel(
-                                modelUploadFormScroller.getModelName().getValue().trim(),
-                                modelUploadFormScroller.getObjUploadComponent().getUploadedFiles().getFirst()
+                                modelUploadFormScrollerComposition.getModelName().getValue().trim(),
+                                modelUploadFormScrollerComposition.getObjUploadComponent().getUploadedFiles().getFirst()
                         );
                         new InfoNotification("Model a textury úspěšně nahrány.");
                     }
@@ -93,7 +93,7 @@ public class CreateModelDialog extends Dialog {
                     new ErrorNotification("Chyba při nahrávání modelu: " + e.getMessage());
                 }
             });
-            modelUploadFormScroller.getVl().add(createButton);
+            modelUploadFormScrollerComposition.getVl().add(createButton);
         }
 
         @Override

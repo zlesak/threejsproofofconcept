@@ -17,14 +17,20 @@ public class ModelDiv extends Div {
 
     /**
      * Constructor for ModelDiv component.
-     *
-     * @param renderer the ThreeJsComponent responsible for rendering the 3D model
      */
-    public ModelDiv(ThreeJsComponent renderer) {
+    public ModelDiv() {
         super();
 
         //Nastavení divId, DŮLEŽITÉ PRO THREEJS
         setId("modelDiv");
+
+        getStyle().set("flex", "1 1 auto");
+        getStyle().set("height", "100%");
+        getStyle().set("width", "100%");
+        getStyle().set("max-height", "100%");
+        getStyle().set("min-height", "0");
+        getStyle().set("position", "relative");
+        getStyle().remove("z-index");
 
         overlayBackground = new Div();
         overlayBackground.setVisible(false);
@@ -53,18 +59,6 @@ public class ModelDiv extends Div {
         actionDescription.getStyle().set("transform", "translate(-50%, -50%)");
         actionDescription.getStyle().set("z-index", "11");
         actionDescription.setWidth("300px");
-        add(renderer, overlayBackground, overlayProgressBar, actionDescription);
-
-        setWidthFull();
-        setHeightFull();
-        getStyle().set("position", "relative");
-        getStyle().remove("z-index");
-
-        renderer.addThreeJsDoingActionsListener(e -> {
-            actionDescription.setText(e.getDescription());
-            showOverlayProgressBar();
-        });
-        renderer.addThreeJsFinishedActionsListener(e -> hideOverlayProgressBar());
     }
 
     private void showOverlayProgressBar() {
@@ -77,5 +71,14 @@ public class ModelDiv extends Div {
         overlayBackground.setVisible(false);
         overlayProgressBar.setVisible(false);
         actionDescription.setVisible(false);
+    }
+    public void setRenderer(ThreeJsComponent renderer) {
+        removeAll();
+        add(renderer, overlayBackground, overlayProgressBar, actionDescription);
+        renderer.addThreeJsDoingActionsListener(e -> {
+            actionDescription.setText(e.getDescription());
+            showOverlayProgressBar();
+        });
+        renderer.addThreeJsFinishedActionsListener(e -> hideOverlayProgressBar());
     }
 }

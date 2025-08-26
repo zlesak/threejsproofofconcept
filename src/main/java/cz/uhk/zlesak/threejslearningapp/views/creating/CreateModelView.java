@@ -37,17 +37,17 @@ public class CreateModelView extends ModelScaffold {
         createButton.addClickListener(event -> {
             try {
                 QuickModelEntity quickModelEntity;
-                if (modelUploadFormScroller.getIsAdvanced().getValue()) {
+                if (modelUploadFormScrollerComposition.getIsAdvanced().getValue()) {
                     quickModelEntity = modelController.uploadModel(
-                            modelUploadFormScroller.getModelName().getValue().trim(),
-                            modelUploadFormScroller.getObjUploadComponent().getUploadedFiles().getFirst(),
-                            modelUploadFormScroller.getMainTextureUploadComponent().getUploadedFiles().getFirst(),
-                            modelUploadFormScroller.getOtherTexturesUploadComponent().getUploadedFiles(),
-                            modelUploadFormScroller.getCsvUploadComponent().getUploadedFiles());
+                            modelUploadFormScrollerComposition.getModelName().getValue().trim(),
+                            modelUploadFormScrollerComposition.getObjUploadComponent().getUploadedFiles().getFirst(),
+                            modelUploadFormScrollerComposition.getMainTextureUploadComponent().getUploadedFiles().getFirst(),
+                            modelUploadFormScrollerComposition.getOtherTexturesUploadComponent().getUploadedFiles(),
+                            modelUploadFormScrollerComposition.getCsvUploadComponent().getUploadedFiles());
                 } else {
                     quickModelEntity = modelController.uploadModel(
-                            modelUploadFormScroller.getModelName().getValue().trim(),
-                            modelUploadFormScroller.getObjUploadComponent().getUploadedFiles().getFirst());
+                            modelUploadFormScrollerComposition.getModelName().getValue().trim(),
+                            modelUploadFormScrollerComposition.getObjUploadComponent().getUploadedFiles().getFirst());
                 }
                 skipBeforeLeaveDialog = true;
                 new InfoNotification("Úspěšně nahráno");
@@ -58,7 +58,7 @@ public class CreateModelView extends ModelScaffold {
                 new ErrorNotification("Chyba při nahrávání modelu: " + e.getMessage());
             }
         });
-        modelUploadFormScroller.getVl().add(createButton);
+        modelUploadFormScrollerComposition.getVl().add(createButton);
     }
 
     @Override

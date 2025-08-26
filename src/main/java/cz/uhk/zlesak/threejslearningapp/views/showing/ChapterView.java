@@ -3,24 +3,24 @@ package cz.uhk.zlesak.threejslearningapp.views.showing;
 import com.vaadin.flow.component.Tag;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.dependency.JavaScript;
-import com.vaadin.flow.component.html.Div;
-import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.router.*;
+import cz.uhk.zlesak.threejslearningapp.components.ThreeJsComponent;
+import cz.uhk.zlesak.threejslearningapp.components.compositions.TextureSelectsComponent;
 import cz.uhk.zlesak.threejslearningapp.components.notifications.ErrorNotification;
-import cz.uhk.zlesak.threejslearningapp.components.selects.TextureAreaSelect;
-import cz.uhk.zlesak.threejslearningapp.components.selects.TextureListingSelect;
 import cz.uhk.zlesak.threejslearningapp.controllers.ChapterController;
 import cz.uhk.zlesak.threejslearningapp.controllers.ModelController;
 import cz.uhk.zlesak.threejslearningapp.controllers.TextureController;
 import cz.uhk.zlesak.threejslearningapp.data.enums.ViewTypeEnum;
+import cz.uhk.zlesak.threejslearningapp.events.toTextureSelectComposition.SetTextureAreaByIdEvent;
+import cz.uhk.zlesak.threejslearningapp.events.toTextureSelectComposition.SetTextureByIdEvent;
 import cz.uhk.zlesak.threejslearningapp.models.entities.quickEntities.QuickModelEntity;
 import cz.uhk.zlesak.threejslearningapp.views.listing.ChapterListView;
 import cz.uhk.zlesak.threejslearningapp.views.scaffolds.ChapterScaffold;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Scope;
-
-import java.util.Objects;
 
 /**
  * ChapterView Class - Shows the requested chapter from URL parameter. Initializes all the necessary elements
@@ -35,8 +35,10 @@ public class ChapterView extends ChapterScaffold {
     private final ModelController modelController;
     private final TextureController textureController;
     private final ChapterController chapterController;
-    private final TextureListingSelect textureListingSelect;
-    private final TextureAreaSelect textureAreaSelect;
+    private final ApplicationEventPublisher applicationEventPublisher;
+    private final ApplicationContext applicationContext;
+
+    private final TextureSelectsComponent textureSelectsComponent;
 
     private String chapterId;
 
@@ -45,33 +47,22 @@ public class ChapterView extends ChapterScaffold {
      * and serving the user the requested chapter from proper backend API endpoint via chapterApiClient.
      */
     @Autowired
-    public ChapterView(ChapterController chapterController, ModelController modelController, TextureController textureController) {
+    public ChapterView(ChapterController chapterController, ModelController modelController, TextureController textureController,
+                       ApplicationEventPublisher applicationEventPublisher, ApplicationContext applicationContext,
+                       TextureSelectsComponent textureSelectsComponent) {
         super(ViewTypeEnum.VIEW);
+        this.applicationContext = applicationContext;
         this.chapterController = chapterController;
         this.modelController = modelController;
         this.textureController = textureController;
+        this.applicationEventPublisher = applicationEventPublisher;
 
-        chapterNameTextField.setReadOnly(true);
-        textureListingSelect = new TextureListingSelect();
-        textureAreaSelect = new TextureAreaSelect();
-        textureListingSelect.addTextureListingChangeListener(
-                event -> {
-                    String textureId = event.getNewValue().id();
-                    if (textureId != null && !Objects.equals(textureId, "")) {
-                        textureAreaSelect.showSelectedTextureAreas(textureId);
-                        renderer.switchOtherTexture(textureId);
-                    }
-                }
-        );
-        textureAreaSelect.addTextureAreaChangeListener(event -> {
-            if (event.getNewValue() != null && !Objects.equals(event.getNewValue().textureId(), "")) {
-                renderer.applyMaskToMainTexture(event.getNewValue().textureId(), event.getNewValue().hexColor());
-            } else {
-                renderer.returnToLastSelectedTexture();
-            }
-        });
+        nameTextField.setReadOnly(true);
+        editorjs.toggleReadOnlyMode(true);
 
-        secondaryNavigationBar.add(new Div(new HorizontalLayout(textureListingSelect, textureAreaSelect)));
+        this.textureSelectsComponent = textureSelectsComponent;
+
+        selectsLayout.add(textureSelectsComponent);
     }
 
     /**
@@ -82,7 +73,17 @@ public class ChapterView extends ChapterScaffold {
     @Override
     public void beforeLeave(BeforeLeaveEvent event) {
         BeforeLeaveEvent.ContinueNavigationAction postponed = event.postpone();
-        renderer.dispose(() -> UI.getCurrent().access(postponed::proceed));
+        UI ui = UI.getCurrent();
+        if (renderer != null) {
+            renderer.dispose(() -> {
+                ui.access(() -> {
+                    modelDiv.remove(renderer);
+                    postponed.proceed();
+                });
+            });
+        } else {
+            postponed.proceed();
+        }
     }
 
     /**
@@ -127,7 +128,10 @@ public class ChapterView extends ChapterScaffold {
     @Override
     public void afterNavigation(AfterNavigationEvent event) {
         try {
-            chapterNameTextField.setValue(chapterController.getChapterName(chapterId));
+            ThreeJsComponent renderer = applicationContext.getBean(ThreeJsComponent.class);
+            setRenderer(renderer);
+
+            nameTextField.setValue(chapterController.getChapterName(chapterId));
 
             try {
                 QuickModelEntity quickModelEntity = chapterController.getChapterFirstQuickModelEntity(chapterId);
@@ -155,12 +159,11 @@ public class ChapterView extends ChapterScaffold {
                     throw new RuntimeException(e);
                 }
             });
-            textureAreaSelect.initializeTextureAreaSelect(chapterController.getAllChapterTextures(chapterId));
-            textureListingSelect.initializeTextureListingSelect(chapterController.getAllChapterTextures(chapterId));
+            textureSelectsComponent.initializeData(chapterController.getAllChapterTextures(chapterId));
 
             editorjs.addTextureColorAreaClickListener((textureId, hexColor, text) -> {
-                textureListingSelect.setSelectedTextureById(textureId);
-                textureAreaSelect.setSelectedAreaByHexColor(hexColor, textureId);
+                applicationEventPublisher.publishEvent(new SetTextureByIdEvent(this, textureId));
+                applicationEventPublisher.publishEvent(new SetTextureAreaByIdEvent(this, textureId, hexColor));
             });
         } catch (Exception e) {
             log.error("Chyba při načítání kapitoly: {}", e.getMessage(), e);

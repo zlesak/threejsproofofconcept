@@ -13,6 +13,7 @@ import cz.uhk.zlesak.threejslearningapp.i18n.CustomI18NProvider;
 import cz.uhk.zlesak.threejslearningapp.models.entities.quickEntities.QuickFile;
 import cz.uhk.zlesak.threejslearningapp.models.entities.quickEntities.QuickModelEntity;
 import cz.uhk.zlesak.threejslearningapp.models.records.PageResult;
+import cz.uhk.zlesak.threejslearningapp.utils.SpringContextUtils;
 import cz.uhk.zlesak.threejslearningapp.views.scaffolds.ListingScaffold;
 import lombok.Setter;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,12 +41,11 @@ public class ModelListView extends ListingScaffold {
      * It initializes the view with the necessary controllers and providers.
      *
      * @param modelController    controller for handling model-related operations
-     * @param customI18NProvider provider for internationalization and localization
      */
     @Autowired
-    public ModelListView(ModelController modelController, CustomI18NProvider customI18NProvider) {
+    public ModelListView(ModelController modelController) {
         this.modelController = modelController;
-        this.customI18NProvider = customI18NProvider;
+        this.customI18NProvider = SpringContextUtils.getBean(CustomI18NProvider.class);
     }
 
     /**
@@ -128,7 +128,7 @@ public class ModelListView extends ListingScaffold {
                     modelSelectedListener.accept(model);
                 }
             });
-            listingLayout.add(itemComponent);
+            itemListLayout.add(itemComponent);
         }
         PaginationComponent paginationComponent;
         if(listView) {
@@ -137,7 +137,7 @@ public class ModelListView extends ListingScaffold {
         else{
             paginationComponent = new PaginationComponent(page, limit, quickFilePageResult.total(), p -> listModels(p, limit, false));
         }
-        listingLayout.add(paginationComponent);
+        paginationLayout.add(paginationComponent);
     }
 
     /**
@@ -145,6 +145,7 @@ public class ModelListView extends ListingScaffold {
      * This method is used to reset the list before populating it with new components.
      */
     private void clearList() {
-        listingLayout.removeAll();
+        itemListLayout.removeAll();
+        paginationLayout.removeAll();
     }
 }

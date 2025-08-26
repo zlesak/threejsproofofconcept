@@ -12,12 +12,12 @@ import com.vaadin.flow.router.BeforeLeaveEvent;
 import com.vaadin.flow.router.Route;
 import cz.uhk.zlesak.threejslearningapp.components.BeforeLeaveActionDialog;
 import cz.uhk.zlesak.threejslearningapp.components.ModelListDialog;
+import cz.uhk.zlesak.threejslearningapp.components.ThreeJsComponent;
 import cz.uhk.zlesak.threejslearningapp.components.notifications.ErrorNotification;
 import cz.uhk.zlesak.threejslearningapp.controllers.ChapterController;
 import cz.uhk.zlesak.threejslearningapp.controllers.ModelController;
 import cz.uhk.zlesak.threejslearningapp.controllers.TextureController;
 import cz.uhk.zlesak.threejslearningapp.data.enums.ViewTypeEnum;
-import cz.uhk.zlesak.threejslearningapp.i18n.CustomI18NProvider;
 import cz.uhk.zlesak.threejslearningapp.models.entities.ChapterEntity;
 import cz.uhk.zlesak.threejslearningapp.models.entities.quickEntities.QuickModelEntity;
 import cz.uhk.zlesak.threejslearningapp.views.listing.ModelListView;
@@ -25,6 +25,7 @@ import cz.uhk.zlesak.threejslearningapp.views.scaffolds.ChapterScaffold;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextException;
 import org.springframework.context.annotation.Scope;
 
@@ -44,6 +45,7 @@ public class CreateChapterView extends ChapterScaffold {
     private final ModelController modelController;
     private final ChapterController chapterController;
     private boolean skipBeforeLeaveDialog = false;
+    private final ApplicationContext applicationContext;
 
     /**
      * Constructor for CreateChapterView.
@@ -54,61 +56,20 @@ public class CreateChapterView extends ChapterScaffold {
      * @param textureController controller for handling texture-related operations
      */
     @Autowired
-    public CreateChapterView(ChapterController chapterController, ModelController modelController, TextureController textureController, CustomI18NProvider customI18NProvider) {
+    public CreateChapterView(ChapterController chapterController, ModelController modelController,
+                             TextureController textureController, ApplicationContext applicationContext) {
         super(ViewTypeEnum.CREATE);
         this.modelController = modelController;
         this.textureController = textureController;
         this.chapterController = chapterController;
+        this.applicationContext = applicationContext;
 
-        Button createChapterButton = new Button("Vytvořit kapitolu");
-        createChapterButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
-        createChapterButton.setWidthFull();
-
+        Button createChapterButton = getCreateChapterButton();
         chapterContent.add(createChapterButton);
 
         Button createModelButton = getCreateModelButton();
-        Button chooseAlreadyCreatedModelButton = new Button("Přidat existující model");
-
-        ModelListView modelListView = new ModelListView(modelController, customI18NProvider);
-        modelListView.listModels(1, 5, false);
-        ModelListDialog modelListDialog = new ModelListDialog(modelListView);
-        modelListDialog.setModelSelectedListener(entity -> {
-            chapterController.setUploadedModel(entity);
-            createModelButton.setText("Model přidán: " + entity.getModel().getName());
-            createModelButton.setIcon(new Icon(VaadinIcon.CHECK));
-            createModelButton.setEnabled(false);
-            chooseAlreadyCreatedModelButton.setEnabled(false);
-            try {
-                rendererAndEditorPreparation(entity);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        });
-        chooseAlreadyCreatedModelButton.addClickListener(e -> modelListDialog.open());
-
-        secondaryNavigationBar.add(createModelButton, chooseAlreadyCreatedModelButton);
-
-        createChapterButton.addClickListener(e -> editorjs.getData().whenComplete((body, error) -> {
-            try {
-                if (error != null) {
-                    throw new ApplicationContextException("Chyba při získávání obsahu: ", error);
-                }
-                ChapterEntity created = chapterController.createChapter(chapterNameTextField.getValue().trim(), body);
-                if (created != null) {
-                    skipBeforeLeaveDialog = true;
-                    UI.getCurrent().navigate("chapter/" + created.getId());
-                } else {
-                    throw new ApplicationContextException("Kapitola nebyla uložena, zkuste to znovu později.");
-                }
-            } catch (ApplicationContextException ex) {
-                log.error("Chyba při ukládání kapitoly: {}", ex.getMessage(), ex);
-                new ErrorNotification("Chyba při ukládání kapitoly: " + ex.getMessage(), 5000);
-            } catch (Exception ex) {
-                log.error("Neočekávaná chyba při ukládání kapitoly: {}", ex.getMessage(), ex);
-                new ErrorNotification("Neočekávaná chyba při vytváření kapitoly: " + ex.getMessage(), 5000);
-            }
-        }));
-
+        Button chooseAlreadyCreatedModelButton = getChooseAlreadyCreatedModelButton(createModelButton);
+        selectsLayout.add(createModelButton, chooseAlreadyCreatedModelButton);
     }
 
     /**
@@ -135,6 +96,68 @@ public class CreateChapterView extends ChapterScaffold {
     }
 
     /**
+     * Creates and returns a button for choosing an already created model.
+     * When clicked, it opens a ModelListDialog for selecting an existing model.
+     * Once a model is selected, it updates the createModelButton text and icon, disables both buttons, and loads the model into the renderer.
+     * @param createModelButton the button for creating a model, which will be updated upon model selection
+     * @return the button for choosing an already created model
+     */
+    @NotNull
+    private Button getChooseAlreadyCreatedModelButton(Button createModelButton) {
+        Button chooseAlreadyCreatedModelButton = new Button("Přidat existující model");
+
+        ModelListDialog modelListDialog = new ModelListDialog(new ModelListView(modelController));
+        modelListDialog.setModelSelectedListener(entity -> {
+            chapterController.setUploadedModel(entity);
+            createModelButton.setText("Model přidán: " + entity.getModel().getName());
+            createModelButton.setIcon(new Icon(VaadinIcon.CHECK));
+            createModelButton.setEnabled(false);
+            chooseAlreadyCreatedModelButton.setEnabled(false);
+            try {
+                rendererAndEditorPreparation(entity);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        });
+        chooseAlreadyCreatedModelButton.addClickListener(e -> modelListDialog.open());
+        return chooseAlreadyCreatedModelButton;
+    }
+
+    /**
+     * Creates and returns a button for creating a chapter.
+     * When clicked, it retrieves the content from the editor and attempts to create a new chapter using the ChapterController.
+     * If successful, it navigates to the newly created chapter's view.
+     * If there are errors during the process, it logs the error and shows an error notification.
+     * @return the button for creating a chapter
+     */
+    @NotNull Button getCreateChapterButton(){
+        Button createChapterButton = new Button("Vytvořit kapitolu");
+        createChapterButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        createChapterButton.setWidthFull();
+        createChapterButton.addClickListener(e -> editorjs.getData().whenComplete((body, error) -> {
+            try {
+                if (error != null) {
+                    throw new ApplicationContextException("Chyba při získávání obsahu: ", error);
+                }
+                ChapterEntity created = chapterController.createChapter(nameTextField.getValue().trim(), body);
+                if (created != null) {
+                    skipBeforeLeaveDialog = true;
+                    UI.getCurrent().navigate("chapter/" + created.getId());
+                } else {
+                    throw new ApplicationContextException("Kapitola nebyla uložena, zkuste to znovu později.");
+                }
+            } catch (ApplicationContextException ex) {
+                log.error("Chyba při ukládání kapitoly: {}", ex.getMessage(), ex);
+                new ErrorNotification("Chyba při ukládání kapitoly: " + ex.getMessage(), 5000);
+            } catch (Exception ex) {
+                log.error("Neočekávaná chyba při ukládání kapitoly: {}", ex.getMessage(), ex);
+                new ErrorNotification("Neočekávaná chyba při vytváření kapitoly: " + ex.getMessage(), 5000);
+            }
+        }));
+        return createChapterButton;
+    }
+
+    /**
      * Handles actions before entering the view.
      * Currently, no specific actions are defined.
      *
@@ -155,9 +178,31 @@ public class CreateChapterView extends ChapterScaffold {
      */
     @Override
     public void beforeLeave(BeforeLeaveEvent event) {
-        if (!skipBeforeLeaveDialog) {
-            BeforeLeaveActionDialog.leave(event);
+        if (skipBeforeLeaveDialog) {
+            BeforeLeaveEvent.ContinueNavigationAction postponed = event.postpone();
+            var ui = event.getUI();
+            if (renderer != null) {
+                renderer.dispose(() -> ui.access(() -> {
+                    modelDiv.remove(renderer);
+                    postponed.proceed();
+                }));
+            } else {
+                postponed.proceed();
+            }
+            return;
         }
+
+        BeforeLeaveActionDialog.leave(event, postponed -> {
+            var ui = event.getUI();
+            if (renderer != null) {
+                renderer.dispose(() -> ui.access(() -> {
+                    modelDiv.remove(renderer);
+                    postponed.proceed();
+                }));
+            } else {
+                postponed.proceed();
+            }
+        });
     }
 
     /**
@@ -183,7 +228,8 @@ public class CreateChapterView extends ChapterScaffold {
      */
     @Override
     public void afterNavigation(AfterNavigationEvent event) {
-
+        ThreeJsComponent renderer = applicationContext.getBean(ThreeJsComponent.class);
+        setRenderer(renderer);
     }
 
     /**

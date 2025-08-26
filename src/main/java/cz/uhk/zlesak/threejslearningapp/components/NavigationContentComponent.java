@@ -5,7 +5,6 @@ import elemental.json.JsonObject;
 import elemental.json.JsonValue;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.html.Anchor;
-import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.dom.DomEventListener;
 import lombok.extern.slf4j.Slf4j;
@@ -31,8 +30,6 @@ public class NavigationContentComponent extends VerticalLayout {
             String dataIdToScroll = event.getSource().getAttribute("data-target-id");
             UI.getCurrent().getPage().executeJs("window.scrollToDataId($0)", dataIdToScroll);
         };
-        Span contentNavigationText = new Span("Podkapitoly");
-        this.add(contentNavigationText);
 
         if (subChaptersContent instanceof JsonArray jsonArray) {
             for (int i = 0; i < jsonArray.length(); i++) {
