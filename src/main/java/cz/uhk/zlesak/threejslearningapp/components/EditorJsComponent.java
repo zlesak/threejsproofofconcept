@@ -107,4 +107,30 @@ public class EditorJsComponent extends Component implements HasSize, HasStyle {
         }
     }
 
+    /**
+     * Adds a listener for texture color area click events.
+     * When a texture color area is clicked in the Editor.js instance, this listener will be triggered.
+     * The listener receives the texture ID, hex color, and associated text as parameters.
+     *
+     * @param listener the listener to be added
+     */
+    public void addTextureColorAreaClickListener(TextureColorAreaClickListener listener) {
+        getElement().addEventListener("texturecolorareaclick", event -> {
+                    String textureId = event.getEventData().getString("event.detail.textureId");
+                    String hexColor = event.getEventData().getString("event.detail.hexColor");
+                    String text = event.getEventData().getString("event.detail.text");
+                    listener.onTextureColorAreaClick(textureId, hexColor, text);
+                }).addEventData("event.detail.textureId")
+                .addEventData("event.detail.hexColor")
+                .addEventData("event.detail.text");
+    }
+
+    /**
+     * Listener interface for handling texture color area click events.
+     * Implement this interface to define custom behavior when a texture color area is clicked.
+     */
+    public interface TextureColorAreaClickListener {
+        void onTextureColorAreaClick(String textureId, String hexColor, String text);
+    }
+
 }

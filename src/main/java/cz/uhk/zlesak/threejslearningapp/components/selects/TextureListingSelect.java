@@ -47,4 +47,19 @@ public class TextureListingSelect extends GenericSelect<TextureListingForSelectR
     public void initializeTextureListingSelect(List<QuickTextureEntity> quickTextureEntityList) {
         initialize(TextureListingDataParser.textureListingForSelectDataParser(quickTextureEntityList), true);
     }
+
+    /**
+     * Sets the selected texture in the select based on the provided texture ID.
+     * If the texture ID is null or not found, no selection is made.
+     * @param textureId the ID of the texture to be selected
+     */
+    public void setSelectedTextureById(String textureId) {
+        if (textureId == null) return;
+        for (TextureListingForSelectRecord item : getItems()) {
+            if (item.id().equals(textureId)) {
+                setValue(item);
+                return;
+            }
+        }
+    }
 }

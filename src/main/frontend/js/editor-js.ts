@@ -53,6 +53,7 @@ export class EditorJs extends LitElement {
 
   async firstUpdated() {
     await this.initializeEditor();
+    attachTextureColorListeners();
   }
 
   async initializeContainer() {
@@ -225,8 +226,10 @@ export class EditorJs extends LitElement {
         onReady: () => {
           this.resolveEditorReadyPromise();
           this.dispatchEvent(new CustomEvent('editor-js-ready', { bubbles: true, composed: true }));
+          attachTextureColorListeners();
         },
         onChange: () => {
+          attachTextureColorListeners();
         }
       });
     } catch (error) {
@@ -273,6 +276,7 @@ export class EditorJs extends LitElement {
     }
     this._chapterContentData = JSON.parse(jsonData);
     await this.setData(this._chapterContentData);
+    attachTextureColorListeners();
   }
 
   // @ts-ignore - Method is used by external components
@@ -285,6 +289,7 @@ export class EditorJs extends LitElement {
     const finalSubChapterDataOutputData: OutputData = structuredClone(this._chapterContentData);
     finalSubChapterDataOutputData.blocks = JSON.parse(jsonData);
     await this.setData(finalSubChapterDataOutputData);
+    attachTextureColorListeners();
   }
 
   async setData(value: OutputData): Promise<void> {
@@ -296,7 +301,7 @@ export class EditorJs extends LitElement {
     try {
       await this.editor.blocks.clear();
       await this.editor.blocks.render(value);
-
+      attachTextureColorListeners();
     } catch (error) {
       console.error('Error setting editor data:', error);
       throw error;
@@ -345,4 +350,30 @@ export class EditorJs extends LitElement {
       throw error;
     }
   }
+}
+
+function attachTextureColorListeners() {
+  const editorContainer = document.getElementById('editorjs');
+  if (!editorContainer) return;
+  const links = editorContainer.querySelectorAll('a[data-texture-id][data-hex-color]');
+  links.forEach(link => {
+    if (!link.hasAttribute('data-texture-color-listener')) {
+      link.addEventListener('click', (event) => {
+        event.preventDefault();
+        let customElement = link.closest('editor-js');
+        if (customElement) {
+          customElement.dispatchEvent(new CustomEvent('texturecolorareaclick', {
+            bubbles: true,
+            composed: true,
+            detail: {
+              textureId: link.getAttribute('data-texture-id'),
+              hexColor: link.getAttribute('data-hex-color'),
+              text: link.textContent
+            }
+          }));
+        }
+      });
+      link.setAttribute('data-texture-color-listener', 'true');
+    }
+  });
 }

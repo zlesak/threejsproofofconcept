@@ -124,9 +124,7 @@ class ThreeTest {
 
     canvasElement.width = parent.clientWidth;
 
-    const modelDiv = document.getElementById('modelDiv').offsetHeight;
-    console.log(modelDiv);
-    canvasElement.height = modelDiv;
+    canvasElement.height = document.getElementById('modelDiv').offsetHeight;
 
     this.camera.aspect = canvasElement.width / canvasElement.height;
     this.camera.updateProjectionMatrix();
@@ -514,7 +512,6 @@ class ThreeTest {
 
   doingActions(description) {
     if (this.element && this.element.$server && typeof this.element.$server.doingActions === 'function') {
-      console.log("Doing action:", description); //TODO: Remove after debugging phase
       this.element.$server.doingActions(description);
     }
   }
@@ -621,8 +618,3 @@ window.addEventListener('load', () => {
 window.addEventListener('beforeunload', () => {
   window.disposeThree();
 });
-
-window.doAction = function(href) {
-  console.log('doAction called from WysiwygE link:', href); //TODO: Remove after debugging phase
-  tt.changeSpeed(0.3); //TODO: Change to certain logic when available, now for channel testing speed up setting
-};

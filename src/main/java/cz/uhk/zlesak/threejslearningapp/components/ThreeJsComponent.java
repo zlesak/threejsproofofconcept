@@ -4,6 +4,7 @@ import com.vaadin.flow.component.*;
 import com.vaadin.flow.component.dependency.JsModule;
 import com.vaadin.flow.component.dependency.NpmPackage;
 import com.vaadin.flow.function.SerializableRunnable;
+import cz.uhk.zlesak.threejslearningapp.components.notifications.InfoNotification;
 import cz.uhk.zlesak.threejslearningapp.events.ThreeJsDoingActions;
 import cz.uhk.zlesak.threejslearningapp.events.ThreeJsFinishedActions;
 import lombok.extern.slf4j.Slf4j;
@@ -76,26 +77,6 @@ public class ThreeJsComponent extends Component {
         if (this.onDisposedCallback != null) {
             this.onDisposedCallback.run();
         }
-    }
-
-    /**
-     * Executes a JavaScript action defined in the Three.js JavaScript module.
-     * This method allows for interaction with the Three.js from the Java side.
-     * The href parameter is expected to be a string that represents the action to be performed.
-     * Mainly used to communicate user actions in Editor.js as click events that has the following action in the Three.js scene.
-     *
-     * @param href the action to be performed in the Three.js scene.
-     */
-    public void doAction(String href) { //TODO: Change method to appropriate method, or use switching for different actions when defined and available
-        getElement().executeJs("""
-                try {
-                    if (typeof window.doAction === 'function') {
-                        window.doAction($0);
-                    }
-                } catch (e) {
-                    console.error('[JS] Error in doAction:', e);
-                }
-                """, href);
     }
 
     /**
@@ -252,7 +233,7 @@ public class ThreeJsComponent extends Component {
      */
     @ClientCallable
     public void onColorPicked(String hexColor) { //TODO implement proper functionality based on chosen logic of transferring color to the JAVA side when properly thought through
-        log.info("Vybraná barva: {}", hexColor);
+        new InfoNotification("Vybraná barva: " + hexColor);
     }
 
     /**

@@ -53,6 +53,7 @@ public class TextureAreaSelect extends GenericSelect<TextureAreaForSelectRecord,
     /**
      * Filters the displayed texture areas based on the provided texture ID.
      * If the texture ID is null, all items are shown.
+     *
      * @param textureId the ID of the texture to filter by
      */
     public void showSelectedTextureAreas(String textureId) {
@@ -67,5 +68,22 @@ public class TextureAreaSelect extends GenericSelect<TextureAreaForSelectRecord,
             }
         }
         setItems(itemsToShow);
+    }
+
+    /**
+     * Sets the selected area based on the provided hex color and texture ID.
+     * If no matching area is found, the selection remains unchanged.
+     *
+     * @param hexColor  the hex color of the area to select
+     * @param textureId the ID of the texture associated with the area
+     */
+    public void setSelectedAreaByHexColor(String hexColor, String textureId) {
+        if (hexColor == null) return;
+        for (TextureAreaForSelectRecord item : getItems()) {
+            if (item.hexColor().equals(hexColor) && item.textureId().equals(textureId)) {
+                setValue(item);
+                return;
+            }
+        }
     }
 }

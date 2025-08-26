@@ -157,6 +157,11 @@ public class ChapterView extends ChapterScaffold {
             });
             textureAreaSelect.initializeTextureAreaSelect(chapterController.getAllChapterTextures(chapterId));
             textureListingSelect.initializeTextureListingSelect(chapterController.getAllChapterTextures(chapterId));
+
+            editorjs.addTextureColorAreaClickListener((textureId, hexColor, text) -> {
+                textureListingSelect.setSelectedTextureById(textureId);
+                textureAreaSelect.setSelectedAreaByHexColor(hexColor, textureId);
+            });
         } catch (Exception e) {
             log.error("Chyba při načítání kapitoly: {}", e.getMessage(), e);
             new ErrorNotification("Chyba při načítání kapitoly: " + e.getMessage(), 5000);
