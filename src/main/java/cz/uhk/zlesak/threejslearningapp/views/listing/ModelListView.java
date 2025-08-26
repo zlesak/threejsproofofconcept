@@ -130,7 +130,14 @@ public class ModelListView extends ListingScaffold {
             });
             listingLayout.add(itemComponent);
         }
-        listingLayout.add(new PaginationComponent(page, limit, quickFilePageResult.total(), p -> UI.getCurrent().navigate("models?page=" + p + "&limit=" + limit)));
+        PaginationComponent paginationComponent;
+        if(listView) {
+             paginationComponent = new PaginationComponent(page, limit, quickFilePageResult.total(), p -> UI.getCurrent().navigate("models?page=" + p + "&limit=" + limit));
+        }
+        else{
+            paginationComponent = new PaginationComponent(page, limit, quickFilePageResult.total(), p -> listModels(p, limit, false));
+        }
+        listingLayout.add(paginationComponent);
     }
 
     /**

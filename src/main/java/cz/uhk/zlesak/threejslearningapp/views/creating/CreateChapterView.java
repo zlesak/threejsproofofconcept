@@ -70,7 +70,7 @@ public class CreateChapterView extends ChapterScaffold {
         Button chooseAlreadyCreatedModelButton = new Button("Přidat existující model");
 
         ModelListView modelListView = new ModelListView(modelController, customI18NProvider);
-        modelListView.listModels(1, 10, false);
+        modelListView.listModels(1, 5, false);
         ModelListDialog modelListDialog = new ModelListDialog(modelListView);
         modelListDialog.setModelSelectedListener(entity -> {
             chapterController.setUploadedModel(entity);
