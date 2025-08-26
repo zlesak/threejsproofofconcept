@@ -16,6 +16,7 @@ class ThreeTest {
     this.otherTextures = [];
     this.mainTexture = null;
     this.lastSelectedTextureId = null;
+    this.actionQueue = [];
   }
 
   init = (element) => {
@@ -258,6 +259,7 @@ class ThreeTest {
       this.finishedActions();
       this.render();
     } else {
+      this.finishedActions();
       await this.switchToMainTexture();
     }
   };
@@ -371,10 +373,6 @@ class ThreeTest {
     }
   };
 
-  changeSpeed = (speed) => {
-    this.controls.autoRotateSpeed += speed;
-  };
-
   clear = async () => {
     this.doingActions("Clearing scene");
     if (this.scene) {
@@ -472,23 +470,21 @@ class ThreeTest {
     const maskData = new Uint8ClampedArray(maskImageData.data);
     const maskColorRgb = hexToRgb(maskColor);
     // Worker
-    const worker = new Worker(new URL('./textureMaskWorker.js', import.meta.url), { type: 'module' });    await new Promise((resolve, reject) => {
-      worker.onmessage = function(e) {
+    const worker = new Worker(new URL('./textureMaskWorker.js', import.meta.url), { type: 'module' });
+    await new Promise((resolve, reject) => {
+      worker.onmessage = async function(e) {
         const { mainData: resultData } = e.data;
         for (let i = 0; i < resultData.length; i++) {
           mainImageData.data[i] = resultData[i];
         }
         ctx.putImageData(mainImageData, 0, 0);
         const resultTexture = new THREE.CanvasTexture(resultCanvas);
-        resultTexture.needsUpdate = true;
-        if (tt && tt.model) {
-          tt.model.traverse((child) => {
-            if (child.isMesh) {
-              child.material.map = resultTexture;
-              child.material.needsUpdate = true;
-            }
-          });
-        }
+        tt.model.traverse((child) => {
+          if (child.isMesh) {
+            child.material.map = resultTexture;
+            child.material.needsUpdate = true;
+          }
+        });
         worker.terminate();
         resolve();
       };
@@ -499,9 +495,8 @@ class ThreeTest {
       };
       worker.postMessage({ mainData, maskData, maskColorRgb, width, height });
     });
-    await new Promise(resolve => setTimeout(resolve, 100));
+    this.render();
     this.finishedActions();
-    tt.render();
   }
 
   returnToLastSelectedTexture() {
@@ -511,14 +506,24 @@ class ThreeTest {
   }
 
   doingActions(description) {
+    this.actionQueue.push(description);
     if (this.element && this.element.$server && typeof this.element.$server.doingActions === 'function') {
-      this.element.$server.doingActions(description);
+      this.element.$server.doingActions(this.actionQueue[this.actionQueue.length - 1]);
     }
   }
 
   finishedActions() {
-    if (this.element && this.element.$server && typeof this.element.$server.finishedActions === 'function') {
-      this.element.$server.finishedActions();
+    if (this.actionQueue.length > 0) {
+      this.actionQueue.shift();
+    }
+    if (this.actionQueue.length === 0) {
+      if (this.element && this.element.$server && typeof this.element.$server.finishedActions === 'function') {
+        this.element.$server.finishedActions();
+      }
+    } else {
+      if (this.element && this.element.$server && typeof this.element.$server.doingActions === 'function') {
+        this.element.$server.doingActions(this.actionQueue[this.actionQueue.length - 1]);
+      }
     }
   }
 }
@@ -600,12 +605,6 @@ window.switchOtherTexture = function(id) {
 window.returnToLastSelectedTexture = function() {
   if (tt) {
     tt.returnToLastSelectedTexture();
-  }
-};
-
-window.switchMainTexture = function() {
-  if (tt) {
-    tt.switchToMainTexture();
   }
 };
 
