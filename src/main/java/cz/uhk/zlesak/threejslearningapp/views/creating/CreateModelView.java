@@ -3,6 +3,7 @@ package cz.uhk.zlesak.threejslearningapp.views.creating;
 import com.vaadin.flow.component.Tag;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.router.AfterNavigationEvent;
 import com.vaadin.flow.router.BeforeEnterEvent;
 import com.vaadin.flow.router.BeforeLeaveEvent;
@@ -33,6 +34,7 @@ public class CreateModelView extends ModelScaffold {
         this.i18nProvider = customI18NProvider;
 
         Button createButton = new Button("Vytvořit model");
+        createButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 
         createButton.addClickListener(event -> {
             try {

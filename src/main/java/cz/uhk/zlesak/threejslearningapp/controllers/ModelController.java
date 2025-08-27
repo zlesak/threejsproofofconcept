@@ -165,7 +165,7 @@ public class ModelController {
         try {
             return modelApiClient.getFileEntities(page, limit);
         } catch (Exception e) {
-            log.error("Chyba při získávání stránkování modelů pro page {}, limit {}, error message: {}", page, limit, e.getMessage(),  e);
+            log.error("Chyba při získávání stránkování modelů pro page {}, limit {}, error message: {}", page, limit, e.getMessage(), e);
             throw new RuntimeException("Chyba při získávání modelu: " + e.getMessage(), e);
         }
     }

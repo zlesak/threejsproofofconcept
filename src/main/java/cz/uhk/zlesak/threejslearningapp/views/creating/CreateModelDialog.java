@@ -2,6 +2,7 @@ package cz.uhk.zlesak.threejslearningapp.views.creating;
 
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.router.AfterNavigationEvent;
 import com.vaadin.flow.theme.lumo.Lumo;
@@ -64,7 +65,11 @@ public class CreateModelDialog extends Dialog {
         public DialogModelScaffold(ModelController modelController) {
             super();
 
+            modelDiv.setHeight("100vh");
+            renderer.getStyle().set("height", "100%");
+
             Button createButton = new Button("Vytvořit model");
+            createButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
             createButton.addClickListener(event -> {
                 try {
                     isAdvanced = modelUploadFormScrollerComposition.getIsAdvanced().getValue();

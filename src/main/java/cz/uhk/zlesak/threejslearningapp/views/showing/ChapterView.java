@@ -44,8 +44,6 @@ public class ChapterView extends ChapterScaffold {
 
         nameTextField.setReadOnly(true);
         editorjs.toggleReadOnlyMode(true);
-
-        selectsLayout.add(textureSelectsComponent);
     }
 
     /**

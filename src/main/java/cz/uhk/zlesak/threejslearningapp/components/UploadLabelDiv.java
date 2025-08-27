@@ -14,6 +14,7 @@ public class UploadLabelDiv extends Div {
      */
     public UploadLabelDiv(UploadComponent uploadComponent, String label) {
         super(label);
+        setWidthFull();
         add(uploadComponent);
     }
 }

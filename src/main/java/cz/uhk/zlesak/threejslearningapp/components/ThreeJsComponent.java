@@ -30,7 +30,7 @@ public class ThreeJsComponent extends Component {
      * Default constructor for ThreeJsComponent.
      */
     public ThreeJsComponent() {
-        init();
+        addAttachListener(e -> init());
     }
 
     /**
@@ -47,7 +47,7 @@ public class ThreeJsComponent extends Component {
                 } catch (e) {
                     console.error('[JS] Error in initThree:', e);
                 }
-                """, this);
+                """, getElement());
     }
 
     /**
@@ -61,10 +61,10 @@ public class ThreeJsComponent extends Component {
     public void dispose(SerializableRunnable onDisposed) {
         this.onDisposedCallback = onDisposed;
         getElement().executeJs("""
-                window.disposeThree().then(() => {
-                    $0.$server.notifyDisposed();
+                window.disposeThree($0).then(() => {
+                    $1.$server.notifyDisposed();
                 })
-                """, this);
+                """, getElement(), this);
     }
 
     /**
@@ -92,12 +92,12 @@ public class ThreeJsComponent extends Component {
         getElement().executeJs("""
                 try {
                     if (typeof window.loadModel === 'function') {
-                        window.loadModel($0);
+                        window.loadModel($0, $1);
                     }
                 } catch (e) {
                     console.error('[JS] Error in loadModel:', e);
                 }
-                """, "data:application/octet-stream;base64," + base64Model);
+                """, getElement(), "data:application/octet-stream;base64," + base64Model);
     }
 
     /**
@@ -119,12 +119,12 @@ public class ThreeJsComponent extends Component {
             getElement().executeJs("""
                     try {
                         if (typeof window.loadAdvancedModel === 'function') {
-                            window.loadAdvancedModel($0, $1);
+                            window.loadAdvancedModel($0, $1, $2);
                         }
                     } catch (e) {
                         console.error('[JS] Error in loadAdvancedModel:', e);
                     }
-                    """, "data:application/octet-stream;base64," + objectUrl, "data:application/octet-stream;base64," + textureUrl);
+                    """, getElement(), "data:application/octet-stream;base64," + objectUrl, "data:application/octet-stream;base64," + textureUrl);
         }
     }
 
@@ -137,12 +137,12 @@ public class ThreeJsComponent extends Component {
         getElement().executeJs("""
                 try {
                     if (typeof window.clear === 'function') {
-                        window.clear();
+                        window.clear($0);
                     }
                 } catch (e) {
                     console.error('[JS] Error in clearModel:', e);
                 }
-                """);
+                """, getElement());
     }
 
     /**
@@ -159,12 +159,12 @@ public class ThreeJsComponent extends Component {
         getElement().executeJs("""
                 try {
                     if (typeof window.addOtherTextures === 'function') {
-                        window.addOtherTextures($0);
+                        window.addOtherTextures($0, $1);
                     }
                 } catch (e) {
                     console.error('[JS] Error in addOtherTexture:', e);
                 }
-                """, jsonTextures);
+                """, getElement(), jsonTextures);
     }
 
     /**
@@ -176,12 +176,12 @@ public class ThreeJsComponent extends Component {
         getElement().executeJs("""
                 try {
                     if (typeof window.switchOtherTexture === 'function') {
-                        window.switchOtherTexture($0);
+                        window.switchOtherTexture($0, $1);
                     }
                 } catch (e) {
                     console.error('[JS] Error in switchOtherTexture:', e);
                 }
-                """, textureId);
+                """, getElement(), textureId);
     }
 
     /**
@@ -197,12 +197,12 @@ public class ThreeJsComponent extends Component {
         getElement().executeJs("""
                 try {
                     if (typeof window.applyMaskToMainTexture === 'function') {
-                        window.applyMaskToMainTexture($0, $1);
+                        window.applyMaskToMainTexture($0, $1, $2);
                     }
                 } catch (e) {
                     console.error('[JS] Error in applyMaskToMainTexture:', e);
                 }
-                """, textureId, maskColor);
+                """, getElement(), textureId, maskColor);
     }
 
     /**
@@ -216,12 +216,12 @@ public class ThreeJsComponent extends Component {
         getElement().executeJs("""
                 try {
                     if (typeof window.returnToLastSelectedTexture === 'function') {
-                        window.returnToLastSelectedTexture();
+                        window.returnToLastSelectedTexture($0);
                     }
                 } catch (e) {
                     console.error('[JS] Error in returnToLastSelectedTexture:', e);
                 }
-                """);
+                """, getElement());
     }
 
     /**

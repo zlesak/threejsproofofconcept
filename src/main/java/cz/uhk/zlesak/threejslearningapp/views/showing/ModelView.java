@@ -5,12 +5,12 @@ import com.vaadin.flow.component.UI;
 import com.vaadin.flow.function.SerializableRunnable;
 import com.vaadin.flow.router.*;
 import com.vaadin.flow.server.VaadinSession;
-import cz.uhk.zlesak.threejslearningapp.components.ThreeJsComponent;
 import cz.uhk.zlesak.threejslearningapp.components.notifications.ErrorNotification;
 import cz.uhk.zlesak.threejslearningapp.controllers.ModelController;
 import cz.uhk.zlesak.threejslearningapp.controllers.TextureController;
 import cz.uhk.zlesak.threejslearningapp.i18n.CustomI18NProvider;
 import cz.uhk.zlesak.threejslearningapp.models.entities.quickEntities.QuickModelEntity;
+import cz.uhk.zlesak.threejslearningapp.models.entities.quickEntities.QuickTextureEntity;
 import cz.uhk.zlesak.threejslearningapp.utils.TextureMapHelper;
 import cz.uhk.zlesak.threejslearningapp.views.listing.ModelListView;
 import cz.uhk.zlesak.threejslearningapp.views.scaffolds.ModelScaffold;
@@ -20,6 +20,7 @@ import org.springframework.context.ApplicationContextException;
 import org.springframework.context.annotation.Scope;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -37,12 +38,14 @@ public class ModelView extends ModelScaffold {
     private final CustomI18NProvider i18nProvider;
     private final TextureController textureController;
     private QuickModelEntity quickModelEntity;
+    private String modelId;
 
     /**
      * Constructor for ModelView.
      * Initializes the view with necessary controllers and providers.
-     * @param modelController controller for handling model-related operations
-     * @param i18nProvider provider for internationalization and localization
+     *
+     * @param modelController   controller for handling model-related operations
+     * @param i18nProvider      provider for internationalization and localization
      * @param textureController controller for handling texture-related operations
      */
     @Autowired
@@ -67,29 +70,12 @@ public class ModelView extends ModelScaffold {
         if (parameters.getParameterNames().isEmpty()) {
             event.forwardTo(ModelListView.class);
         }
-        String modelId = parameters.get("modelId").orElse(null);
-        if (modelId == null) {
+        this.modelId = parameters.get("modelId").orElse(null);
+        if (this.modelId == null) {
             event.forwardTo(ModelListView.class);
         }
 
-        quickModelEntity = (QuickModelEntity) VaadinSession.getCurrent().getAttribute("quickModelEntity");
-        if (quickModelEntity != null && quickModelEntity.getModel() != null && Objects.equals(modelId, quickModelEntity.getModel().getId())) {
-            try {
-                String base64Model = modelController.getModelBase64(quickModelEntity.getModel().getId());
-                String base64Texture = null;
-                if(quickModelEntity.getMainTexture() != null){
-                    base64Texture = textureController.getTextureBase64(quickModelEntity.getMainTexture().getTextureFileId());
-                }
-                renderer.loadModel(base64Model, base64Texture);
-            } catch (Exception e) {
-                log.error(e.getMessage());
-                new ErrorNotification("Nepovedlo se načíst model: " + e.getMessage());
-                event.forwardTo(ModelListView.class);
-            }
-            VaadinSession.getCurrent().setAttribute("quickModelEntity", null);
-        } else {
-            //todo implement logic of loading model when not using session
-        }
+        this.quickModelEntity = (QuickModelEntity) VaadinSession.getCurrent().getAttribute("quickModelEntity");
     }
 
     /**
@@ -108,6 +94,7 @@ public class ModelView extends ModelScaffold {
     /**
      * Provides the title of the page.
      * The title is localized using the CustomI18NProvider.
+     *
      * @return the localized page title
      */
     @Override
@@ -118,29 +105,50 @@ public class ModelView extends ModelScaffold {
     /**
      * Handles actions after navigation to the view.
      * It sets the form to listing mode and populates the model name and texture selectors if a model is loaded.
+     *
      * @param event after navigation event with event details
      */
     @Override
     public void afterNavigation(AfterNavigationEvent event) {
-        modelUploadFormScrollerComposition.listingMode();
+        if (quickModelEntity != null && quickModelEntity.getModel() != null && Objects.equals(modelId, quickModelEntity.getModel().getId())) {
+            try {
+                String base64Model = modelController.getModelBase64(quickModelEntity.getModel().getId());
+                String base64Texture = null;
+                if (quickModelEntity.getMainTexture() != null) {
+                    base64Texture = textureController.getTextureBase64(quickModelEntity.getMainTexture().getTextureFileId());
+                }
+                renderer.loadModel(base64Model, base64Texture);
+            } catch (Exception e) {
+                log.error(e.getMessage());
+                new ErrorNotification("Nepovedlo se načíst model: " + e.getMessage());
+                UI.getCurrent().navigate(ModelListView.class);
+                return;
+            } finally {
+                VaadinSession.getCurrent().setAttribute("quickModelEntity", null);
+            }
+        }
+
         if (quickModelEntity != null) {
-            modelUploadFormScrollerComposition.getModelName().setValue(quickModelEntity.getModel().getName());
+            if (quickModelEntity.getModel() != null && quickModelEntity.getModel().getName() != null) {
+                modelUploadFormScrollerComposition.getModelName().setValue(quickModelEntity.getModel().getName());
+            } else {
+                modelUploadFormScrollerComposition.getModelName().clear();
+            }
             if (quickModelEntity.getMainTexture() != null) {
-                modelUploadFormScrollerComposition.showTextureSelectors(true);
                 modelUploadFormScrollerComposition.getIsAdvanced().setValue(true);
                 try {
                     Map<String, String> otherTexturesMap = TextureMapHelper.otherTexturesMap(quickModelEntity.getOtherTextures(), textureController);
                     renderer.addOtherTextures(otherTexturesMap);
-
-                    modelUploadFormScrollerComposition.initializeSelectors(quickModelEntity.getOtherTextures());
                 } catch (IOException e) {
                     log.error(e.getMessage(), e);
                     throw new ApplicationContextException(e.getMessage());
                 }
             }
-            else{
-                modelUploadFormScrollerComposition.showTextureSelectors(false);
-            }
+            List<QuickTextureEntity> allTextures = quickModelEntity.getOtherTextures();
+            allTextures.addFirst(quickModelEntity.getMainTexture());
+            textureSelectsComponent.initializeData(allTextures);
         }
+
+        modelUploadFormScrollerComposition.listingMode();
     }
 }

@@ -24,7 +24,7 @@ public abstract class TextureMapHelper {
         Map<String, String> textureIdCsvMap = new HashMap<>();
         for(QuickTextureEntity textureEntity : quickTextureEntityList) {
             String textureId = textureEntity.getTextureFileId();
-            if (!textureEntity.getCsvContent().isEmpty()) {
+            if (textureEntity.getCsvContent() != null && !textureEntity.getCsvContent().isEmpty()) {
                 textureIdCsvMap.put(textureId, textureEntity.getCsvContent());
             }
         }

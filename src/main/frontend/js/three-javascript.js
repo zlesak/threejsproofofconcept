@@ -17,6 +17,7 @@ class ThreeTest {
     this.mainTexture = null;
     this.lastSelectedTextureId = null;
     this.actionQueue = [];
+    this._resizeObserver = null;
   }
 
   init = (element) => {
@@ -52,14 +53,12 @@ class ThreeTest {
     // Event listeners
     window.addEventListener('resize', this.onWindowResize);
 
-    // Initial setup
-
-    const modelDivElement = document.getElementById('modelDiv');
-    if (modelDivElement && window.ResizeObserver) {
+    const parent = this.element?.parentElement;
+    if (parent && window.ResizeObserver) {
       this._resizeObserver = new ResizeObserver(() => {
         this.onWindowResize();
       });
-      this._resizeObserver.observe(modelDivElement);
+      this._resizeObserver.observe(parent);
     }
 
     this.onWindowResize();
@@ -123,13 +122,16 @@ class ThreeTest {
     const parent = canvasElement.parentElement;
     if (!parent) return;
 
-    canvasElement.width = parent.clientWidth;
+    const parentRect = parent.getBoundingClientRect();
+    const width = parent.clientWidth || parentRect.width || window.innerWidth;
+    const height = parent.clientHeight || parentRect.height || Math.max(200, Math.floor(window.innerHeight * 0.5));
 
-    canvasElement.height = document.getElementById('modelDiv').offsetHeight;
+    canvasElement.width = width;
+    canvasElement.height = height;
 
-    this.camera.aspect = canvasElement.width / canvasElement.height;
+    this.camera.aspect = width / height;
     this.camera.updateProjectionMatrix();
-    this.renderer.setSize(canvasElement.width, canvasElement.height);
+    this.renderer.setSize(width, height);
     this.render();
   };
 
@@ -156,7 +158,7 @@ class ThreeTest {
         undefined,
         (error) => {
           console.error('Error loading model:', error);
-          reject();
+          reject(error);
         }
       );
     });
@@ -164,6 +166,7 @@ class ThreeTest {
   };
 
   centerCameraOnModel = () => {
+    if (!this.model) return;
     const box = new THREE.Box3().setFromObject(this.model);
     const center = box.getCenter(new THREE.Vector3());
     const size = box.getSize(new THREE.Vector3());
@@ -198,7 +201,7 @@ class ThreeTest {
         resolve();
       }, undefined, (error) => {
         console.error('Error loading advanced model:', error);
-        reject();
+        reject(error);
       });
     });
     this.finishedActions();
@@ -284,20 +287,27 @@ class ThreeTest {
   dispose = () => {
     this.stopAnimation();
     if (this.renderer) {
-      this.renderer.setAnimationLoop(null);
-      this.renderer.forceContextLoss();
+      try {
+        this.renderer.setAnimationLoop(null);
+        if (this.renderer.forceContextLoss) {
+          this.renderer.forceContextLoss();
+        }
+        this.renderer.dispose();
+      } catch (e) {
+        console.warn('Renderer dispose issue:', e);
+      }
     }
-    this.renderer.dispose();
-    const canvas = this.renderer?.domElement;
+    const canvas = this.renderer?.domElement || this.element;
     if (canvas) {
       const contexts = ['webgl', 'experimental-webgl', 'webgl2'];
       contexts.forEach(ctx => {
-        const gl = canvas.getContext(ctx);
-        if (gl?.getExtension('WEBGL_lose_context')) {
-          gl.getExtension('WEBGL_lose_context').loseContext();
-          gl.getExtension('WEBGL_lose_context').restoreContext();
-          gl.getExtension('WEBGL_lose_context').loseContext();
-        }
+        try {
+          const gl = canvas.getContext(ctx);
+          const ext = gl && gl.getExtension && gl.getExtension('WEBGL_lose_context');
+          if (ext) {
+            ext.loseContext();
+          }
+        } catch (e) { /* ignore */ }
       });
       canvas.width = 1;
       canvas.height = 1;
@@ -307,26 +317,20 @@ class ThreeTest {
       if (obj.material) {
         if (Array.isArray(obj.material)) {
           obj.material.forEach(m => {
-            m.dispose();
-            m.needsUpdate = true;
+            try { m.dispose(); m.needsUpdate = true; } catch(e) { /* ignore */ }
           });
         } else {
-          obj.material.dispose();
-          obj.material.needsUpdate = true;
+          try { obj.material.dispose(); obj.material.needsUpdate = true; } catch(e) { /* ignore */ }
         }
       }
       if (obj.geometry) {
-        obj.geometry.dispose();
+        try { obj.geometry.dispose(); } catch(e) { /* ignore */ }
         obj.geometry = null;
       }
     });
 
-    // Chrome only
-    if (window.gc) {
-      window.gc();
-    }
     if (this._resizeObserver) {
-      this._resizeObserver.disconnect();
+      try { this._resizeObserver.disconnect(); } catch(e) { /* ignore */ }
       this._resizeObserver = null;
     }
   };
@@ -334,12 +338,10 @@ class ThreeTest {
   disposeObject = (object) => {
     if (!object) return;
 
-    // Geometry
     if (object.geometry) {
-      object.geometry.dispose();
+      try { object.geometry.dispose(); } catch(e) { /* ignore */ }
     }
 
-    // Material
     if (object.material) {
       if (Array.isArray(object.material)) {
         object.material.forEach(material => this.disposeMaterial(material));
@@ -348,12 +350,10 @@ class ThreeTest {
       }
     }
 
-    // Custom dispose method
     if (object.dispose) {
-      object.dispose();
+      try { object.dispose(); } catch(e) { /* ignore */ }
     }
 
-    // Children
     if (object.children) {
       object.children.forEach(child => this.disposeObject(child));
     }
@@ -362,13 +362,12 @@ class ThreeTest {
   disposeMaterial = (material) => {
     if (!material) return;
 
-    material.dispose();
+    try { material.dispose(); } catch(e) { /* ignore */ }
 
-    // Dispose textures
     for (const prop in material) {
       const value = material[prop];
       if (value && value.isTexture) {
-        value.dispose();
+        try { value.dispose(); } catch(e) { /* ignore */ }
       }
     }
   };
@@ -382,7 +381,7 @@ class ThreeTest {
             this.disposeMaterial(obj.material);
           }
           if (obj.geometry) {
-            obj.geometry.dispose();
+            try { obj.geometry.dispose(); } catch(e) { /* ignore */ }
           }
           this.scene.remove(obj);
         }
@@ -444,13 +443,17 @@ class ThreeTest {
   applyMaskToMainTexture = async (id, maskColor) => {
     this.doingActions("Applying mask to texture");
     this.lastSelectedTextureId = id;
-    const mainImage = this.mainTexture.image;
+    const mainImage = this.mainTexture?.image;
     const textureObject = this.otherTextures.find(t => t.id === id);
     let maskImage;
     if (textureObject) {
       maskImage = textureObject.texture.image;
     } else {
-      console.error('Errorgetting texture image:', id);
+      console.error('Error getting texture image:', id);
+    }
+    if (!mainImage || !maskImage) {
+      this.finishedActions();
+      return;
     }
     const width = mainImage.width;
     const height = mainImage.height;
@@ -469,7 +472,6 @@ class ThreeTest {
     const mainData = new Uint8ClampedArray(mainImageData.data);
     const maskData = new Uint8ClampedArray(maskImageData.data);
     const maskColorRgb = hexToRgb(maskColor);
-    // Worker
     const worker = new Worker(new URL('./textureMaskWorker.js', import.meta.url), { type: 'module' });
     await new Promise((resolve, reject) => {
       worker.onmessage = async function(e) {
@@ -479,15 +481,17 @@ class ThreeTest {
         }
         ctx.putImageData(mainImageData, 0, 0);
         const resultTexture = new THREE.CanvasTexture(resultCanvas);
-        tt.model.traverse((child) => {
-          if (child.isMesh) {
-            child.material.map = resultTexture;
-            child.material.needsUpdate = true;
-          }
-        });
+        if (this.model) {
+          this.model.traverse((child) => {
+            if (child.isMesh) {
+              child.material.map = resultTexture;
+              child.material.needsUpdate = true;
+            }
+          });
+        }
         worker.terminate();
         resolve();
-      };
+      }.bind(this);
       worker.onerror = function(e) {
         console.error('Worker error:', e);
         worker.terminate();
@@ -541,79 +545,88 @@ function hexToRgb(hex) {
   };
 }
 
-// Global interface
-let tt = null;
+// Multi-instance management
+const instances = new WeakMap();
 
-window.applyMaskToMainTexture = function(textureId, maskColor) {
-  if (tt && tt.mainTexture) {
-    tt.applyMaskToMainTexture(textureId, maskColor);
-  }
-};
+function getInstance(element) {
+  return instances.get(element);
+}
 
-window.loadModel = function(modelUrl) {
-  if (tt) {
-    tt.loadModel(modelUrl);
-  }
-};
-
-window.loadAdvancedModel = function(objUrl, textureUrl) {
-  if (tt) {
-    tt.loadAdvancedModel(objUrl, textureUrl);
-  }
-};
-
-window.clear = function() {
-  if (tt) {
-    tt.clear();
-  }
-};
+function setInstance(element, inst) {
+  instances.set(element, inst);
+}
 
 window.initThree = function(element) {
-  if (tt) {
-    tt.dispose();
+  const existing = getInstance(element);
+  if (existing) {
+    try { existing.dispose(); } catch(e) { /* ignore */ }
   }
-  tt = new ThreeTest();
-  tt.init(element);
+  const inst = new ThreeTest();
+  setInstance(element, inst);
+  inst.init(element);
 };
 
-window.disposeThree = function() {
+window.disposeThree = function(element) {
   return new Promise((resolve) => {
-    if (tt) {
-      tt.dispose();
-      setTimeout(() => {
-        tt = null;
-        resolve();
-      }, 100);
+    const inst = getInstance(element);
+    if (inst) {
+      try { inst.dispose(); } catch(e) { /* ignore */ }
+      instances.delete(element);
+      setTimeout(() => resolve(), 100);
     } else {
       resolve();
     }
   });
 };
 
-window.addOtherTextures = function(textureJson) {
-  if (tt) {
-    tt.addOtherTextures(textureJson);
+window.loadModel = function(element, modelUrl) {
+  const inst = getInstance(element);
+  if (inst) {
+    inst.loadModel(modelUrl);
   }
 };
 
-window.switchOtherTexture = function(id) {
-  if (tt) {
-    tt.switchOtherTexture(id);
+window.loadAdvancedModel = function(element, objUrl, textureUrl) {
+  const inst = getInstance(element);
+  if (inst) {
+    inst.loadAdvancedModel(objUrl, textureUrl);
   }
 };
 
-window.returnToLastSelectedTexture = function() {
-  if (tt) {
-    tt.returnToLastSelectedTexture();
+window.clear = function(element) {
+  const inst = getInstance(element);
+  if (inst) {
+    inst.clear();
   }
 };
 
-window.addEventListener('load', () => {
-  if (tt && tt.element) {
-    tt.onWindowResize();
+window.addOtherTextures = function(element, textureJson) {
+  const inst = getInstance(element);
+  if (inst) {
+    inst.addOtherTextures(textureJson);
   }
-});
+};
+
+window.switchOtherTexture = function(element, id) {
+  const inst = getInstance(element);
+  if (inst) {
+    inst.switchOtherTexture(id);
+  }
+};
+
+window.returnToLastSelectedTexture = function(element) {
+  const inst = getInstance(element);
+  if (inst) {
+    inst.returnToLastSelectedTexture();
+  }
+};
+
+window.applyMaskToMainTexture = function(element, textureId, maskColor) {
+  const inst = getInstance(element);
+  if (inst) {
+    inst.applyMaskToMainTexture(textureId, maskColor);
+  }
+};
 
 window.addEventListener('beforeunload', () => {
-  window.disposeThree();
 });

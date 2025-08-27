@@ -6,6 +6,8 @@ import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
+import com.vaadin.flow.component.orderedlayout.FlexComponent;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.router.AfterNavigationEvent;
 import com.vaadin.flow.router.BeforeEnterEvent;
 import com.vaadin.flow.router.BeforeLeaveEvent;
@@ -43,6 +45,8 @@ public class CreateChapterView extends ChapterScaffold {
     private final ChapterController chapterController;
     private boolean skipBeforeLeaveDialog = false;
 
+    private Button chooseAlreadyCreatedModelButton;
+
     /**
      * Constructor for CreateChapterView.
      * Initializes the view with necessary controllers and providers.
@@ -63,12 +67,29 @@ public class CreateChapterView extends ChapterScaffold {
         chapterNavigation.setVisible(false);
         editorjs.toggleReadOnlyMode(false);
 
-        Button createChapterButton = getCreateChapterButton();
-        chapterContent.add(createChapterButton);
+        HorizontalLayout chapterContentButtons = getHorizontalLayout();
+        chapterContent.add(chapterContentButtons);
+    }
 
+    /**
+     * Creates and returns a HorizontalLayout containing buttons for creating a chapter, creating a model, and choosing an existing model.
+     * The layout is configured to stretch and space the buttons appropriately.
+     * @return the HorizontalLayout with chapter content buttons
+     */
+    @NotNull
+    private HorizontalLayout getHorizontalLayout() {
+        Button createChapterButton = getCreateChapterButton();
         Button createModelButton = getCreateModelButton();
-        Button chooseAlreadyCreatedModelButton = getChooseAlreadyCreatedModelButton(createModelButton);
-        selectsLayout.add(createModelButton, chooseAlreadyCreatedModelButton);
+        chooseAlreadyCreatedModelButton = getChooseAlreadyCreatedModelButton(createModelButton);
+        HorizontalLayout chapterContentButtons = new HorizontalLayout(createModelButton, chooseAlreadyCreatedModelButton, createChapterButton);
+        chapterContentButtons.setWidthFull();
+        chapterContentButtons.setSpacing(true);
+        chapterContentButtons.setPadding(false);
+        chapterContentButtons.setAlignItems(FlexComponent.Alignment.STRETCH);
+        chapterContentButtons.setFlexGrow(0, createModelButton);
+        chapterContentButtons.setFlexGrow(0, chooseAlreadyCreatedModelButton);
+        chapterContentButtons.setFlexGrow(1, createChapterButton);
+        return chapterContentButtons;
     }
 
     /**
@@ -89,6 +110,7 @@ public class CreateChapterView extends ChapterScaffold {
             createModelButton.setText("Model přidán: " + entity.getModel().getName());
             createModelButton.setIcon(new Icon(VaadinIcon.CHECK));
             createModelButton.setEnabled(false);
+            chooseAlreadyCreatedModelButton.setEnabled(false);
             rendererAndEditorPreparation(entity);
         });
         return createModelButton;
@@ -134,7 +156,6 @@ public class CreateChapterView extends ChapterScaffold {
     @NotNull Button getCreateChapterButton() {
         Button createChapterButton = new Button("Vytvořit kapitolu");
         createChapterButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
-        createChapterButton.setWidthFull();
         createChapterButton.addClickListener(e -> editorjs.getData().whenComplete((body, error) -> {
             try {
                 if (error != null) {

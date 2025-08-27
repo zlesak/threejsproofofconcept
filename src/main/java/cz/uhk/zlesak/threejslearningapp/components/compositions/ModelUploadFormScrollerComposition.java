@@ -2,17 +2,16 @@ package cz.uhk.zlesak.threejslearningapp.components.compositions;
 
 import com.vaadin.flow.component.ComponentEventListener;
 import com.vaadin.flow.component.checkbox.Checkbox;
+import com.vaadin.flow.component.orderedlayout.FlexComponent;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.Scroller;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.component.upload.receivers.MultiFileMemoryBuffer;
 import cz.uhk.zlesak.threejslearningapp.components.UploadComponent;
 import cz.uhk.zlesak.threejslearningapp.components.UploadLabelDiv;
-import cz.uhk.zlesak.threejslearningapp.components.selects.TextureAreaSelect;
-import cz.uhk.zlesak.threejslearningapp.components.selects.TextureListingSelect;
 import cz.uhk.zlesak.threejslearningapp.events.ModelClearEvent;
 import cz.uhk.zlesak.threejslearningapp.events.ModelLoadEvent;
-import cz.uhk.zlesak.threejslearningapp.models.entities.quickEntities.QuickTextureEntity;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -38,9 +37,6 @@ public class ModelUploadFormScrollerComposition extends Scroller {
     protected final UploadLabelDiv uploadModelDiv, uploadMainTextureDiv, uploadOtherTexturesDiv, csvOtherTexturesDiv;
     @Getter
     protected final UploadComponent objUploadComponent, mainTextureUploadComponent, otherTexturesUploadComponent, csvUploadComponent;
-
-    protected final TextureAreaSelect textureAreaSelect = new TextureAreaSelect();
-    protected final TextureListingSelect textureListingSelect = new TextureListingSelect();
 
     protected String base64Model = null;
     protected String base64Texture = null;
@@ -189,7 +185,19 @@ public class ModelUploadFormScrollerComposition extends Scroller {
         });
 
         hideAdvancedModelUpload();
-        vl.add(modelName, isAdvanced, uploadModelDiv, uploadMainTextureDiv, uploadOtherTexturesDiv, csvOtherTexturesDiv);
+
+        modelName.setWidthFull();
+        modelName.getStyle().set("min-width", "0");
+        isAdvanced.getStyle().set("white-space", "nowrap");
+        HorizontalLayout topHorizontalLayout = new HorizontalLayout(modelName, isAdvanced);
+        topHorizontalLayout.setWidthFull();
+        topHorizontalLayout.setVerticalComponentAlignment(FlexComponent.Alignment.END, isAdvanced);
+        topHorizontalLayout.setFlexGrow(1, modelName);
+        topHorizontalLayout.setFlexGrow(0, isAdvanced);
+        topHorizontalLayout.getStyle().set("min-width", "0");
+
+        vl.setWidthFull();
+        vl.add(topHorizontalLayout, uploadModelDiv, uploadMainTextureDiv, uploadOtherTexturesDiv, csvOtherTexturesDiv);
     }
 
     /**
@@ -231,27 +239,6 @@ public class ModelUploadFormScrollerComposition extends Scroller {
         uploadOtherTexturesDiv.setVisible(false);
         csvUploadComponent.setEnabled(false);
         csvOtherTexturesDiv.setVisible(false);
-        vl.add(textureListingSelect, textureAreaSelect);
-    }
-
-    /**
-     * Shows or hides the texture selectors based on the provided boolean value.
-     *
-     * @param show true to show the texture selectors, false to hide them.
-     */
-    public void showTextureSelectors(boolean show) {
-        textureListingSelect.setVisible(show);
-        textureAreaSelect.setVisible(show);
-    }
-
-    /**
-     * Initializes the texture listing and area selectors with the provided list of QuickTextureEntity objects.
-     *
-     * @param quickTextureEntityList the list of QuickTextureEntity objects to populate the selectors.
-     */
-    public void initializeSelectors(List<QuickTextureEntity> quickTextureEntityList) {
-        textureListingSelect.initializeTextureListingSelect(quickTextureEntityList);
-        textureAreaSelect.initializeTextureAreaSelect(quickTextureEntityList);
     }
 
     /**

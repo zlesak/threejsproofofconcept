@@ -87,7 +87,7 @@ public abstract class ChapterScaffold extends Composite<VerticalLayout> implemen
         chapterContent.getStyle().set("flex-grow", "1");
 
         //Model layout
-        selectsLayout = new HorizontalLayout();
+        selectsLayout = new HorizontalLayout(textureSelectsComponent);
         selectsLayout.setWidthFull();
 
         chapterModel.add(selectsLayout, modelDiv);
