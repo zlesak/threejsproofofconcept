@@ -18,7 +18,7 @@ public class ModelDiv extends Div {
     /**
      * Constructor for ModelDiv component.
      */
-    public ModelDiv() {
+    public ModelDiv(ThreeJsComponent renderer) {
         super();
 
         //Nastavení divId, DŮLEŽITÉ PRO THREEJS
@@ -59,6 +59,14 @@ public class ModelDiv extends Div {
         actionDescription.getStyle().set("transform", "translate(-50%, -50%)");
         actionDescription.getStyle().set("z-index", "11");
         actionDescription.setWidth("300px");
+
+        removeAll();
+        add(renderer, overlayBackground, overlayProgressBar, actionDescription);
+        renderer.addThreeJsDoingActionsListener(e -> {
+            actionDescription.setText(e.getDescription());
+            showOverlayProgressBar();
+        });
+        renderer.addThreeJsFinishedActionsListener(e -> hideOverlayProgressBar());
     }
 
     private void showOverlayProgressBar() {
@@ -71,14 +79,5 @@ public class ModelDiv extends Div {
         overlayBackground.setVisible(false);
         overlayProgressBar.setVisible(false);
         actionDescription.setVisible(false);
-    }
-    public void setRenderer(ThreeJsComponent renderer) {
-        removeAll();
-        add(renderer, overlayBackground, overlayProgressBar, actionDescription);
-        renderer.addThreeJsDoingActionsListener(e -> {
-            actionDescription.setText(e.getDescription());
-            showOverlayProgressBar();
-        });
-        renderer.addThreeJsFinishedActionsListener(e -> hideOverlayProgressBar());
     }
 }

@@ -12,12 +12,10 @@ import com.vaadin.flow.router.BeforeLeaveEvent;
 import com.vaadin.flow.router.Route;
 import cz.uhk.zlesak.threejslearningapp.components.BeforeLeaveActionDialog;
 import cz.uhk.zlesak.threejslearningapp.components.ModelListDialog;
-import cz.uhk.zlesak.threejslearningapp.components.ThreeJsComponent;
 import cz.uhk.zlesak.threejslearningapp.components.notifications.ErrorNotification;
 import cz.uhk.zlesak.threejslearningapp.controllers.ChapterController;
 import cz.uhk.zlesak.threejslearningapp.controllers.ModelController;
 import cz.uhk.zlesak.threejslearningapp.controllers.TextureController;
-import cz.uhk.zlesak.threejslearningapp.data.enums.ViewTypeEnum;
 import cz.uhk.zlesak.threejslearningapp.models.entities.ChapterEntity;
 import cz.uhk.zlesak.threejslearningapp.models.entities.quickEntities.QuickModelEntity;
 import cz.uhk.zlesak.threejslearningapp.views.listing.ModelListView;
@@ -25,7 +23,6 @@ import cz.uhk.zlesak.threejslearningapp.views.scaffolds.ChapterScaffold;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextException;
 import org.springframework.context.annotation.Scope;
 
@@ -45,7 +42,6 @@ public class CreateChapterView extends ChapterScaffold {
     private final ModelController modelController;
     private final ChapterController chapterController;
     private boolean skipBeforeLeaveDialog = false;
-    private final ApplicationContext applicationContext;
 
     /**
      * Constructor for CreateChapterView.
@@ -56,13 +52,16 @@ public class CreateChapterView extends ChapterScaffold {
      * @param textureController controller for handling texture-related operations
      */
     @Autowired
-    public CreateChapterView(ChapterController chapterController, ModelController modelController,
-                             TextureController textureController, ApplicationContext applicationContext) {
-        super(ViewTypeEnum.CREATE);
+    public CreateChapterView(ChapterController chapterController, ModelController modelController, TextureController textureController) {
+        super();
         this.modelController = modelController;
         this.textureController = textureController;
         this.chapterController = chapterController;
-        this.applicationContext = applicationContext;
+
+        chapterSelect.setVisible(false);
+        searchTextField.setVisible(false);
+        chapterNavigation.setVisible(false);
+        editorjs.toggleReadOnlyMode(false);
 
         Button createChapterButton = getCreateChapterButton();
         chapterContent.add(createChapterButton);
@@ -99,6 +98,7 @@ public class CreateChapterView extends ChapterScaffold {
      * Creates and returns a button for choosing an already created model.
      * When clicked, it opens a ModelListDialog for selecting an existing model.
      * Once a model is selected, it updates the createModelButton text and icon, disables both buttons, and loads the model into the renderer.
+     *
      * @param createModelButton the button for creating a model, which will be updated upon model selection
      * @return the button for choosing an already created model
      */
@@ -128,9 +128,10 @@ public class CreateChapterView extends ChapterScaffold {
      * When clicked, it retrieves the content from the editor and attempts to create a new chapter using the ChapterController.
      * If successful, it navigates to the newly created chapter's view.
      * If there are errors during the process, it logs the error and shows an error notification.
+     *
      * @return the button for creating a chapter
      */
-    @NotNull Button getCreateChapterButton(){
+    @NotNull Button getCreateChapterButton() {
         Button createChapterButton = new Button("Vytvořit kapitolu");
         createChapterButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         createChapterButton.setWidthFull();
@@ -228,8 +229,6 @@ public class CreateChapterView extends ChapterScaffold {
      */
     @Override
     public void afterNavigation(AfterNavigationEvent event) {
-        ThreeJsComponent renderer = applicationContext.getBean(ThreeJsComponent.class);
-        setRenderer(renderer);
     }
 
     /**
@@ -242,8 +241,7 @@ public class CreateChapterView extends ChapterScaffold {
     private void rendererAndEditorPreparation(QuickModelEntity quickModelEntity) throws IOException {
         String base64ModelFile = modelController.getModelBase64(quickModelEntity.getModel().getId());
         String textureFileEntity = null;
-        if(quickModelEntity.getMainTexture() != null)
-        {
+        if (quickModelEntity.getMainTexture() != null) {
             textureFileEntity = textureController.getTextureBase64(quickModelEntity.getMainTexture().getTextureFileId());
         }
         renderer.loadModel(base64ModelFile, textureFileEntity);

@@ -7,33 +7,30 @@ import com.vaadin.flow.theme.lumo.LumoUtility;
 import cz.uhk.zlesak.threejslearningapp.components.ModelDiv;
 import cz.uhk.zlesak.threejslearningapp.components.ThreeJsComponent;
 import cz.uhk.zlesak.threejslearningapp.components.compositions.ModelUploadFormScrollerComposition;
-import cz.uhk.zlesak.threejslearningapp.utils.SpringContextUtils;
 import cz.uhk.zlesak.threejslearningapp.views.IView;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Scope;
 
 @Slf4j
 @Scope("prototype")
 public abstract class ModelScaffold extends Composite<VerticalLayout> implements IView {
-    protected final ModelDiv modelDiv = new ModelDiv();;
-    protected final ThreeJsComponent renderer;
+    protected final ThreeJsComponent renderer = new ThreeJsComponent();
+    protected final ModelDiv modelDiv = new ModelDiv(renderer);
     protected final ModelUploadFormScrollerComposition modelUploadFormScrollerComposition;
 
     public ModelScaffold() {
         HorizontalLayout modelPageLayout = new HorizontalLayout();
-        this.renderer = new ThreeJsComponent();
-        modelDiv.setRenderer(renderer);
+
         modelUploadFormScrollerComposition = new ModelUploadFormScrollerComposition();
 
         modelUploadFormScrollerComposition.addModelLoadEventListener(
-                event -> this.renderer.loadModel(event.getBase64Model(), event.getBase64Texture())
+                event -> renderer.loadModel(event.getBase64Model(), event.getBase64Texture())
         );
         modelUploadFormScrollerComposition.addModelClearEventListener(
-                event -> this.renderer.clear()
+                event -> renderer.clear()
         );
 
-        this.renderer.getStyle().set("width", "100%");
+        renderer.getStyle().set("width", "100%");
         modelDiv.setId("modelDiv");
         modelDiv.setSizeFull();
 

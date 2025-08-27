@@ -8,8 +8,8 @@ import com.vaadin.flow.component.orderedlayout.Scroller;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.theme.lumo.LumoUtility.Gap;
 import cz.uhk.zlesak.threejslearningapp.components.*;
+import cz.uhk.zlesak.threejslearningapp.components.compositions.TextureSelectsComponent;
 import cz.uhk.zlesak.threejslearningapp.components.selects.ChapterSelect;
-import cz.uhk.zlesak.threejslearningapp.data.enums.ViewTypeEnum;
 import cz.uhk.zlesak.threejslearningapp.i18n.CustomI18NProvider;
 import cz.uhk.zlesak.threejslearningapp.utils.SpringContextUtils;
 import cz.uhk.zlesak.threejslearningapp.views.IView;
@@ -32,21 +32,20 @@ public abstract class ChapterScaffold extends Composite<VerticalLayout> implemen
     protected final ChapterSelect chapterSelect = new ChapterSelect();
     protected final NavigationContentComponent navigationContentLayout = new NavigationContentComponent();
     protected final EditorJsComponent editorjs = new EditorJsComponent();
-    protected ThreeJsComponent renderer;
     protected final NameTextField nameTextField = new NameTextField("Název kapitoly");
-    protected final ModelDiv modelDiv = new ModelDiv();
-
     protected final VerticalLayout chapterNavigation, chapterContent, chapterModel;
-    protected HorizontalLayout selectsLayout;
     protected final CustomI18NProvider i18NProvider;
+    protected ThreeJsComponent renderer = new ThreeJsComponent();
+    protected final ModelDiv modelDiv = new ModelDiv(renderer);
+    protected final TextureSelectsComponent textureSelectsComponent = new TextureSelectsComponent(renderer);
+    protected HorizontalLayout selectsLayout;
 
     /**
      * Constructor for ChapterScaffold.
      * Initializes the layout and components based on the specified view type.
      *
-     * @param viewType the type of view (CREATE, EDIT, VIEW) determining the layout and component behavior. (TODO move away)
      */
-    public ChapterScaffold(ViewTypeEnum viewType) {
+    public ChapterScaffold() {
         this.i18NProvider = SpringContextUtils.getBean(CustomI18NProvider.class);
 
         //Main page layout
@@ -101,18 +100,6 @@ public abstract class ChapterScaffold extends Composite<VerticalLayout> implemen
         getContent().add(chapterPageLayout);
         getContent().setSizeFull();
 
-        switch (viewType) {
-            case CREATE -> {
-                chapterSelect.setVisible(false);
-                searchTextField.setVisible(false);
-                chapterNavigation.setVisible(false);
-                editorjs.toggleReadOnlyMode(false);
-            }
-            case EDIT -> {
-
-            }
-        }
-
         chapterSelect.addValueChangeListener(event -> {
             var oldSelectedSubchapter = event.getOldValue();
             var newSelectedSubchapter = event.getValue();
@@ -123,11 +110,5 @@ public abstract class ChapterScaffold extends Composite<VerticalLayout> implemen
                 navigationContentLayout.showSubchapterNavigationContent(newSelectedSubchapter.id());
             }
         });
-    }
-    public void setRenderer(ThreeJsComponent renderer) {
-        this.renderer = renderer;
-        modelDiv.setRenderer(renderer);
-        chapterModel.removeAll();
-        chapterModel.add(selectsLayout, modelDiv);
     }
 }
