@@ -36,7 +36,7 @@ public class MainPageView extends Composite<VerticalLayout> implements IView {
         Icon icon = new Icon();
         H1 h1 = new H1();
         icon.setIcon("lumo:user");
-        h1.setText("Moderní metody učení nejen pro budoucí lékaře");
+        h1.setText("Moderní metody učení, nejen pro budoucí lékaře");
         h1.setWidth("max-content");
         textSmall.setText(
                 "MISH APP - moderní systém ");
