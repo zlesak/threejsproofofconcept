@@ -20,6 +20,8 @@ import cz.uhk.zlesak.threejslearningapp.controllers.ModelController;
 import cz.uhk.zlesak.threejslearningapp.controllers.TextureController;
 import cz.uhk.zlesak.threejslearningapp.models.entities.ChapterEntity;
 import cz.uhk.zlesak.threejslearningapp.models.entities.quickEntities.QuickModelEntity;
+import cz.uhk.zlesak.threejslearningapp.models.entities.quickEntities.QuickTextureEntity;
+import cz.uhk.zlesak.threejslearningapp.utils.TextureMapHelper;
 import cz.uhk.zlesak.threejslearningapp.views.listing.ModelListView;
 import cz.uhk.zlesak.threejslearningapp.views.scaffolds.ChapterScaffold;
 import lombok.extern.slf4j.Slf4j;
@@ -29,6 +31,7 @@ import org.springframework.context.ApplicationContextException;
 import org.springframework.context.annotation.Scope;
 
 import java.io.IOException;
+import java.util.List;
 
 /**
  * CreateChapterView for creating a new chapter.
@@ -111,7 +114,7 @@ public class CreateChapterView extends ChapterScaffold {
             createModelButton.setIcon(new Icon(VaadinIcon.CHECK));
             createModelButton.setEnabled(false);
             chooseAlreadyCreatedModelButton.setEnabled(false);
-            rendererAndEditorPreparation(entity);
+            rendererSelectsAndEditorPreparation(entity);
         });
         return createModelButton;
     }
@@ -136,7 +139,7 @@ public class CreateChapterView extends ChapterScaffold {
             createModelButton.setEnabled(false);
             chooseAlreadyCreatedModelButton.setEnabled(false);
             try {
-                rendererAndEditorPreparation(entity);
+                rendererSelectsAndEditorPreparation(entity);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
@@ -259,14 +262,19 @@ public class CreateChapterView extends ChapterScaffold {
      * @param quickModelEntity the QuickModelEntity containing model and texture information
      * @throws IOException if there is an error loading the model or textures
      */
-    private void rendererAndEditorPreparation(QuickModelEntity quickModelEntity) throws IOException {
+    private void rendererSelectsAndEditorPreparation(QuickModelEntity quickModelEntity) throws IOException {
         String base64ModelFile = modelController.getModelBase64(quickModelEntity.getModel().getId());
         String textureFileEntity = null;
         if (quickModelEntity.getMainTexture() != null) {
             textureFileEntity = textureController.getTextureBase64(quickModelEntity.getMainTexture().getTextureFileId());
         }
         renderer.loadModel(base64ModelFile, textureFileEntity);
-        renderer.setVisible(true);
+
+        List<QuickTextureEntity> allTextures = quickModelEntity.getOtherTextures();
+        renderer.addOtherTextures(TextureMapHelper.otherTexturesMap(allTextures, textureController));
+
         editorjs.initializeTextureSelects(quickModelEntity.getOtherTextures());
+        allTextures.addFirst(quickModelEntity.getMainTexture());
+        textureSelectsComponent.initializeData(allTextures);
     }
 }
