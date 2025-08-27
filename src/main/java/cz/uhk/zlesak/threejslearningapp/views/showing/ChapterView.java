@@ -117,7 +117,17 @@ public class ChapterView extends ChapterScaffold {
                     base64Texture = textureController.getTextureBase64(quickModelEntity.getMainTexture().getTextureFileId());
                 }
                 renderer.loadModel(base64Model, base64Texture);
-                renderer.addOtherTextures(chapterController.getOtherTextures(chapterId, textureController));
+
+                if (quickModelEntity.getMainTexture() != null) {
+                    renderer.addOtherTextures(chapterController.getOtherTextures(chapterId, textureController));
+
+                    textureSelectsComponent.initializeData(chapterController.getAllChapterTextures(chapterId));
+                    editorjs.addTextureColorAreaClickListener((textureId, hexColor, text) -> {
+                        textureSelectsComponent.getTextureListingSelect().setSelectedTextureById(textureId);
+                        textureSelectsComponent.getTextureAreaSelect().setSelectedAreaByHexColor(hexColor, textureId);
+
+                    });
+                }
             } catch (Exception e) {
                 log.error(e.getMessage());
                 new ErrorNotification("Nepovedlo se načíst model: " + e.getMessage(), 5000);
@@ -130,7 +140,7 @@ public class ChapterView extends ChapterScaffold {
 
             chapterSelect.addSubChapterChangeListener(event2 -> {
                 try {
-                    if(event2.getNewValue() == null){
+                    if (event2.getNewValue() == null) {
                         editorjs.showWholeChapterData();
                         return;
                     }
@@ -138,13 +148,6 @@ public class ChapterView extends ChapterScaffold {
                 } catch (Exception e) {
                     throw new RuntimeException(e);
                 }
-            });
-            textureSelectsComponent.initializeData(chapterController.getAllChapterTextures(chapterId));
-
-            editorjs.addTextureColorAreaClickListener((textureId, hexColor, text) -> {
-                textureSelectsComponent.getTextureListingSelect().setSelectedTextureById(textureId);
-                textureSelectsComponent.getTextureAreaSelect().setSelectedAreaByHexColor(hexColor, textureId);
-
             });
         } catch (Exception e) {
             log.error("Chyba při načítání kapitoly: {}", e.getMessage(), e);

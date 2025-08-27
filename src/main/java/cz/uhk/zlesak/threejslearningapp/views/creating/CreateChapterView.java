@@ -271,16 +271,18 @@ public class CreateChapterView extends ChapterScaffold {
         }
         renderer.loadModel(base64ModelFile, textureFileEntity);
 
-        List<QuickTextureEntity> allTextures = new ArrayList<>(quickModelEntity.getOtherTextures());
-        renderer.addOtherTextures(TextureMapHelper.otherTexturesMap(allTextures, textureController));
+        if(textureFileEntity != null) {
+            List<QuickTextureEntity> allTextures = new ArrayList<>(quickModelEntity.getOtherTextures());
+            renderer.addOtherTextures(TextureMapHelper.otherTexturesMap(allTextures, textureController));
 
-        editorjs.initializeTextureSelects(quickModelEntity.getOtherTextures());
-        editorjs.addTextureColorAreaClickListener((textureId, hexColor, text) -> {
-            textureSelectsComponent.getTextureListingSelect().setSelectedTextureById(textureId);
-            textureSelectsComponent.getTextureAreaSelect().setSelectedAreaByHexColor(hexColor, textureId);
+            editorjs.initializeTextureSelects(quickModelEntity.getOtherTextures());
+            editorjs.addTextureColorAreaClickListener((textureId, hexColor, text) -> {
+                textureSelectsComponent.getTextureListingSelect().setSelectedTextureById(textureId);
+                textureSelectsComponent.getTextureAreaSelect().setSelectedAreaByHexColor(hexColor, textureId);
 
-        });
-        allTextures.addFirst(quickModelEntity.getMainTexture());
-        textureSelectsComponent.initializeData(allTextures);
+            });
+            allTextures.addFirst(quickModelEntity.getMainTexture());
+            textureSelectsComponent.initializeData(allTextures);
+        }
     }
 }

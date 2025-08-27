@@ -115,9 +115,10 @@ public class ChapterListView extends ListingScaffold {
 
         for (ChapterEntity chapter : chapterEntities) {
             ChapterListItemComponent itemComponent = new ChapterListItemComponent(chapter);
-            listingLayout.add(itemComponent);
+            itemListLayout.add(itemComponent);
         }
-        listingLayout.add(new PaginationComponent(page, limit, chapterEntityPageResult.total(), p -> UI.getCurrent().navigate("chapters?page=" + p + "&limit=" + limit)));
+        PaginationComponent paginationComponent = new PaginationComponent(page, limit, chapterEntityPageResult.total(), p -> UI.getCurrent().navigate("chapters?page=" + p + "&limit=" + limit));
+        paginationLayout.add(paginationComponent);
     }
 
     /**
@@ -125,6 +126,7 @@ public class ChapterListView extends ListingScaffold {
      * This method is used to reset the list before populating it with new components.
      */
     private void clearList() {
-        listingLayout.removeAll();
+        itemListLayout.removeAll();
+        paginationLayout.removeAll();
     }
 }

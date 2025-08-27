@@ -148,10 +148,10 @@ public class ModelView extends ModelScaffold {
                     log.error(e.getMessage(), e);
                     throw new ApplicationContextException(e.getMessage());
                 }
+                List<QuickTextureEntity> allTextures = quickModelEntity.getOtherTextures();
+                allTextures.addFirst(quickModelEntity.getMainTexture());
+                textureSelectsComponent.initializeData(allTextures);
             }
-            List<QuickTextureEntity> allTextures = quickModelEntity.getOtherTextures();
-            allTextures.addFirst(quickModelEntity.getMainTexture());
-            textureSelectsComponent.initializeData(allTextures);
         }
 
         modelUploadFormScrollerComposition.listingMode();

@@ -1,13 +1,14 @@
 package cz.uhk.zlesak.threejslearningapp.i18n;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.vaadin.flow.i18n.I18NProvider;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
-import java.io.File;
 import java.io.InputStream;
 import java.net.URL;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -29,29 +30,43 @@ public class CustomI18NProvider implements I18NProvider {
      * For example: texts/pages_cs.properties.
      */
     public CustomI18NProvider() {
-        csTranslations = new java.util.HashMap<>();
+        csTranslations = new HashMap<>();
         try {
             ClassLoader classLoader = getClass().getClassLoader();
             URL textsDir = classLoader.getResource("texts");
             if (textsDir != null) {
-                File dir = new File(textsDir.toURI());
-                File[] files = dir.listFiles((d, name) -> name.endsWith("_cs.json"));
-                if (files != null) {
-                    ObjectMapper mapper = new ObjectMapper();
-                    for (File file : files) {
-                        try (InputStream input = classLoader.getResourceAsStream("texts/" + file.getName())) {
-                            if (input == null) {
-                                log.error("Soubor s překlady nebyl nalezen: texts/{}", file.getName());
-                                continue;
-                            }
-                            Map<String, String> map = mapper.readValue(input, Map.class);
-                            csTranslations.putAll(map);
-                        }
-                    }
-                }
+                loadTranslationsFromResource(classLoader);
+            } else {
+                log.warn("Texts file nenalezeno");
             }
         } catch (Exception e) {
-            log.error("Chyba při načítání českých překladů z JSON: {}", e.getMessage(), e);
+            log.error("Chyba při načítání překladů z JSON: {}", e.getMessage(), e);
+        }
+    }
+
+    private void loadTranslationsFromResource(ClassLoader classLoader) {
+        ObjectMapper mapper = new ObjectMapper();
+
+        String[] translationFiles = {
+                "beforeLeaveActionDialog_cs.json",
+                "chapter_cs.json",
+                "generic_cs.json",
+                "pages_cs.json",
+                "uppload_component_cs.json"
+        };
+
+        for (String fileName : translationFiles) {
+            try (InputStream input = classLoader.getResourceAsStream("texts/" + fileName)) {
+                if (input != null) {
+                    Map<String, String> map = mapper.readValue(input, new TypeReference<>() {});
+                    csTranslations.putAll(map);
+                } else {
+                    log.warn("Nenalezeno: {}", fileName);
+                }
+
+            } catch (Exception e) {
+                log.error("Chyba při načítání českých překladů z JSON: {}", e.getMessage(), e);
+            }
         }
     }
 
