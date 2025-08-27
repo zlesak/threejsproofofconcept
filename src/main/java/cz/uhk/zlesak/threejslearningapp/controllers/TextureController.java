@@ -64,7 +64,7 @@ public class TextureController {
         }
 
         try {
-            String csvString = csv == null ? null : new String(csv.readAllBytes(), StandardCharsets.UTF_8);
+            String csvString = csv == null ? "" : new String(csv.readAllBytes(), StandardCharsets.UTF_8);
             TextureEntity textureEntity = TextureEntity.builder()
                     .Name(inputStream.getDisplayName())
                     .CsvContent(csvString)
