@@ -292,6 +292,16 @@ export class EditorJs extends LitElement {
     attachTextureColorListeners();
   }
 
+  // @ts-ignore - Method is used by external components
+  async showWholeChapterData(){
+    await this.editorReadyPromise;
+    if (!this.editor || !this.editor.blocks) {
+      console.error('setData: Editor or editor.blocks not fully initialized even after promise resolved.');
+      return;
+    }
+    await this.setData(this._chapterContentData);
+  }
+
   async setData(value: OutputData): Promise<void> {
     await this.editorReadyPromise;
     if (!this.editor || !this.editor.blocks) {

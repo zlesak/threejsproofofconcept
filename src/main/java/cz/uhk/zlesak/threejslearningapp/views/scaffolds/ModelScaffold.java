@@ -43,11 +43,8 @@ public abstract class ModelScaffold extends Composite<VerticalLayout> implements
         modelDiv.getStyle().set("min-width", "0");
 
         //Model layout
-        HorizontalLayout selectsLayout = new HorizontalLayout(textureSelectsComponent);
-        selectsLayout.setWidthFull();
-
         VerticalLayout chapterModel = new VerticalLayout();
-        chapterModel.add(selectsLayout, modelDiv);
+        chapterModel.add(textureSelectsComponent, modelDiv);
         chapterModel.addClassName(LumoUtility.Gap.MEDIUM);
         chapterModel.setSizeFull();
         chapterModel.setPadding(false);

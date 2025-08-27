@@ -78,6 +78,20 @@ public class EditorJsComponent extends Component implements HasSize, HasStyle {
     }
 
     /**
+     * Shows the whole chapter data in the Editor.js instance.
+     * This method is used to display all the content of the chapter, including subchapters.
+     * Used when no specific subchapter is selected.
+     */
+    public void showWholeChapterData() {
+        getElement().callJsFunction("showWholeChapterData")
+                .toCompletableFuture()
+                .exceptionally(error -> {
+                    throw new RuntimeException("Chyba při zobrazování dat celé kapitoly " + error.getMessage());
+                })
+                .thenApply(ignore -> null);
+    }
+
+    /**
      * Sets the selected subchapter data in the Editor.js instance.
      * This method expects a JSON string that represents the subchapter data.
      *

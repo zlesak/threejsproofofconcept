@@ -38,12 +38,14 @@ public class TextureSelectsComponent extends HorizontalLayout {
             }
         });
         add(textureListingSelect, textureAreaSelect);
+        setVisible(false);
         setWidthFull();
     }
 
     public void initializeData(List<QuickTextureEntity> textures) {
         textureAreaSelect.initializeTextureAreaSelect(textures);
         textureListingSelect.initializeTextureListingSelect(textures);
+        setVisible(true);
 
     }
 }

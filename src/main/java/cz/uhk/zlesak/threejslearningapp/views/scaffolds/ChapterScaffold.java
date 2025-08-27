@@ -38,7 +38,6 @@ public abstract class ChapterScaffold extends Composite<VerticalLayout> implemen
     protected ThreeJsComponent renderer = new ThreeJsComponent();
     protected final ModelDiv modelDiv = new ModelDiv(renderer);
     protected final TextureSelectsComponent textureSelectsComponent = new TextureSelectsComponent(renderer);
-    protected HorizontalLayout selectsLayout;
 
     /**
      * Constructor for ChapterScaffold.
@@ -87,10 +86,8 @@ public abstract class ChapterScaffold extends Composite<VerticalLayout> implemen
         chapterContent.getStyle().set("flex-grow", "1");
 
         //Model layout
-        selectsLayout = new HorizontalLayout(textureSelectsComponent);
-        selectsLayout.setWidthFull();
 
-        chapterModel.add(selectsLayout, modelDiv);
+        chapterModel.add(textureSelectsComponent, modelDiv);
         chapterModel.addClassName(Gap.MEDIUM);
         chapterModel.setSizeFull();
         chapterModel.setPadding(false);

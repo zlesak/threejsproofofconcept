@@ -130,6 +130,10 @@ public class ChapterView extends ChapterScaffold {
 
             chapterSelect.addSubChapterChangeListener(event2 -> {
                 try {
+                    if(event2.getNewValue() == null){
+                        editorjs.showWholeChapterData();
+                        return;
+                    }
                     editorjs.setSelectedSubchapterData(chapterController.getSelectedSubChapterContent(event2.getNewValue().id()));
                 } catch (Exception e) {
                     throw new RuntimeException(e);

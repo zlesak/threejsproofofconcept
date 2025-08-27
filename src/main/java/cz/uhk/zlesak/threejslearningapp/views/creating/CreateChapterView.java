@@ -113,7 +113,7 @@ public class CreateChapterView extends ChapterScaffold {
             createModelButton.setText("Model přidán: " + entity.getModel().getName());
             createModelButton.setIcon(new Icon(VaadinIcon.CHECK));
             createModelButton.setEnabled(false);
-            chooseAlreadyCreatedModelButton.setEnabled(false);
+            chooseAlreadyCreatedModelButton.setVisible(false);
             rendererSelectsAndEditorPreparation(entity);
         });
         return createModelButton;
@@ -137,7 +137,7 @@ public class CreateChapterView extends ChapterScaffold {
             createModelButton.setText("Model přidán: " + entity.getModel().getName());
             createModelButton.setIcon(new Icon(VaadinIcon.CHECK));
             createModelButton.setEnabled(false);
-            chooseAlreadyCreatedModelButton.setEnabled(false);
+            chooseAlreadyCreatedModelButton.setVisible(false);
             try {
                 rendererSelectsAndEditorPreparation(entity);
             } catch (IOException e) {
@@ -274,6 +274,11 @@ public class CreateChapterView extends ChapterScaffold {
         renderer.addOtherTextures(TextureMapHelper.otherTexturesMap(allTextures, textureController));
 
         editorjs.initializeTextureSelects(quickModelEntity.getOtherTextures());
+        editorjs.addTextureColorAreaClickListener((textureId, hexColor, text) -> {
+            textureSelectsComponent.getTextureListingSelect().setSelectedTextureById(textureId);
+            textureSelectsComponent.getTextureAreaSelect().setSelectedAreaByHexColor(hexColor, textureId);
+
+        });
         allTextures.addFirst(quickModelEntity.getMainTexture());
         textureSelectsComponent.initializeData(allTextures);
     }
