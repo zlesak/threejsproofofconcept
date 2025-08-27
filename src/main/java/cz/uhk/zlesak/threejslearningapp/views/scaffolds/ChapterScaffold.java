@@ -107,5 +107,8 @@ public abstract class ChapterScaffold extends Composite<VerticalLayout> implemen
                 navigationContentLayout.showSubchapterNavigationContent(newSelectedSubchapter.id());
             }
         });
+        searchTextField.addValueChangeListener(
+                event -> editorjs.search(event.getValue())
+        );
     }
 }

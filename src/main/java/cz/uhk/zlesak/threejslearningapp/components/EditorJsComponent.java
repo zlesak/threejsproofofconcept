@@ -140,11 +140,25 @@ public class EditorJsComponent extends Component implements HasSize, HasStyle {
     }
 
     /**
+     * Searches for the given text in the Editor.js instance.
+     * This method triggers a search operation within the Editor.js content.
+     * @param searchText the text to search for within the Editor.js content.
+     * @see SearchTextField
+     */
+    public void search(String searchText){
+        getElement().callJsFunction("search", searchText)
+                .toCompletableFuture()
+                .exceptionally(error -> {
+                    throw new RuntimeException("Chyba při vyhledávání " + error.getMessage());
+                })
+                .thenApply(ignore -> null);
+    }
+
+    /**
      * Listener interface for handling texture color area click events.
      * Implement this interface to define custom behavior when a texture color area is clicked.
      */
     public interface TextureColorAreaClickListener {
         void onTextureColorAreaClick(String textureId, String hexColor, String text);
     }
-
 }

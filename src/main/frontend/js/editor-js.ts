@@ -47,6 +47,11 @@ export class EditorJs extends LitElement {
               }
               .codex-editor__redactor {
                   padding-bottom: 0 !important;
+              }              
+              .editor-search-highlight {
+                background-color: #ffeb3b;
+                color: #000000;
+                font-weight: bold;
               }`;
     this.appendChild(style);
   }
@@ -293,7 +298,7 @@ export class EditorJs extends LitElement {
   }
 
   // @ts-ignore - Method is used by external components
-  async showWholeChapterData(){
+  async showWholeChapterData() {
     await this.editorReadyPromise;
     if (!this.editor || !this.editor.blocks) {
       console.error('setData: Editor or editor.blocks not fully initialized even after promise resolved.');
@@ -360,8 +365,61 @@ export class EditorJs extends LitElement {
       throw error;
     }
   }
+
+  // @ts-ignore - Method is used by external components
+  public async search(searchText: string): Promise<void> {
+    await this.editorReadyPromise;
+    if (!this.editor || !this.editor.blocks) {
+      console.error('search: Editor or editor.blocks not fully initialized even after promise resolved.');
+      return;
+    }
+
+    this.clearSearchHighlights();
+    if (!searchText || searchText.trim() === '') return;
+    const searchTextLower = searchText.toLowerCase();
+
+    for (let i = 0; i < this.editor.blocks.getBlocksCount(); i++) {
+      const blockElement = this.editor.blocks.getBlockByIndex(i)!.holder;
+      const walker = document.createTreeWalker(blockElement, NodeFilter.SHOW_TEXT, null);
+      let node: Node | null;
+      while (node = walker.nextNode()) {
+        if (node.nodeType !== Node.TEXT_NODE) break;
+
+        const textContent = node.textContent || '';
+        const textContentLower = textContent.toLowerCase();
+
+        if (!textContentLower.includes(searchTextLower)) break;
+
+        const parent = node.parentNode;
+        if (!parent) break;
+
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = textContent.replace(new RegExp(`(${searchText})`, 'gi'), `<span class="editor-search-highlight" match="true">$1</span>`);
+
+        const fragment = document.createDocumentFragment();
+        while (tempDiv.firstChild) {
+          fragment.appendChild(tempDiv.firstChild);
+        }
+        parent.replaceChild(fragment, node);
+      }
+    }
+  }
+
+  private clearSearchHighlights(): void {
+    const highlightedElements = document.getElementById('editorjs')?.querySelectorAll('[match="true"]');
+    if (highlightedElements === undefined) return;
+    highlightedElements.forEach(element => {
+      const parent = element.parentNode;
+      if (parent) {
+        const textNode = document.createTextNode(element.textContent || '');
+        parent.replaceChild(textNode, element);
+        parent.normalize();
+      }
+    });
+  }
 }
 
+// @ts-ignore
 function attachTextureColorListeners() {
   const editorContainer = document.getElementById('editorjs');
   if (!editorContainer) return;

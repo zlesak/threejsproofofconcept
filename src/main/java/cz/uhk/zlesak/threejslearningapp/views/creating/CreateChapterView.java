@@ -31,6 +31,7 @@ import org.springframework.context.ApplicationContextException;
 import org.springframework.context.annotation.Scope;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -270,7 +271,7 @@ public class CreateChapterView extends ChapterScaffold {
         }
         renderer.loadModel(base64ModelFile, textureFileEntity);
 
-        List<QuickTextureEntity> allTextures = quickModelEntity.getOtherTextures();
+        List<QuickTextureEntity> allTextures = new ArrayList<>(quickModelEntity.getOtherTextures());
         renderer.addOtherTextures(TextureMapHelper.otherTexturesMap(allTextures, textureController));
 
         editorjs.initializeTextureSelects(quickModelEntity.getOtherTextures());
