@@ -4,6 +4,7 @@ import com.vaadin.flow.component.*;
 import com.vaadin.flow.component.dependency.JsModule;
 import com.vaadin.flow.component.dependency.NpmPackage;
 import com.vaadin.flow.function.SerializableRunnable;
+import cz.uhk.zlesak.threejslearningapp.components.compositions.ModelUploadFormScrollerComposition;
 import cz.uhk.zlesak.threejslearningapp.components.notifications.InfoNotification;
 import cz.uhk.zlesak.threejslearningapp.events.ThreeJsDoingActions;
 import cz.uhk.zlesak.threejslearningapp.events.ThreeJsFinishedActions;
@@ -165,6 +166,27 @@ public class ThreeJsComponent extends Component {
                     console.error('[JS] Error in addOtherTexture:', e);
                 }
                 """, getElement(), jsonTextures);
+    }
+
+    /**
+     * Removes a texture from the Three.js scene based on its identifier.
+     * This method calls the JavaScript function removeOtherTexture to handle the removal process.
+     * It is used to delete textures that are no longer needed or to free up resources.
+     *
+     * @param id identification of the texture to be deleted
+     * @see ModelUploadFormScrollerComposition for usage context
+     */
+    public void removeOtherTexture(String id){
+        if (id.isEmpty()) return;
+        getElement().executeJs("""
+                try {
+                    if (typeof window.removeOtherTexture === 'function') {
+                        window.removeOtherTexture($0, $1);
+                    }
+                } catch (e) {
+                    console.error('[JS] Error in removeOtherTexture:', e);
+                }
+                """, getElement(), id);
     }
 
     /**

@@ -8,17 +8,17 @@ import com.vaadin.flow.component.orderedlayout.Scroller;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.component.upload.receivers.MultiFileMemoryBuffer;
+import cz.uhk.zlesak.threejslearningapp.components.NameTextField;
+import cz.uhk.zlesak.threejslearningapp.components.ThreeJsComponent;
 import cz.uhk.zlesak.threejslearningapp.components.UploadComponent;
 import cz.uhk.zlesak.threejslearningapp.components.UploadLabelDiv;
-import cz.uhk.zlesak.threejslearningapp.events.ModelClearEvent;
-import cz.uhk.zlesak.threejslearningapp.events.ModelLoadEvent;
+import cz.uhk.zlesak.threejslearningapp.events.*;
+import cz.uhk.zlesak.threejslearningapp.models.entities.quickEntities.QuickTextureEntity;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Base64;
-import java.util.List;
+import java.util.*;
 
 /**
  * ModelUploadFormScroller is a custom Vaadin component that provides a form for uploading 3D models and their associated textures.
@@ -37,7 +37,8 @@ public class ModelUploadFormScrollerComposition extends Scroller {
     protected final UploadLabelDiv uploadModelDiv, uploadMainTextureDiv, uploadOtherTexturesDiv, csvOtherTexturesDiv;
     @Getter
     protected final UploadComponent objUploadComponent, mainTextureUploadComponent, otherTexturesUploadComponent, csvUploadComponent;
-
+    private final Map<String, QuickTextureEntity> quickTextureEntityMap = new HashMap<>();
+    private final Map<String, String> csvMap = new HashMap<>();
     protected String base64Model = null;
     protected String base64Texture = null;
     protected List<String> otherBase64Texture = new ArrayList<>();
@@ -57,8 +58,7 @@ public class ModelUploadFormScrollerComposition extends Scroller {
         otherTexturesUploadComponent = new UploadComponent(new MultiFileMemoryBuffer(), List.of(".jpg"), false, true);
         csvUploadComponent = new UploadComponent(new MultiFileMemoryBuffer(), List.of(".csv"), false, false);
 
-        modelName = new TextField("Název modelu");
-        modelName.setPlaceholder("Zadejte název modelu");
+        modelName = new NameTextField("Zadejte název modelu");
 
         isAdvanced = new Checkbox("Pokročilé nahrání modelu", false);
         isAdvanced.setTooltipText("Pokročilé nahrání modelu umožňuje nahrát model ve formátu OBJ s jednou hlavní a dalšími texturami pro pokročilé modely.");
@@ -117,6 +117,7 @@ public class ModelUploadFormScrollerComposition extends Scroller {
                     base64Texture = Base64.getEncoder().encodeToString(bytes);
                     if (base64Model != null) {
                         fireEvent(new ModelLoadEvent(this, base64Model, base64Texture));
+                        fireEvent(new ModelTextureChangeEvent(this, textureUploaded(event.getFileName())));
                     }
                 } catch (Exception ex) {
                     log.error("Chyba při zpracování hlavní textury", ex);
@@ -125,6 +126,7 @@ public class ModelUploadFormScrollerComposition extends Scroller {
         });
         mainTextureUploadComponent.addFileRemovedListener(event -> {
             fireEvent(new ModelClearEvent(this));
+            fireEvent(new ModelTextureChangeEvent(this, textureDeleted(event.getFileName())));
             uploadOtherTexturesDiv.setEnabled(false);
             csvOtherTexturesDiv.setEnabled(false);
             base64Texture = null;
@@ -138,6 +140,10 @@ public class ModelUploadFormScrollerComposition extends Scroller {
                     byte[] bytes = inputStream.readAllBytes();
                     String base64 = Base64.getEncoder().encodeToString(bytes);
                     otherBase64Texture.add(base64);
+                    Map<String, String> base64Textures = new HashMap<>();
+                    base64Textures.put(fileName, "data:application/octet-stream;base64," + base64);
+                    fireEvent(new OtherTextureLoadedEvent(this, base64Textures));
+                    fireEvent(new ModelTextureChangeEvent(this, textureUploaded(event.getFileName())));
                 } catch (Exception ex) {
                     log.error("Chyba při zpracování další textury", ex);
                 }
@@ -150,7 +156,9 @@ public class ModelUploadFormScrollerComposition extends Scroller {
                 try {
                     byte[] bytes = inputStream.readAllBytes();
                     String base64 = Base64.getEncoder().encodeToString(bytes);
-                    csvBase64.remove(base64);
+                    otherBase64Texture.remove(base64);
+                    fireEvent(new OtherTextureRemovedEvent(this, event.getFileName()));
+                    fireEvent(new ModelTextureChangeEvent(this, textureDeleted(event.getFileName())));
                 } catch (Exception ex) {
                     log.error("Chyba při zpracování další textury", ex);
                 }
@@ -159,12 +167,14 @@ public class ModelUploadFormScrollerComposition extends Scroller {
 
         csvUploadComponent.addSucceededListener(event -> {
             String fileName = event.getFileName();
-            InputStream inputStream = ((MultiFileMemoryBuffer) otherTexturesUploadComponent.getReceiver()).getInputStream(fileName);
+            InputStream inputStream = ((MultiFileMemoryBuffer) csvUploadComponent.getReceiver()).getInputStream(fileName);
             if (inputStream != null) {
                 try {
                     byte[] bytes = inputStream.readAllBytes();
+                    String csvContent = new String(bytes, java.nio.charset.StandardCharsets.UTF_8);
                     String base64 = Base64.getEncoder().encodeToString(bytes);
                     csvBase64.add(base64);
+                    csvUploaded(fileName, csvContent);
                 } catch (Exception ex) {
                     log.error("Chyba při zpracování CSV souboru", ex);
                 }
@@ -172,12 +182,13 @@ public class ModelUploadFormScrollerComposition extends Scroller {
         });
         csvUploadComponent.addFileRemovedListener(event -> {
             String fileName = event.getFileName();
-            InputStream inputStream = ((MultiFileMemoryBuffer) otherTexturesUploadComponent.getReceiver()).getInputStream(fileName);
+            InputStream inputStream = ((MultiFileMemoryBuffer) csvUploadComponent.getReceiver()).getInputStream(fileName);
             if (inputStream != null) {
                 try {
                     byte[] bytes = inputStream.readAllBytes();
                     String base64 = Base64.getEncoder().encodeToString(bytes);
-                    otherBase64Texture.remove(base64);
+                    csvBase64.remove(base64);
+                    csvDeleted(fileName);
                 } catch (Exception ex) {
                     log.error("Chyba při zpracování CSV souboru", ex);
                 }
@@ -191,13 +202,27 @@ public class ModelUploadFormScrollerComposition extends Scroller {
         isAdvanced.getStyle().set("white-space", "nowrap");
         HorizontalLayout topHorizontalLayout = new HorizontalLayout(modelName, isAdvanced);
         topHorizontalLayout.setWidthFull();
-        topHorizontalLayout.setVerticalComponentAlignment(FlexComponent.Alignment.END, isAdvanced);
+        topHorizontalLayout.setVerticalComponentAlignment(FlexComponent.Alignment.CENTER, isAdvanced);
         topHorizontalLayout.setFlexGrow(1, modelName);
         topHorizontalLayout.setFlexGrow(0, isAdvanced);
         topHorizontalLayout.getStyle().set("min-width", "0");
 
         vl.setWidthFull();
+        vl.setPadding(false);
         vl.add(topHorizontalLayout, uploadModelDiv, uploadMainTextureDiv, uploadOtherTexturesDiv, csvOtherTexturesDiv);
+    }
+
+    /**
+     * Converts a given filename to a .jpg filename by replacing its extension.
+     * If the filename has no extension, it appends .jpg to the end.
+     *
+     * @param filename the original filename
+     * @return the filename with a .jpg extension
+     */
+    private static String toJpgName(String filename) {
+        int dot = filename.lastIndexOf('.');
+        String base = dot > 0 ? filename.substring(0, dot) : filename;
+        return base + ".jpg";
     }
 
     /**
@@ -246,9 +271,11 @@ public class ModelUploadFormScrollerComposition extends Scroller {
      * This listener will be notified when a model is successfully loaded.
      *
      * @param listener the listener to be added
+     * @return the current instance of ModelUploadFormScrollerComposition for method chaining
      */
-    public void addModelLoadEventListener(ComponentEventListener<ModelLoadEvent> listener) {
+    public ModelUploadFormScrollerComposition addModelLoadEventListener(ComponentEventListener<ModelLoadEvent> listener) {
         addListener(ModelLoadEvent.class, listener);
+        return this;
     }
 
     /**
@@ -256,8 +283,100 @@ public class ModelUploadFormScrollerComposition extends Scroller {
      * This listener will be notified when the model is cleared from the form.
      *
      * @param listener the listener to be added
+     * @return the current instance of ModelUploadFormScrollerComposition for method chaining
      */
-    public void addModelClearEventListener(ComponentEventListener<ModelClearEvent> listener) {
+    public ModelUploadFormScrollerComposition addModelClearEventListener(ComponentEventListener<ModelClearEvent> listener) {
         addListener(ModelClearEvent.class, listener);
+        return this;
+    }
+
+    /**
+     * Adds a listener for other texture loaded events.
+     * This listener will be notified when additional textures are successfully loaded.
+     *
+     * @param listener the listener to be added
+     * @return the current instance of ModelUploadFormScrollerComposition for method chaining
+     */
+    public ModelUploadFormScrollerComposition addOtherTextureLoadedEventListener(ComponentEventListener<OtherTextureLoadedEvent> listener) {
+        addListener(OtherTextureLoadedEvent.class, listener);
+        return this;
+    }
+
+    /**
+     * Adds a listener for other texture removed events.
+     * This listener will be notified when additional textures are removed.
+     *
+     * @param listener the listener to be added
+     * @return the current instance of ModelUploadFormScrollerComposition for method chaining
+     */
+    public ModelUploadFormScrollerComposition addOtherTextureRemovedEventListener(ComponentEventListener<OtherTextureRemovedEvent> listener) {
+        addListener(OtherTextureRemovedEvent.class, listener);
+        return this;
+    }
+
+    /**
+     * Adds a listener for model texture change events.
+     * This listener will be notified when textures are uploaded or removed.
+     *
+     * @param listener the listener to be added
+     */
+    public void addTextureChangeEventListener(ComponentEventListener<ModelTextureChangeEvent> listener) {
+        addListener(ModelTextureChangeEvent.class, listener);
+    }
+
+    /**
+     * Handles the event when a texture is uploaded.
+     * It updates the internal map of textures and returns the current list of QuickTextureEntity objects
+     *
+     * @param name the name of the uploaded texture file
+     * @return the current list of QuickTextureEntity objects
+     * @see ThreeJsComponent#addOtherTextures(Map)
+     */
+    private List<QuickTextureEntity> textureUploaded(String name) {
+        if (!this.quickTextureEntityMap.containsKey(name)) {
+            this.quickTextureEntityMap.put(name, new QuickTextureEntity(name, name, this.csvMap.getOrDefault(name, null)));
+        }
+        return this.quickTextureEntityMap.values().stream().toList();
+    }
+
+    /**
+     * Handles the event when a texture is deleted.
+     *
+     * @param name the name of the deleted texture file
+     * @return the current list of QuickTextureEntity objects after deletion
+     * @see ThreeJsComponent#removeOtherTexture(String)
+     */
+    private List<QuickTextureEntity> textureDeleted(String name) {
+        this.quickTextureEntityMap.remove(name);
+        return this.quickTextureEntityMap.values().stream().toList();
+    }
+
+    /**
+     * Handles the event when a CSV file is uploaded.
+     *
+     * @param name       the name of the uploaded CSV file
+     * @param csvContent the content of the uploaded CSV file
+     */
+    private void csvUploaded(String name, String csvContent) {
+        String key = toJpgName(name);
+        this.csvMap.put(key, csvContent);
+        if (this.quickTextureEntityMap.containsKey(key)) {
+            this.quickTextureEntityMap.get(key).setCsvContent(csvContent);
+            fireEvent(new ModelTextureChangeEvent(this, this.quickTextureEntityMap.values().stream().toList()));
+        }
+    }
+
+    /**
+     * Handles the event when a CSV file is deleted.
+     *
+     * @param name the name of the deleted CSV file
+     */
+    private void csvDeleted(String name) {
+        String key = toJpgName(name);
+        this.csvMap.remove(key);
+        if (this.quickTextureEntityMap.containsKey(key)) {
+            this.quickTextureEntityMap.get(key).setCsvContent(null);
+            fireEvent(new ModelTextureChangeEvent(this, this.quickTextureEntityMap.values().stream().toList()));
+        }
     }
 }

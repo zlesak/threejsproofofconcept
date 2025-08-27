@@ -18,6 +18,7 @@ import cz.uhk.zlesak.threejslearningapp.models.entities.quickEntities.QuickModel
 import cz.uhk.zlesak.threejslearningapp.views.scaffolds.ModelScaffold;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContextException;
 import org.springframework.context.annotation.Scope;
 
 @Slf4j
@@ -55,9 +56,11 @@ public class CreateModelView extends ModelScaffold {
                 new InfoNotification("Úspěšně nahráno");
                 VaadinSession.getCurrent().setAttribute("quickModelEntity", quickModelEntity);
                 UI.getCurrent().navigate("model/" + quickModelEntity.getModel().getId());
+            } catch (ApplicationContextException e) {
+                new ErrorNotification("Chyba při nahrávání modelu: " + e.getMessage());
             } catch (Exception e) {
                 log.error("Error uploading model", e);
-                new ErrorNotification("Chyba při nahrávání modelu: " + e.getMessage());
+                new ErrorNotification("Neočekávaná chyba při nahrávání modelu: " + e.getMessage());
             }
         });
         modelUploadFormScrollerComposition.getVl().add(createButton);

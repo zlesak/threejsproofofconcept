@@ -27,9 +27,14 @@ public abstract class ModelScaffold extends Composite<VerticalLayout> implements
 
         modelUploadFormScrollerComposition.addModelLoadEventListener(
                 event -> renderer.loadModel(event.getBase64Model(), event.getBase64Texture())
-        );
-        modelUploadFormScrollerComposition.addModelClearEventListener(
+        ).addModelClearEventListener(
                 event -> renderer.clear()
+        ).addOtherTextureLoadedEventListener(
+                event -> renderer.addOtherTextures(event.getBase64Textures())
+        ).addOtherTextureRemovedEventListener(
+                event -> renderer.removeOtherTexture(event.getName())
+        ).addTextureChangeEventListener(
+                event -> textureSelectsComponent.initializeData(event.getQuickTextureEntity())
         );
 
         renderer.getStyle().set("width", "100%");

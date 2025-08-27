@@ -242,6 +242,22 @@ class ThreeTest {
     }));
     this.finishedActions();
   };
+  removeOtherTexture = async (id) => {
+    this.doingActions("Removing texture");
+    const index = this.otherTextures.findIndex(t => t.id === id);
+    if (index !== -1) {
+      const [removed] = this.otherTextures.splice(index, 1);
+      if (removed && removed.texture) {
+        try { removed.texture.dispose(); } catch(e) { /* ignore */ }
+      }
+      if (this.lastSelectedTextureId === id) {
+        this.lastSelectedTextureId = null;
+        await this.switchToMainTexture();
+      }
+    }
+    this.finishedActions();
+  }
+
 
   switchOtherTexture = async (id) => {
     this.doingActions("Switching to other texture");
@@ -260,6 +276,7 @@ class ThreeTest {
       });
       await new Promise(resolve => setTimeout(resolve, 100));
       this.finishedActions();
+      this.lastSelectedTextureId = id;
       this.render();
     } else {
       this.finishedActions();
@@ -606,6 +623,14 @@ window.addOtherTextures = function(element, textureJson) {
     inst.addOtherTextures(textureJson);
   }
 };
+
+window.removeOtherTexture = function(element, id) {
+  const inst = getInstance(element);
+  if (inst) {
+    inst.removeOtherTexture(id);
+  }
+};
+
 
 window.switchOtherTexture = function(element, id) {
   const inst = getInstance(element);

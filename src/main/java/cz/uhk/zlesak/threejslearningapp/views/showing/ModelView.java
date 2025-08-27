@@ -75,7 +75,12 @@ public class ModelView extends ModelScaffold {
             event.forwardTo(ModelListView.class);
         }
 
-        this.quickModelEntity = (QuickModelEntity) VaadinSession.getCurrent().getAttribute("quickModelEntity");
+        //TODO remove after BE implementation of geting model by modelEntityId
+        if(VaadinSession.getCurrent().getAttribute("quickModelEntity") != null) {
+            this.quickModelEntity = (QuickModelEntity) VaadinSession.getCurrent().getAttribute("quickModelEntity");
+        }else{
+            event.forwardTo(ModelListView.class);
+        }
     }
 
     /**
