@@ -596,60 +596,59 @@ window.disposeThree = function(element) {
   });
 };
 
-window.loadModel = function(element, modelUrl) {
+window.loadModel = async function(element, modelUrl) {
   const inst = getInstance(element);
   if (inst) {
-    inst.loadModel(modelUrl);
+    await inst.loadModel(modelUrl);
   }
 };
 
-window.loadAdvancedModel = function(element, objUrl, textureUrl) {
+window.loadAdvancedModel = async function(element, objUrl, textureUrl) {
   const inst = getInstance(element);
   if (inst) {
-    inst.loadAdvancedModel(objUrl, textureUrl);
+    await inst.loadAdvancedModel(objUrl, textureUrl);
   }
 };
 
-window.clear = function(element) {
+window.clear = async function(element) {
   const inst = getInstance(element);
   if (inst) {
-    inst.clear();
+    await inst.clear();
   }
 };
 
-window.addOtherTextures = function(element, textureJson) {
+window.addOtherTextures = async function(element, textureJson) {
   const inst = getInstance(element);
   if (inst) {
-    inst.addOtherTextures(textureJson);
+    await inst.addOtherTextures(textureJson);
   }
 };
 
-window.removeOtherTexture = function(element, id) {
+window.removeOtherTexture = async function(element, id) {
   const inst = getInstance(element);
   if (inst) {
-    inst.removeOtherTexture(id);
+    await inst.removeOtherTexture(id);
   }
 };
 
-
-window.switchOtherTexture = function(element, id) {
+window.switchOtherTexture = async function(element, id) {
   const inst = getInstance(element);
   if (inst) {
-    inst.switchOtherTexture(id);
+    await inst.switchOtherTexture(id);
   }
 };
 
-window.returnToLastSelectedTexture = function(element) {
+window.returnToLastSelectedTexture = async function(element) {
   const inst = getInstance(element);
   if (inst) {
-    inst.returnToLastSelectedTexture();
+    await inst.returnToLastSelectedTexture();
   }
 };
 
-window.applyMaskToMainTexture = function(element, textureId, maskColor) {
+window.applyMaskToMainTexture = async function(element, textureId, maskColor) {
   const inst = getInstance(element);
   if (inst) {
-    inst.applyMaskToMainTexture(textureId, maskColor);
+    await inst.applyMaskToMainTexture(textureId, maskColor);
   }
 };
 

@@ -3,7 +3,7 @@ package cz.uhk.zlesak.threejslearningapp;
 import com.vaadin.flow.component.page.AppShellConfigurator;
 import com.vaadin.flow.server.AppShellSettings;
 import com.vaadin.flow.theme.Theme;
-import cz.uhk.zlesak.threejslearningapp.i18n.CustomI18NProvider;
+import cz.uhk.zlesak.threejslearningapp.application.i18n.CustomI18NProvider;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
@@ -14,7 +14,7 @@ import org.springframework.web.client.RestTemplate;
  * It sets up the Spring Boot application and provides RestTemplate and I18NProvider beans.
  * The application uses a custom theme named "threejslearningapp".
  */
-@SpringBootApplication
+@SpringBootApplication(scanBasePackages = "cz.uhk.zlesak.threejslearningapp")
 @Theme(value = "threejslearningapp")
 public class Application implements AppShellConfigurator {
 
