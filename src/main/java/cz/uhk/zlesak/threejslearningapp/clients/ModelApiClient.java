@@ -91,6 +91,7 @@ public class ModelApiClient implements IFileApiClient {
                         .inputStream(new ByteArrayInputStream(response.getBody()))
                         .build();
                 return ModelEntity.builder()
+                        .Id(fileEntityId)
                         .Name(filename)
                         .MainTextureEntity(null)
                         .TextureEntities(List.of())
@@ -192,46 +193,6 @@ public class ModelApiClient implements IFileApiClient {
     }
 
     /**
-     * API call function to download a file entity by its ID.
-     * This method retrieves the file associated with the given file entity ID and returns it as an Entity object.
-     * It uses the RestTemplate to make a GET request to the backend service.
-     *
-     * @param fileEntityId The ID of the file entity to download.
-     * @return Entity containing the file and its metadata.
-     * @throws Exception if the file is not found or there is an error during the download process.
-     */
-    @Override
-    public Entity downloadFileEntityById(String fileEntityId) throws Exception {
-        String url = baseUrl + "download/" + fileEntityId;
-        try {
-            ResponseEntity<byte[]> response = restTemplate.exchange(
-                    url,
-                    HttpMethod.GET,
-                    null,
-                    byte[].class
-            );
-            if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
-
-                String contentDisposition = response.getHeaders().getFirst(HttpHeaders.CONTENT_DISPOSITION);
-                String filename = null;
-                if (contentDisposition != null && contentDisposition.contains("filename=")) {
-                    filename = contentDisposition.substring(contentDisposition.indexOf("filename=") + 9).replace("\"", "");
-                }
-                InputStreamMultipartFile file = InputStreamMultipartFile.builder()
-                        .inputStream(new ByteArrayInputStream(response.getBody()))
-                        .fileName(filename)
-                        .displayName(filename)//todo change after display name returning from BE
-                        .build();
-                return ModelEntity.builder().Name(filename).File(file).build();
-            } else {
-                throw new Exception("Soubor nebyl nalezen nebo došlo k chybě při stahování.");
-            }
-        } catch (HttpStatusCodeException ex) {
-            throw new ApiCallException("Chyba při stahování souboru", null, null, ex.getStatusCode(), ex.getResponseBodyAsString(), ex);
-        }
-    }
-
-    /**
      * This method is not implemented as of this moment.
      *
      * @param modelId ID of the model to be deleted.
@@ -240,5 +201,14 @@ public class ModelApiClient implements IFileApiClient {
     @Override
     public void deleteFileEntity(String modelId) throws NotImplementedException {
         throw new NotImplementedException("Metoda deleteFileEntity není implementována pro ModelApiClient.");
+    }
+
+    /**
+     * Generates the backend endpoint URL for downloading a model file by its ID.
+     * @param modelId the ID of the model
+     * @return the complete URL to download the model file
+     */
+    public String getModelFileBeEndpointUrl(String modelId) {
+        return baseUrl + "download/" + modelId;
     }
 }

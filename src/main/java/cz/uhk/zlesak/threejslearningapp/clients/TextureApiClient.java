@@ -90,6 +90,7 @@ public class TextureApiClient implements IFileApiClient {
                         .inputStream(new ByteArrayInputStream(response.getBody()))
                         .build();
                 return TextureEntity.builder()
+                        .Id(fileEntityId)
                         .Name(filename)
                         .File(file)
                         .build();
@@ -165,45 +166,6 @@ public class TextureApiClient implements IFileApiClient {
     }
 
     /**
-     * API call function to download a texture file by its ID.
-     * This method retrieves a texture file from the backend service using its ID.
-     *
-     * @param fileEntityId The ID of the texture entity to download.
-     * @return Returns the TextureEntity containing the downloaded file and its metadata.
-     * @throws Exception Throws exception if anything goes wrong when downloading the texture via this API call.
-     */
-    @Override
-    public Entity downloadFileEntityById(String fileEntityId) throws Exception {
-        String url = baseUrl + "download/" + fileEntityId;
-        try {
-            ResponseEntity<byte[]> response = restTemplate.exchange(
-                    url,
-                    HttpMethod.GET,
-                    null,
-                    byte[].class
-            );
-            if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
-
-                String contentDisposition = response.getHeaders().getFirst(HttpHeaders.CONTENT_DISPOSITION);
-                String filename = null;
-                if (contentDisposition != null && contentDisposition.contains("filename=")) {
-                    filename = contentDisposition.substring(contentDisposition.indexOf("filename=") + 9).replace("\"", "");
-                }
-                InputStreamMultipartFile file = InputStreamMultipartFile.builder()
-                        .fileName(filename)
-                        .displayName(filename) //todo change after i wil get the name back from the BE
-                        .inputStream(new ByteArrayInputStream(response.getBody()))
-                        .build();
-                return TextureEntity.builder().Name(filename).File(file).build();
-            } else {
-                throw new Exception("Soubor nebyl nalezen nebo došlo k chybě při stahování.");
-            }
-        } catch (HttpStatusCodeException ex) {
-            throw new ApiCallException("Chyba při stahování souboru", null, null, ex.getStatusCode(), ex.getResponseBodyAsString(), ex);
-        }
-    }
-
-    /**
      * This method is not implemented at this moment as the textures should be deleted on BE side after their aro no longer associated with any model.
      *
      * @param modelId The ID of the model.
@@ -212,5 +174,14 @@ public class TextureApiClient implements IFileApiClient {
     @Override
     public void deleteFileEntity(String modelId) throws NotImplementedException {
         throw new NotImplementedException("Tato metoda není implementována pro textury.");
+    }
+
+    /**
+     * Generates the URL for downloading a texture by its ID.
+     * @param textureId The ID of the texture to download.
+     * @return The URL for downloading the texture.
+     */
+    public String getTextureStreamBeEndpointUrl(String textureId) {
+        return baseUrl + "download/" + textureId;
     }
 }

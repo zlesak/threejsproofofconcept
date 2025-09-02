@@ -2,6 +2,7 @@ package cz.uhk.zlesak.threejslearningapp.models.entities.quickEntities;
 
 import lombok.*;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -21,4 +22,19 @@ public class QuickModelEntity extends QuickFile {
     QuickFileEntity model;
     QuickTextureEntity mainTexture;
     List<QuickTextureEntity> otherTextures;
+
+    /**
+     * Provides list of all textures assigned to the model including main texture.
+     * @return list of model textures
+     */
+    public List<QuickTextureEntity> getAllTextures(){
+        List<QuickTextureEntity> allTextures = new ArrayList<>();
+        if(mainTexture != null){
+            allTextures.add(mainTexture);
+        }
+        if(otherTextures != null && !otherTextures.isEmpty()){
+            allTextures.addAll(otherTextures);
+        }
+        return allTextures;
+    }
 }

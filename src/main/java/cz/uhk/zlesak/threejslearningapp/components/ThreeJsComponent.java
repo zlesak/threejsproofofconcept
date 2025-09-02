@@ -87,9 +87,9 @@ public class ThreeJsComponent extends Component {
      * Loading methods are now separated into two methods, one for basic models and one for advanced models.
      * This allows for more flexibility in handling different types of models  based on the selected model upload method.
      *
-     * @param base64Model the base64 encoded string of the model data.
+     * @param modelUrl the base64 encoded string of the model data.
      */
-    private void loadModel(String base64Model) {
+    private void loadModel(String modelUrl) {
         getElement().executeJs("""
                 try {
                     if (typeof window.loadModel === 'function') {
@@ -98,7 +98,7 @@ public class ThreeJsComponent extends Component {
                 } catch (e) {
                     console.error('[JS] Error in loadModel:', e);
                 }
-                """, getElement(), "data:application/octet-stream;base64," + base64Model);
+                """, getElement(), modelUrl);
     }
 
     /**
@@ -125,7 +125,7 @@ public class ThreeJsComponent extends Component {
                     } catch (e) {
                         console.error('[JS] Error in loadAdvancedModel:', e);
                     }
-                    """, getElement(), "data:application/octet-stream;base64," + objectUrl, "data:application/octet-stream;base64," + textureUrl);
+                    """, getElement(), objectUrl, textureUrl);
         }
     }
 
@@ -152,11 +152,11 @@ public class ThreeJsComponent extends Component {
      * It calls the JavaScript function addTexture to handle the addition of the texture.
      * This is used to apply textures to models in the scene.
      *
-     * @param base64Textures the base64 encoded string of the texture data.
+     * @param otherTexturesUrl the base64 encoded string of the texture data.
      */
-    public void addOtherTextures(Map<String, String> base64Textures) {
-        if (base64Textures.isEmpty()) return;
-        String jsonTextures = new com.google.gson.Gson().toJson(base64Textures);
+    public void addOtherTextures(Map<String, String> otherTexturesUrl) {
+        if (otherTexturesUrl.isEmpty()) return;
+        String jsonTextures = new com.google.gson.Gson().toJson(otherTexturesUrl);
         getElement().executeJs("""
                 try {
                     if (typeof window.addOtherTextures === 'function') {

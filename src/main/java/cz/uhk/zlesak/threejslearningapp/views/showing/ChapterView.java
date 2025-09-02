@@ -55,11 +55,8 @@ public class ChapterView extends ChapterScaffold {
     public void beforeLeave(BeforeLeaveEvent event) {
         BeforeLeaveEvent.ContinueNavigationAction postponed = event.postpone();
         UI ui = UI.getCurrent();
-        if (renderer != null) {
-            renderer.dispose(() -> ui.access(() -> {
-                modelDiv.remove(renderer);
-                postponed.proceed();
-            }));
+        if (modelDiv.renderer != null) {
+            modelDiv.renderer.dispose(() -> ui.access(postponed::proceed));
         } else {
             postponed.proceed();
         }
@@ -111,20 +108,20 @@ public class ChapterView extends ChapterScaffold {
 
             try {
                 QuickModelEntity quickModelEntity = chapterController.getChapterFirstQuickModelEntity(chapterId);
-                String base64Model = modelController.getModelBase64(quickModelEntity.getModel().getId());
-                String base64Texture = null;
+                String model = modelController.getModelFileBeEndpointUrl(quickModelEntity.getModel().getId());
+                String texture = null;
                 if (quickModelEntity.getMainTexture() != null) {
-                    base64Texture = textureController.getTextureBase64(quickModelEntity.getMainTexture().getTextureFileId());
+                    texture = textureController.getTextureFileBeEndpointUrl(quickModelEntity.getMainTexture().getTextureFileId());
                 }
-                renderer.loadModel(base64Model, base64Texture);
+                modelDiv.renderer.loadModel(model, texture);
 
-                if (quickModelEntity.getMainTexture() != null) {
-                    renderer.addOtherTextures(chapterController.getOtherTextures(chapterId, textureController));
+                if (quickModelEntity.getOtherTextures() != null) {
+                    modelDiv.renderer.addOtherTextures(chapterController.getOtherTextures(chapterId, textureController));
 
-                    textureSelectsComponent.initializeData(chapterController.getAllChapterTextures(chapterId));
+                    modelDiv.textureSelectsComponent.initializeData(chapterController.getAllChapterTextures(chapterId));
                     editorjs.addTextureColorAreaClickListener((textureId, hexColor, text) -> {
-                        textureSelectsComponent.getTextureListingSelect().setSelectedTextureById(textureId);
-                        textureSelectsComponent.getTextureAreaSelect().setSelectedAreaByHexColor(hexColor, textureId);
+                        modelDiv.textureSelectsComponent.getTextureListingSelect().setSelectedTextureById(textureId);
+                        modelDiv.textureSelectsComponent.getTextureAreaSelect().setSelectedAreaByHexColor(hexColor, textureId);
 
                     });
                 }

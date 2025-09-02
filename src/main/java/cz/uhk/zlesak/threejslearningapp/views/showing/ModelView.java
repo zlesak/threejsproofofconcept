@@ -10,7 +10,6 @@ import cz.uhk.zlesak.threejslearningapp.controllers.ModelController;
 import cz.uhk.zlesak.threejslearningapp.controllers.TextureController;
 import cz.uhk.zlesak.threejslearningapp.i18n.CustomI18NProvider;
 import cz.uhk.zlesak.threejslearningapp.models.entities.quickEntities.QuickModelEntity;
-import cz.uhk.zlesak.threejslearningapp.models.entities.quickEntities.QuickTextureEntity;
 import cz.uhk.zlesak.threejslearningapp.utils.TextureMapHelper;
 import cz.uhk.zlesak.threejslearningapp.views.listing.ModelListView;
 import cz.uhk.zlesak.threejslearningapp.views.scaffolds.ModelScaffold;
@@ -20,9 +19,7 @@ import org.springframework.context.ApplicationContextException;
 import org.springframework.context.annotation.Scope;
 
 import java.io.IOException;
-import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 /**
  * ModelView for displaying a 3D model without the need for the sub-chapter to be present.
@@ -38,7 +35,6 @@ public class ModelView extends ModelScaffold {
     private final CustomI18NProvider i18nProvider;
     private final TextureController textureController;
     private QuickModelEntity quickModelEntity;
-    private String modelId;
 
     /**
      * Constructor for ModelView.
@@ -70,15 +66,15 @@ public class ModelView extends ModelScaffold {
         if (parameters.getParameterNames().isEmpty()) {
             event.forwardTo(ModelListView.class);
         }
-        this.modelId = parameters.get("modelId").orElse(null);
-        if (this.modelId == null) {
+
+        if (parameters.get("modelId").orElse(null) == null) {
             event.forwardTo(ModelListView.class);
         }
 
         //TODO remove after BE implementation of geting model by modelEntityId
-        if(VaadinSession.getCurrent().getAttribute("quickModelEntity") != null) {
+        if (VaadinSession.getCurrent().getAttribute("quickModelEntity") != null) {
             this.quickModelEntity = (QuickModelEntity) VaadinSession.getCurrent().getAttribute("quickModelEntity");
-        }else{
+        } else {
             event.forwardTo(ModelListView.class);
         }
     }
@@ -93,7 +89,7 @@ public class ModelView extends ModelScaffold {
     @Override
     public void beforeLeave(BeforeLeaveEvent event) {
         BeforeLeaveEvent.ContinueNavigationAction postponed = event.postpone();
-        renderer.dispose((SerializableRunnable) () -> UI.getCurrent().access(postponed::proceed));
+        modelDiv.renderer.dispose((SerializableRunnable) () -> UI.getCurrent().access(postponed::proceed));
     }
 
     /**
@@ -115,45 +111,33 @@ public class ModelView extends ModelScaffold {
      */
     @Override
     public void afterNavigation(AfterNavigationEvent event) {
-        if (quickModelEntity != null && quickModelEntity.getModel() != null && Objects.equals(modelId, quickModelEntity.getModel().getId())) {
-            try {
-                String base64Model = modelController.getModelBase64(quickModelEntity.getModel().getId());
-                String base64Texture = null;
-                if (quickModelEntity.getMainTexture() != null) {
-                    base64Texture = textureController.getTextureBase64(quickModelEntity.getMainTexture().getTextureFileId());
-                }
-                renderer.loadModel(base64Model, base64Texture);
-            } catch (Exception e) {
-                log.error(e.getMessage());
-                new ErrorNotification("Nepovedlo se načíst model: " + e.getMessage());
-                UI.getCurrent().navigate(ModelListView.class);
-                return;
-            } finally {
-                VaadinSession.getCurrent().setAttribute("quickModelEntity", null);
-            }
-        }
-
-        if (quickModelEntity != null) {
-            if (quickModelEntity.getModel() != null && quickModelEntity.getModel().getName() != null) {
-                modelUploadFormScrollerComposition.getModelName().setValue(quickModelEntity.getModel().getName());
-            } else {
-                modelUploadFormScrollerComposition.getModelName().clear();
-            }
+        try {
+            String modelUrl = modelController.getModelFileBeEndpointUrl(quickModelEntity.getModel().getId());
+            String textureUrl = null;
             if (quickModelEntity.getMainTexture() != null) {
                 modelUploadFormScrollerComposition.getIsAdvanced().setValue(true);
+                textureUrl = textureController.getTextureFileBeEndpointUrl(quickModelEntity.getMainTexture().getTextureFileId());
+            }
+            modelUploadFormScrollerComposition.getModelName().setValue(quickModelEntity.getModel().getName());
+            modelDiv.renderer.loadModel(modelUrl, textureUrl);
+
+            if (quickModelEntity.getOtherTextures() != null && !quickModelEntity.getOtherTextures().isEmpty()) {
                 try {
                     Map<String, String> otherTexturesMap = TextureMapHelper.otherTexturesMap(quickModelEntity.getOtherTextures(), textureController);
-                    renderer.addOtherTextures(otherTexturesMap);
+                    modelDiv.renderer.addOtherTextures(otherTexturesMap);
+                    modelDiv.textureSelectsComponent.initializeData(quickModelEntity.getAllTextures());
                 } catch (IOException e) {
                     log.error(e.getMessage(), e);
                     throw new ApplicationContextException(e.getMessage());
                 }
-                List<QuickTextureEntity> allTextures = quickModelEntity.getOtherTextures();
-                allTextures.addFirst(quickModelEntity.getMainTexture());
-                textureSelectsComponent.initializeData(allTextures);
             }
+        } catch (Exception e) {
+            log.error(e.getMessage());
+            new ErrorNotification("Nepovedlo se načíst model: " + e.getMessage(), 5000);
+            throw e;
+        } finally {
+            VaadinSession.getCurrent().setAttribute("quickModelEntity", null);
         }
-
         modelUploadFormScrollerComposition.listingMode();
     }
 }

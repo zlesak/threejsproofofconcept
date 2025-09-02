@@ -12,9 +12,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContextException;
 import org.springframework.context.annotation.Scope;
+import org.springframework.core.io.InputStreamResource;
 import org.springframework.stereotype.Component;
 
-import java.io.IOException;
 import java.util.List;
 
 /**
@@ -139,22 +139,6 @@ public class ModelController {
     }
 
     /**
-     * Retrieves the base64 representation of a model by its ID.
-     * The base64 format is used to transfer the model to the Three.js renderer.
-     * This method checks if the model entity is already loaded; if not, it fetches it using the getModel method.
-     *
-     * @param modelId the ID of the model for which the base64 representation is requested.
-     * @return the base64 representation of the model file as a String.
-     * @throws IOException if there is an error during the retrieval of the model entity or its base64 representation.
-     */
-    public String getModelBase64(String modelId) throws IOException {
-        if (this.modelEntity == null || !this.modelEntity.getId().equals(modelId)) {
-            this.getModel(modelId);
-        }
-        return modelEntity.getBase64File();
-    }
-
-    /**
      * Retrieves models saved in the BE.
      * Currently, it retrieves only the first 10 models due to pagination.
      *
@@ -168,5 +152,60 @@ public class ModelController {
             log.error("Chyba při získávání stránkování modelů pro page {}, limit {}, error message: {}", page, limit, e.getMessage(), e);
             throw new RuntimeException("Chyba při získávání modelu: " + e.getMessage(), e);
         }
+    }
+
+    /**
+     * Retrieves the InputStream of a model file by its ID.
+     * If the model entity is not already loaded or if the loaded entity does not match the requested ID,
+     * it fetches the model entity using the getModel method.
+     *
+     * @param modelId the ID of the model whose InputStream is to be retrieved.
+     * @return the InputStream of the model file.
+     */
+    public InputStreamResource getInputStream(String modelId) {
+        if (this.modelEntity == null) {
+            this.getModel(modelId);
+        } else if (this.modelEntity.getId() == null || !this.modelEntity.getId().equals(modelId)) {
+            this.getModel(modelId);
+        }
+        return new InputStreamResource(modelEntity.getFile().getInputStream());
+    }
+
+    /**
+     * Constructs the endpoint URL for streaming the model file by its ID.
+     * If the model entity is not already loaded or if the loaded entity does not match the requested ID,
+     * it fetches the model entity using the getModel method.
+     *
+     * @param modelId the ID of the model whose stream endpoint URL is to be constructed.
+     * @return the endpoint URL for streaming the model file.
+     */
+    public String getModelStreamEndpoint(String modelId, boolean advanced) {
+        return "/api/model/" + modelId + "/stream" + (advanced ? "?advanced=true" : "?advanced=false");
+    }
+
+    /**
+     * Retrieves the name of a model by its ID.
+     * If the model entity is not already loaded or if the loaded entity does not match the requested ID,
+     * it fetches the model entity using the getModel method.
+     *
+     * @param modelId the ID of the model whose name is to be retrieved.
+     * @return the name of the model.
+     */
+    public String getModelName(String modelId) {
+        if (this.modelEntity == null) {
+            this.getModel(modelId);
+        } else if (this.modelEntity.getId() == null || !this.modelEntity.getId().equals(modelId)) {
+            this.getModel(modelId);
+        }
+        return this.modelEntity.getName();
+    }
+
+    /**
+     * Retrieves the URL for texture file BE endpoint by texture ID.
+     * @param textureId the ID of the texture whose URL is to be retrieved.
+     * @return the URL for the texture file BE endpoint.
+     */
+    public String getModelFileBeEndpointUrl(String textureId) {
+        return modelApiClient.getModelFileBeEndpointUrl(textureId);
     }
 }

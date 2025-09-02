@@ -11,14 +11,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContextException;
 import org.springframework.context.annotation.Scope;
+import org.springframework.core.io.InputStreamResource;
 import org.springframework.stereotype.Component;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 /**
  * TextureController is responsible for handling texture-related operations such as uploading textures,
@@ -136,7 +135,9 @@ public class TextureController {
      * @return a StreamResource representing the texture image
      */
     public StreamResource getTextureImage(String textureId) {
-        if (this.textureEntity == null || !Objects.equals(this.textureEntity.getId(), textureId)) {
+        if(this.textureEntity == null){
+            this.getTexture(textureId);
+        }else if (this.textureEntity.getId() == null || !this.textureEntity.getId().equals(textureId)) {
             this.getTexture(textureId);
         }
         InputStreamMultipartFile texture = this.textureEntity.getFile();
@@ -152,25 +153,45 @@ public class TextureController {
      * @return the name of the texture
      */
     public String getTextureName(String textureId) {
-        if (this.textureEntity == null || !Objects.equals(this.textureEntity.getId(), textureId)) {
+        if(this.textureEntity == null){
+            this.getTexture(textureId);
+        }else if (this.textureEntity.getId() == null || !this.textureEntity.getId().equals(textureId)) {
             this.getTexture(textureId);
         }
         return this.textureEntity.getName();
     }
 
     /**
-     * Retrieves the base64 representation of the texture file by its ID.
+     * Retrieves the texture file as an InputStream by its ID.
      * If the texture entity is not already cached or if the cached entity does not match the requested ID,
      * it fetches the texture entity from the server.
-     * @param textureId the ID of the texture whose base64 representation is to be retrieved
-     * @return the base64 representation of the texture file
-     * @throws IOException if an I/O error occurs while reading the texture file
+     * @param textureId the ID of the texture to be retrieved
+     * @return an InputStream of the texture file
      */
-    public String getTextureBase64(String textureId) throws IOException {
-        if (this.textureEntity == null || !Objects.equals(this.textureEntity.getId(), textureId)) {
+    public InputStreamResource getInputStream(String textureId) {
+        if(this.textureEntity == null){
+            this.getTexture(textureId);
+        }else if (this.textureEntity.getId() == null || !this.textureEntity.getId().equals(textureId)) {
             this.getTexture(textureId);
         }
-        return textureEntity.getBase64File();
+        return new InputStreamResource(textureEntity.getFile().getInputStream());
+    }
+
+    /**
+     * Generates the endpoint URL for streaming the texture by its ID.
+     * @param textureId the ID of the texture
+     * @return the endpoint URL for streaming the texture
+     */
+    public String getTextureStreamEndpointUrl(String textureId){
+        return "/api/texture/" + textureId + "/stream";
+    }
+
+    /**
+     * Generates the backend endpoint URL for accessing the texture file by its ID.
+     * @param textureId the ID of the texture
+     * @return the backend endpoint URL for the texture file
+     */
+    public String getTextureFileBeEndpointUrl(String textureId){
+        return textureApiClient.getTextureStreamBeEndpointUrl(textureId);
     }
 }
-

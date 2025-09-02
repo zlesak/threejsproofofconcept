@@ -1,23 +1,28 @@
 package cz.uhk.zlesak.threejslearningapp.views.scaffolds;
 
 import com.vaadin.flow.component.Composite;
+import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.theme.lumo.LumoUtility;
 import cz.uhk.zlesak.threejslearningapp.components.ModelDiv;
-import cz.uhk.zlesak.threejslearningapp.components.ThreeJsComponent;
 import cz.uhk.zlesak.threejslearningapp.components.compositions.ModelUploadFormScrollerComposition;
-import cz.uhk.zlesak.threejslearningapp.components.compositions.TextureSelectsComponent;
+import cz.uhk.zlesak.threejslearningapp.controllers.ModelController;
+import cz.uhk.zlesak.threejslearningapp.models.entities.quickEntities.QuickModelEntity;
+import cz.uhk.zlesak.threejslearningapp.components.notifications.ErrorNotification;
+import cz.uhk.zlesak.threejslearningapp.components.notifications.InfoNotification;
 import cz.uhk.zlesak.threejslearningapp.views.IView;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationContextException;
 import org.springframework.context.annotation.Scope;
+
+import java.util.function.Consumer;
 
 @Slf4j
 @Scope("prototype")
 public abstract class ModelScaffold extends Composite<VerticalLayout> implements IView {
-    protected final ThreeJsComponent renderer = new ThreeJsComponent();
-    protected final ModelDiv modelDiv = new ModelDiv(renderer);
-    protected final TextureSelectsComponent textureSelectsComponent = new TextureSelectsComponent(renderer);
+    protected final ModelDiv modelDiv = new ModelDiv();
     protected final ModelUploadFormScrollerComposition modelUploadFormScrollerComposition;
 
     public ModelScaffold() {
@@ -26,25 +31,24 @@ public abstract class ModelScaffold extends Composite<VerticalLayout> implements
         modelUploadFormScrollerComposition = new ModelUploadFormScrollerComposition();
 
         modelUploadFormScrollerComposition.addModelLoadEventListener(
-                event -> renderer.loadModel(event.getBase64Model(), event.getBase64Texture())
+                event -> modelDiv.renderer.loadModel(event.getBase64Model(), event.getBase64Texture())
         ).addModelClearEventListener(
-                event -> renderer.clear()
+                event -> modelDiv.renderer.clear()
         ).addOtherTextureLoadedEventListener(
-                event -> renderer.addOtherTextures(event.getBase64Textures())
+                event -> modelDiv.renderer.addOtherTextures(event.getBase64Textures())
         ).addOtherTextureRemovedEventListener(
-                event -> renderer.removeOtherTexture(event.getName())
+                event -> modelDiv.renderer.removeOtherTexture(event.getName())
         ).addTextureChangeEventListener(
-                event -> textureSelectsComponent.initializeData(event.getQuickTextureEntity())
+                event -> modelDiv.textureSelectsComponent.initializeData(event.getQuickTextureEntity())
         );
 
-        renderer.getStyle().set("width", "100%");
         modelDiv.setId("modelDiv");
         modelDiv.setSizeFull();
         modelDiv.getStyle().set("min-width", "0");
 
         //Model layout
         VerticalLayout chapterModel = new VerticalLayout();
-        chapterModel.add(textureSelectsComponent, modelDiv);
+        chapterModel.add(modelDiv);
         chapterModel.addClassName(LumoUtility.Gap.MEDIUM);
         chapterModel.setSizeFull();
         chapterModel.setPadding(false);
@@ -66,5 +70,48 @@ public abstract class ModelScaffold extends Composite<VerticalLayout> implements
         getContent().setWidth("100%");
         getContent().setHeightFull();
         getContent().setMinHeight("0");
+    }
+
+    /**
+     * Creates a button that, when clicked, uploads a model using the provided ModelController.
+     * It retrieves the necessary data from the ModelUploadFormScrollerComposition and handles success and error
+     * notifications. If the model is successfully created, it invokes the onModelCreated consumer with the created
+     * QuickModelEntity.
+     * @param modelController the controller used to upload the model
+     * @param onModelCreated a consumer that accepts the created QuickModelEntity upon successful upload
+     * @return the created Button
+     */
+    protected Button createModelButton(ModelController modelController, Consumer<QuickModelEntity> onModelCreated) {
+        Button createButton = new Button("Vytvořit model");
+        createButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        createButton.addClickListener(event -> {
+            QuickModelEntity quickModelEntity;
+            try {
+                if (modelUploadFormScrollerComposition.getIsAdvanced().getValue()) {
+                    quickModelEntity = modelController.uploadModel(
+                            modelUploadFormScrollerComposition.getModelName().getValue().trim(),
+                            modelUploadFormScrollerComposition.getObjUploadComponent().getUploadedFiles().getFirst(),
+                            modelUploadFormScrollerComposition.getMainTextureUploadComponent().getUploadedFiles().getFirst(),
+                            modelUploadFormScrollerComposition.getOtherTexturesUploadComponent().getUploadedFiles(),
+                            modelUploadFormScrollerComposition.getCsvUploadComponent().getUploadedFiles()
+                    );
+                } else {
+                    quickModelEntity = modelController.uploadModel(
+                            modelUploadFormScrollerComposition.getModelName().getValue().trim(),
+                            modelUploadFormScrollerComposition.getObjUploadComponent().getUploadedFiles().getFirst()
+                    );
+                }
+                new InfoNotification("Úspěšně nahráno");
+                if (onModelCreated != null) {
+                    onModelCreated.accept(quickModelEntity);
+                }
+            } catch (ApplicationContextException e) {
+                new ErrorNotification("Chyba při nahrávání modelu: " + e.getMessage());
+            } catch (Exception e) {
+                log.error("Error uploading model", e);
+                new ErrorNotification("Chyba při nahrávání modelu: " + e.getMessage());
+            }
+        });
+        return createButton;
     }
 }

@@ -229,9 +229,9 @@ class ThreeTest {
       this.finishedActions();
       return;
     }
-    await Promise.all(entries.map(([id, base64]) => {
+    await Promise.all(entries.map(([id, url]) => {
       return new Promise((resolve) => {
-        textureLoader.load(base64, (texture) => {
+        textureLoader.load(url, (texture) => {
           this.otherTextures.push({ id, texture });
           resolve();
         }, undefined, (error) => {

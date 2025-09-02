@@ -34,19 +34,18 @@ public abstract class TextureMapHelper {
     }
 
     /**
-     * Creates a map of texture IDs to their corresponding base64-encoded texture data URIs from a list of QuickTextureEntity objects.
-     * Uses the TextureController to retrieve the base64-encoded texture data.
-     * @see TextureController#getTextureBase64(String)
+     * Creates a map of texture file IDs to their corresponding texture stream endpoint URLs.
+     * Uses the provided TextureController to generate the URLs.
      * @param quickTextureEntityList the list of QuickTextureEntity objects
-     * @param textureController the TextureController used to retrieve texture data
-     * @return a map where the key is the texture ID and the value is the base64-encoded texture data URI
-     * @throws IOException if an I/O error occurs while retrieving texture data
+     * @param textureController the TextureController used to get the texture stream endpoint URLs
+     * @return a map where the key is the texture file ID and the value is the texture stream endpoint URL
+     * @throws IOException if an I/O error occurs while retrieving the texture stream endpoint URL
      */
     public static Map<String, String> otherTexturesMap(List<QuickTextureEntity> quickTextureEntityList, TextureController textureController) throws IOException {
         Map<String, String> otherTextures = new HashMap<>();
         for (QuickTextureEntity texture : quickTextureEntityList) {
-            String otherTextureBase64 = textureController.getTextureBase64(texture.getTextureFileId());
-            otherTextures.put(texture.getTextureFileId(), "data:application/octet-stream;base64," + otherTextureBase64);
+            String textureUrl = textureController.getTextureStreamEndpointUrl(texture.getTextureFileId());
+            otherTextures.put(texture.getTextureFileId(), textureUrl);
         }
         return otherTextures;
     }

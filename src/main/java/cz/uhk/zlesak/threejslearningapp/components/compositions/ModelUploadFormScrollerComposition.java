@@ -8,6 +8,9 @@ import com.vaadin.flow.component.orderedlayout.Scroller;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.component.upload.receivers.MultiFileMemoryBuffer;
+import com.vaadin.flow.server.StreamRegistration;
+import com.vaadin.flow.server.StreamResource;
+import com.vaadin.flow.server.VaadinSession;
 import cz.uhk.zlesak.threejslearningapp.components.NameTextField;
 import cz.uhk.zlesak.threejslearningapp.components.ThreeJsComponent;
 import cz.uhk.zlesak.threejslearningapp.components.UploadComponent;
@@ -18,7 +21,10 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.InputStream;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * ModelUploadFormScroller is a custom Vaadin component that provides a form for uploading 3D models and their associated textures.
@@ -39,9 +45,9 @@ public class ModelUploadFormScrollerComposition extends Scroller {
     protected final UploadComponent objUploadComponent, mainTextureUploadComponent, otherTexturesUploadComponent, csvUploadComponent;
     private final Map<String, QuickTextureEntity> quickTextureEntityMap = new HashMap<>();
     private final Map<String, String> csvMap = new HashMap<>();
-    protected String base64Model = null;
-    protected String base64Texture = null;
-    protected List<String> otherBase64Texture = new ArrayList<>();
+    protected String modelUrl = null;
+    protected String textureUrl = null;
+    protected List<String> otherTexturesUrls = new ArrayList<>();
     protected List<String> csvBase64 = new ArrayList<>();
 
     /**
@@ -81,14 +87,17 @@ public class ModelUploadFormScrollerComposition extends Scroller {
             InputStream inputStream = ((MultiFileMemoryBuffer) objUploadComponent.getReceiver()).getInputStream(fileName);
             if (inputStream != null) {
                 try {
-                    byte[] bytes = inputStream.readAllBytes();
-                    base64Model = Base64.getEncoder().encodeToString(bytes);
-                    if (!isAdvanced.getValue()) {
-                        fireEvent(new ModelLoadEvent(this, base64Model, null));
+                    String contentType;
+                    if (fileName.toLowerCase().endsWith(".obj") || isAdvanced.getValue()) {
+                        contentType = "text/plain";
                     } else {
-                        if (base64Texture != null) {
-                            fireEvent(new ModelLoadEvent(this, base64Model, base64Texture));
-                        }
+                        contentType = "model/gltf-binary";
+                    }
+                    modelUrl = registerStreamUrl(fileName, contentType, inputStream);
+                    if (!isAdvanced.getValue()) {
+                        fireEvent(new ModelLoadEvent(this, modelUrl, null));
+                    } else if (textureUrl != null) {
+                        fireEvent(new ModelLoadEvent(this, modelUrl, textureUrl));
                     }
                 } catch (Exception ex) {
                     log.error("Chyba při zpracování modelu", ex);
@@ -100,9 +109,9 @@ public class ModelUploadFormScrollerComposition extends Scroller {
             isAdvanced.setReadOnly(false);
             mainTextureUploadComponent.clear();
             otherTexturesUploadComponent.clear();
-            base64Model = null;
-            base64Texture = null;
-            otherBase64Texture.clear();
+            modelUrl = null;
+            textureUrl = null;
+            otherTexturesUrls.clear();
         });
 
         mainTextureUploadComponent.addSucceededListener(event -> {
@@ -113,10 +122,9 @@ public class ModelUploadFormScrollerComposition extends Scroller {
             InputStream inputStream = ((MultiFileMemoryBuffer) mainTextureUploadComponent.getReceiver()).getInputStream(fileName);
             if (inputStream != null) {
                 try {
-                    byte[] bytes = inputStream.readAllBytes();
-                    base64Texture = Base64.getEncoder().encodeToString(bytes);
-                    if (base64Model != null) {
-                        fireEvent(new ModelLoadEvent(this, base64Model, base64Texture));
+                    textureUrl = registerStreamUrl(fileName, "image/jpeg", inputStream);
+                    if (modelUrl != null) {
+                        fireEvent(new ModelLoadEvent(this, modelUrl, textureUrl));
                         fireEvent(new ModelTextureChangeEvent(this, textureUploaded(event.getFileName())));
                     }
                 } catch (Exception ex) {
@@ -129,7 +137,7 @@ public class ModelUploadFormScrollerComposition extends Scroller {
             fireEvent(new ModelTextureChangeEvent(this, textureDeleted(event.getFileName())));
             uploadOtherTexturesDiv.setEnabled(false);
             csvOtherTexturesDiv.setEnabled(false);
-            base64Texture = null;
+            textureUrl = null;
         });
 
         otherTexturesUploadComponent.addSucceededListener(event -> {
@@ -137,12 +145,11 @@ public class ModelUploadFormScrollerComposition extends Scroller {
             InputStream inputStream = ((MultiFileMemoryBuffer) otherTexturesUploadComponent.getReceiver()).getInputStream(fileName);
             if (inputStream != null) {
                 try {
-                    byte[] bytes = inputStream.readAllBytes();
-                    String base64 = Base64.getEncoder().encodeToString(bytes);
-                    otherBase64Texture.add(base64);
-                    Map<String, String> base64Textures = new HashMap<>();
-                    base64Textures.put(fileName, "data:application/octet-stream;base64," + base64);
-                    fireEvent(new OtherTextureLoadedEvent(this, base64Textures));
+                    String url = registerStreamUrl(fileName, "image/jpeg", inputStream);
+                    otherTexturesUrls.add(url);
+                    Map<String, String> otherTextures = new HashMap<>();
+                    otherTextures.put(fileName, url);
+                    fireEvent(new OtherTextureLoadedEvent(this, otherTextures));
                     fireEvent(new ModelTextureChangeEvent(this, textureUploaded(event.getFileName())));
                 } catch (Exception ex) {
                     log.error("Chyba při zpracování další textury", ex);
@@ -150,19 +157,8 @@ public class ModelUploadFormScrollerComposition extends Scroller {
             }
         });
         otherTexturesUploadComponent.addFileRemovedListener(event -> {
-            String fileName = event.getFileName();
-            InputStream inputStream = ((MultiFileMemoryBuffer) otherTexturesUploadComponent.getReceiver()).getInputStream(fileName);
-            if (inputStream != null) {
-                try {
-                    byte[] bytes = inputStream.readAllBytes();
-                    String base64 = Base64.getEncoder().encodeToString(bytes);
-                    otherBase64Texture.remove(base64);
-                    fireEvent(new OtherTextureRemovedEvent(this, event.getFileName()));
-                    fireEvent(new ModelTextureChangeEvent(this, textureDeleted(event.getFileName())));
-                } catch (Exception ex) {
-                    log.error("Chyba při zpracování další textury", ex);
-                }
-            }
+            fireEvent(new OtherTextureRemovedEvent(this, event.getFileName()));
+            fireEvent(new ModelTextureChangeEvent(this, textureDeleted(event.getFileName())));
         });
 
         csvUploadComponent.addSucceededListener(event -> {
@@ -170,10 +166,9 @@ public class ModelUploadFormScrollerComposition extends Scroller {
             InputStream inputStream = ((MultiFileMemoryBuffer) csvUploadComponent.getReceiver()).getInputStream(fileName);
             if (inputStream != null) {
                 try {
-                    byte[] bytes = inputStream.readAllBytes();
-                    String csvContent = new String(bytes, java.nio.charset.StandardCharsets.UTF_8);
-                    String base64 = Base64.getEncoder().encodeToString(bytes);
+                    String base64 = java.util.Base64.getEncoder().encodeToString(inputStream.readAllBytes());
                     csvBase64.add(base64);
+                    String csvContent = new String(java.util.Base64.getDecoder().decode(base64), java.nio.charset.StandardCharsets.UTF_8);
                     csvUploaded(fileName, csvContent);
                 } catch (Exception ex) {
                     log.error("Chyba při zpracování CSV souboru", ex);
@@ -182,17 +177,7 @@ public class ModelUploadFormScrollerComposition extends Scroller {
         });
         csvUploadComponent.addFileRemovedListener(event -> {
             String fileName = event.getFileName();
-            InputStream inputStream = ((MultiFileMemoryBuffer) csvUploadComponent.getReceiver()).getInputStream(fileName);
-            if (inputStream != null) {
-                try {
-                    byte[] bytes = inputStream.readAllBytes();
-                    String base64 = Base64.getEncoder().encodeToString(bytes);
-                    csvBase64.remove(base64);
-                    csvDeleted(fileName);
-                } catch (Exception ex) {
-                    log.error("Chyba při zpracování CSV souboru", ex);
-                }
-            }
+            csvDeleted(fileName);
         });
 
         hideAdvancedModelUpload();
@@ -210,6 +195,20 @@ public class ModelUploadFormScrollerComposition extends Scroller {
         vl.setWidthFull();
         vl.setPadding(false);
         vl.add(topHorizontalLayout, uploadModelDiv, uploadMainTextureDiv, uploadOtherTexturesDiv, csvOtherTexturesDiv);
+    }
+
+    /**
+     * Registers resource URL to provide files via streaming endpoint from front end side.
+     * @param fileName name of the file
+     * @param contentType content type of the file
+     * @param inputStream file in input stream format
+     * @return registered stream URL in Vaadin session
+     */
+    private String registerStreamUrl(String fileName, String contentType, InputStream inputStream) {
+        StreamResource resource = new StreamResource(fileName, () -> inputStream);
+        resource.setContentType(contentType);
+        StreamRegistration registration = VaadinSession.getCurrent().getResourceRegistry().registerResource(resource);
+        return registration.getResourceUri().toString();
     }
 
     /**

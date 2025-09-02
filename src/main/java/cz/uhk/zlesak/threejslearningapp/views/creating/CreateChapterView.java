@@ -207,11 +207,8 @@ public class CreateChapterView extends ChapterScaffold {
         if (skipBeforeLeaveDialog) {
             BeforeLeaveEvent.ContinueNavigationAction postponed = event.postpone();
             var ui = event.getUI();
-            if (renderer != null) {
-                renderer.dispose(() -> ui.access(() -> {
-                    modelDiv.remove(renderer);
-                    postponed.proceed();
-                }));
+            if (modelDiv.renderer != null) {
+                modelDiv.renderer.dispose(() -> ui.access(postponed::proceed));
             } else {
                 postponed.proceed();
             }
@@ -220,11 +217,8 @@ public class CreateChapterView extends ChapterScaffold {
 
         BeforeLeaveActionDialog.leave(event, postponed -> {
             var ui = event.getUI();
-            if (renderer != null) {
-                renderer.dispose(() -> ui.access(() -> {
-                    modelDiv.remove(renderer);
-                    postponed.proceed();
-                }));
+            if (modelDiv.renderer != null) {
+                modelDiv.renderer.dispose(() -> ui.access(postponed::proceed));
             } else {
                 postponed.proceed();
             }
@@ -264,25 +258,25 @@ public class CreateChapterView extends ChapterScaffold {
      * @throws IOException if there is an error loading the model or textures
      */
     private void rendererSelectsAndEditorPreparation(QuickModelEntity quickModelEntity) throws IOException {
-        String base64ModelFile = modelController.getModelBase64(quickModelEntity.getModel().getId());
-        String textureFileEntity = null;
+        String modelUrl = modelController.getModelStreamEndpoint(quickModelEntity.getModel().getId(), quickModelEntity.getMainTexture() != null);
+        String textureUrl = null;
         if (quickModelEntity.getMainTexture() != null) {
-            textureFileEntity = textureController.getTextureBase64(quickModelEntity.getMainTexture().getTextureFileId());
+            textureUrl = textureController.getTextureStreamEndpointUrl(quickModelEntity.getMainTexture().getTextureFileId());
         }
-        renderer.loadModel(base64ModelFile, textureFileEntity);
+        modelDiv.renderer.loadModel(modelUrl, textureUrl);
 
-        if(textureFileEntity != null) {
+        if(textureUrl != null) {
             List<QuickTextureEntity> allTextures = new ArrayList<>(quickModelEntity.getOtherTextures());
-            renderer.addOtherTextures(TextureMapHelper.otherTexturesMap(allTextures, textureController));
+            modelDiv.renderer.addOtherTextures(TextureMapHelper.otherTexturesMap(allTextures, textureController));
 
             editorjs.initializeTextureSelects(quickModelEntity.getOtherTextures());
             editorjs.addTextureColorAreaClickListener((textureId, hexColor, text) -> {
-                textureSelectsComponent.getTextureListingSelect().setSelectedTextureById(textureId);
-                textureSelectsComponent.getTextureAreaSelect().setSelectedAreaByHexColor(hexColor, textureId);
+                modelDiv.textureSelectsComponent.getTextureListingSelect().setSelectedTextureById(textureId);
+                modelDiv.textureSelectsComponent.getTextureAreaSelect().setSelectedAreaByHexColor(hexColor, textureId);
 
             });
             allTextures.addFirst(quickModelEntity.getMainTexture());
-            textureSelectsComponent.initializeData(allTextures);
+            modelDiv.textureSelectsComponent.initializeData(allTextures);
         }
     }
 }

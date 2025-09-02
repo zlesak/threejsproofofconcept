@@ -8,7 +8,6 @@ import com.vaadin.flow.component.orderedlayout.Scroller;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.theme.lumo.LumoUtility.Gap;
 import cz.uhk.zlesak.threejslearningapp.components.*;
-import cz.uhk.zlesak.threejslearningapp.components.compositions.TextureSelectsComponent;
 import cz.uhk.zlesak.threejslearningapp.components.selects.ChapterSelect;
 import cz.uhk.zlesak.threejslearningapp.i18n.CustomI18NProvider;
 import cz.uhk.zlesak.threejslearningapp.utils.SpringContextUtils;
@@ -35,9 +34,7 @@ public abstract class ChapterScaffold extends Composite<VerticalLayout> implemen
     protected final NameTextField nameTextField = new NameTextField("Název kapitoly");
     protected final VerticalLayout chapterNavigation, chapterContent, chapterModel;
     protected final CustomI18NProvider i18NProvider;
-    protected ThreeJsComponent renderer = new ThreeJsComponent();
-    protected final ModelDiv modelDiv = new ModelDiv(renderer);
-    protected final TextureSelectsComponent textureSelectsComponent = new TextureSelectsComponent(renderer);
+    protected final ModelDiv modelDiv = new ModelDiv();
 
     /**
      * Constructor for ChapterScaffold.
@@ -87,7 +84,7 @@ public abstract class ChapterScaffold extends Composite<VerticalLayout> implemen
 
         //Model layout
 
-        chapterModel.add(textureSelectsComponent, modelDiv);
+        chapterModel.add(modelDiv);
         chapterModel.addClassName(Gap.MEDIUM);
         chapterModel.setSizeFull();
         chapterModel.setPadding(false);

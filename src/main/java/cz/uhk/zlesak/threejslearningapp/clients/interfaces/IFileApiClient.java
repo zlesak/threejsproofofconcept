@@ -20,6 +20,5 @@ public interface IFileApiClient extends IApiClient {
     List<Entity> getFileEntitiesByAuthor(String authorId) throws Exception;
     PageResult<QuickFile> getFileEntities(int page, int limit) throws Exception;
     QuickFile uploadFileEntity(InputStreamMultipartFile inputStream, IEntity entity) throws Exception;
-    Entity downloadFileEntityById(String fileEntityId) throws Exception;
     void deleteFileEntity(String modelId) throws Exception;
 }
