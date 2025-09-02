@@ -194,6 +194,6 @@ public class ModelApiClient implements IFileApiClient {
      * @return the complete URL to download the model file
      */
     public String getModelFileBeEndpointUrl(String modelId) {
-        return baseUrl + "download/" + modelId;
+        return IApiClient.getLocalBaseBeUrl() + "model/download/" + modelId;
     }
 }

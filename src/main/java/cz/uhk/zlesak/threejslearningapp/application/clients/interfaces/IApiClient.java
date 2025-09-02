@@ -19,5 +19,9 @@ public interface IApiClient {
         return "http://kotlin-backend:8080/api/";
     }
 
+    static  String getLocalBaseBeUrl() {
+        return "http://localhost:8080/api/";
+    }
+
 }
 

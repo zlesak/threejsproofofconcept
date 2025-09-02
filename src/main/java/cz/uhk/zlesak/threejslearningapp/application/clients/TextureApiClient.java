@@ -168,6 +168,6 @@ public class TextureApiClient implements IFileApiClient {
      * @return The URL for downloading the texture.
      */
     public String getTextureStreamBeEndpointUrl(String textureId) {
-        return baseUrl + "download/" + textureId;
+        return IApiClient.getLocalBaseBeUrl() + "texture/download/" + textureId;
     }
 }
