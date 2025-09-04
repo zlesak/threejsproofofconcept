@@ -40,6 +40,9 @@ public class Application implements AppShellConfigurator {
      */
     @Override
     public void configurePage(AppShellSettings settings) {
-        settings.addFavIcon("icon", "icons/MISH_icon.ico", "256x256");
+        settings.addFavIcon("icon", "/icons/MISH_icon.ico", "256x256");
+        settings.addLink("shortcut icon", "/icons/MISH_icon.ico");
+        settings.addMetaTag("description", "MISH APP - moderní systém učení");
+        settings.setPageTitle("MISH APP");
     }
 }
