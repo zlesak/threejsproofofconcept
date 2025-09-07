@@ -1,6 +1,6 @@
 package cz.uhk.zlesak.threejslearningapp.application.clients.interfaces;
 
-import cz.uhk.zlesak.threejslearningapp.application.data.files.InputStreamMultipartFile;
+import cz.uhk.zlesak.threejslearningapp.application.files.InputStreamMultipartFile;
 import cz.uhk.zlesak.threejslearningapp.application.models.entities.IEntity;
 import cz.uhk.zlesak.threejslearningapp.application.models.entities.Entity;
 import cz.uhk.zlesak.threejslearningapp.application.models.entities.quickEntities.QuickFile;

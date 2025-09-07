@@ -3,7 +3,7 @@ package cz.uhk.zlesak.threejslearningapp.application.clients;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import cz.uhk.zlesak.threejslearningapp.application.clients.interfaces.IApiClient;
 import cz.uhk.zlesak.threejslearningapp.application.clients.interfaces.IFileApiClient;
-import cz.uhk.zlesak.threejslearningapp.application.data.files.InputStreamMultipartFile;
+import cz.uhk.zlesak.threejslearningapp.application.files.InputStreamMultipartFile;
 import cz.uhk.zlesak.threejslearningapp.application.exceptions.ApiCallException;
 import cz.uhk.zlesak.threejslearningapp.application.models.entities.Entity;
 import cz.uhk.zlesak.threejslearningapp.application.models.entities.IEntity;

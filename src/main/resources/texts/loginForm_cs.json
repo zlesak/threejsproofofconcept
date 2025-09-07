@@ -1,0 +1,10 @@
+{
+  "login.title": "Přihlášení",
+  "login.description": "Zadejte své přihlašovací údaje.",
+  "login.submit": "Přihlásit se",
+  "login.password": "Heslo",
+  "login.username": "Uživatelské jméno",
+  "login.form.title": "Přihlášení",
+  "login.error.title": "Chyba přihlášení",
+  "login.error.message": "Neplatné uživatelské jméno nebo heslo."
+}

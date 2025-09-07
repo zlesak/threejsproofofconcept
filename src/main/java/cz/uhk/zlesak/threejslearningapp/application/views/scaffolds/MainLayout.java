@@ -14,7 +14,9 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.dom.ThemeList;
 import com.vaadin.flow.router.Layout;
 import com.vaadin.flow.router.RouterLink;
+import com.vaadin.flow.server.VaadinService;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
+import com.vaadin.flow.spring.security.AuthenticationContext;
 import com.vaadin.flow.theme.lumo.Lumo;
 import com.vaadin.flow.theme.lumo.LumoUtility.*;
 import cz.uhk.zlesak.threejslearningapp.application.components.AvatarItemComponent;
@@ -22,18 +24,27 @@ import cz.uhk.zlesak.threejslearningapp.application.views.creating.CreateChapter
 import cz.uhk.zlesak.threejslearningapp.application.views.creating.CreateModelView;
 import cz.uhk.zlesak.threejslearningapp.application.views.listing.ChapterListView;
 import cz.uhk.zlesak.threejslearningapp.application.views.listing.ModelListView;
+import cz.uhk.zlesak.threejslearningapp.application.views.showing.LoginView;
 import cz.uhk.zlesak.threejslearningapp.application.views.showing.MainPageView;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationContextException;
 import org.springframework.context.annotation.Scope;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 @AnonymousAllowed
 @Scope("prototype")
 @Layout
+@Slf4j
 public class MainLayout extends AppLayout {
     public MainLayout() {
         addToNavbar(createHeaderContent());
     }
 
     private Component createHeaderContent() {
+        AuthenticationContext authenticationContext = VaadinService.getCurrent().getInstantiator().getOrCreate(AuthenticationContext.class);
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         /// Header item component wrapper
         Header header = new Header();
         header.addClassNames(BoxSizing.BORDER, Display.FLEX, FlexDirection.COLUMN, Width.FULL);
@@ -56,7 +67,7 @@ public class MainLayout extends AppLayout {
         nav.add(list);
         layout.add(nav);
         /// For loop for inserting the menu items into the UL wrapper
-        for (MenuItemInfo menuItem : createMenuItems()) {
+        for (MenuItemInfo menuItem : createMenuItems(authentication)) {
             list.add(menuItem);
         }
 
@@ -89,22 +100,58 @@ public class MainLayout extends AppLayout {
         });
 
         /// Login user basic information avatar item TODO in phase where ogin is implemented via BE API react to these changes and change accordingly to use the appropriate APIs
-        AvatarItemComponent avatarItem = new AvatarItemComponent("Aria Bailey", "Endocrinologist", new Avatar("Aria Bailey"));
-        layout.add(avatarItem);
-
+        if (authentication != null && authentication.isAuthenticated() && !"anonymousUser".equals(authentication.getName())) {
+            String username = authentication.getName();
+            AvatarItemComponent avatarItem = new AvatarItemComponent(username, getUserRoleName(authentication), new Avatar(username));
+            layout.add(avatarItem);
+            Button logoutButton = new Button("Odhlásit se", VaadinIcon.SIGN_OUT.create());
+            logoutButton.addThemeVariants(ButtonVariant.LUMO_CONTRAST);
+            logoutButton.addClickListener(e -> authenticationContext.logout());
+            layout.add(logoutButton);
+        } else {
+            Button loginButton = new Button("Přihlásit se", VaadinIcon.SIGN_IN.create());
+            loginButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+            loginButton.addClickListener(e -> UI.getCurrent().navigate(LoginView.class));
+            layout.add(loginButton);
+        }
         header.add(layout);
         return header;
     }
 
     /// Function for creating menu items to appear at the top navigation
-    private MenuItemInfo[] createMenuItems() {
-        return new MenuItemInfo[]{
-                new MenuItemInfo("Domovská stránka", VaadinIcon.HOME.create(), MainPageView.class),
-                new MenuItemInfo("Vytvořit kapitolu", VaadinIcon.PENCIL.create(), CreateChapterView.class),
-                new MenuItemInfo("Nahrát model", VaadinIcon.FILE_ZIP.create(), CreateModelView.class),
-                new MenuItemInfo("Modely", VaadinIcon.FILE_TREE.create(), ModelListView.class),
-                new MenuItemInfo("Kapitoly", VaadinIcon.MODAL_LIST.create(), ChapterListView.class)
-        };
+    private MenuItemInfo[] createMenuItems(Authentication authentication) {
+        if (authentication != null && authentication.getAuthorities() != null) {
+            if (authentication.getAuthorities().stream().anyMatch(auth -> "ROLE_ADMIN".equals(auth.getAuthority()))) {
+                return new MenuItemInfo[]{
+                        new MenuItemInfo("Domovská stránka", VaadinIcon.HOME.create(), MainPageView.class),
+                        new MenuItemInfo("Vytvořit kapitolu", VaadinIcon.PENCIL.create(), CreateChapterView.class),
+                        new MenuItemInfo("Nahrát model", VaadinIcon.FILE_ZIP.create(), CreateModelView.class),
+                        new MenuItemInfo("Modely", VaadinIcon.FILE_TREE.create(), ModelListView.class),
+                        new MenuItemInfo("Kapitoly", VaadinIcon.MODAL_LIST.create(), ChapterListView.class)
+                };
+            } else if (authentication.getAuthorities().stream().anyMatch(auth -> "ROLE_USER".equals(auth.getAuthority()))) {
+                return new MenuItemInfo[]{
+                        new MenuItemInfo("Domovská stránka", VaadinIcon.HOME.create(), MainPageView.class),
+                        new MenuItemInfo("Modely", VaadinIcon.FILE_TREE.create(), ModelListView.class),
+                        new MenuItemInfo("Kapitoly", VaadinIcon.MODAL_LIST.create(), ChapterListView.class)
+                };
+            }
+        }
+        return new MenuItemInfo[]{new MenuItemInfo("Domovská stránka", VaadinIcon.HOME.create(), MainPageView.class)};
+    }
+
+    private String getUserRoleName(Authentication authentication) {
+        if (authentication != null && authentication.getAuthorities() != null) {
+            for (GrantedAuthority authority : authentication.getAuthorities()) {
+                if ("ROLE_ADMIN".equals(authority.getAuthority())) {
+                    return "Administrátor";
+                } else if ("ROLE_USER".equals(authority.getAuthority())) {
+                    return "Uživatel";
+                }
+            }
+            throw new ApplicationContextException("Role uživatele nejsou mezi známými rolemi systému" + authentication.getAuthorities().stream().map(GrantedAuthority::getAuthority).toList());
+        }
+        throw new ApplicationContextException("Neplatné role uživatele, authentication není nastavena!");
     }
 
     /// Dark theme or light theme change function
@@ -169,5 +216,4 @@ public class MainLayout extends AppLayout {
             return view;
         }
     }
-
 }

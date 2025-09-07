@@ -52,7 +52,8 @@ public class CustomI18NProvider implements I18NProvider {
                 "chapter_cs.json",
                 "generic_cs.json",
                 "pages_cs.json",
-                "uppload_component_cs.json"
+                "upload_component_cs.json",
+                "loginForm_cs.json"
         };
 
         for (String fileName : translationFiles) {

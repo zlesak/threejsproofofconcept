@@ -11,7 +11,7 @@ import com.vaadin.flow.component.upload.Upload;
 import com.vaadin.flow.server.streams.InMemoryUploadHandler;
 import com.vaadin.flow.server.streams.UploadHandler;
 import cz.uhk.zlesak.threejslearningapp.application.components.notifications.ErrorNotification;
-import cz.uhk.zlesak.threejslearningapp.application.data.files.InputStreamMultipartFile;
+import cz.uhk.zlesak.threejslearningapp.application.files.InputStreamMultipartFile;
 import cz.uhk.zlesak.threejslearningapp.application.i18n.CustomI18NProvider;
 import cz.uhk.zlesak.threejslearningapp.application.utils.SpringContextUtils;
 import lombok.Getter;

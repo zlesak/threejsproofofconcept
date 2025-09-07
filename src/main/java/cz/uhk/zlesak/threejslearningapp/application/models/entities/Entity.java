@@ -1,6 +1,6 @@
 package cz.uhk.zlesak.threejslearningapp.application.models.entities;
 
-import cz.uhk.zlesak.threejslearningapp.application.data.files.InputStreamMultipartFile;
+import cz.uhk.zlesak.threejslearningapp.application.files.InputStreamMultipartFile;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;

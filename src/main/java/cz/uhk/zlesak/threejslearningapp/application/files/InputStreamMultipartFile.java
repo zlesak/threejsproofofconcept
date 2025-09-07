@@ -1,4 +1,4 @@
-package cz.uhk.zlesak.threejslearningapp.application.data.files;
+package cz.uhk.zlesak.threejslearningapp.application.files;
 
 import lombok.Builder;
 import org.jetbrains.annotations.NotNull;

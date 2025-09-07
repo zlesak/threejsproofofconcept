@@ -2,7 +2,7 @@ package cz.uhk.zlesak.threejslearningapp.application.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import cz.uhk.zlesak.threejslearningapp.application.clients.TextureApiClient;
-import cz.uhk.zlesak.threejslearningapp.application.data.files.InputStreamMultipartFile;
+import cz.uhk.zlesak.threejslearningapp.application.files.InputStreamMultipartFile;
 import cz.uhk.zlesak.threejslearningapp.application.models.entities.TextureEntity;
 import cz.uhk.zlesak.threejslearningapp.application.models.entities.TextureUploadEntity;
 import cz.uhk.zlesak.threejslearningapp.application.models.entities.quickEntities.QuickTextureEntity;
