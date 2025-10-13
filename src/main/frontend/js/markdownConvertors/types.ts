@@ -27,6 +27,9 @@ export function inlineHtmlToMarkdown(html: string): string {
   if (!html) return '';
   let out = html;
 
+  // <br> -> '  \n' (markdown hard line break pomocí dvou mezer)
+  out = out.replace(/<br\s*\/?>(?:(?=\s)|)/gi, '  \n');
+
   out = out.replace(/<a\b([^>]*)>([\s\S]*?)<\/a>/gi, (match, attrs: string, inner: string) => {
     const texId = /data-texture-id="([^"]+)"/i.exec(attrs)?.[1];
     const hex = /data-hex-color="([^"]+)"/i.exec(attrs)?.[1];
@@ -91,7 +94,14 @@ export function inlineMarkdownToHtml(md: string): string {
     return `<a href="${href}">${formatted}</a>`;
   });
 
+  // Konce řádků
+  out = out.replace(/<br\s*\/??\s*>/gi, '<br>');
+  out = out.replace(/ {2,}\n/g, '<br>');
+  out = out.replace(/\\\n/g, '<br>');
+
   out = applyInlineFormatting(out);
 
-  return out;
+  out = out.replace(/\n+/g, ' ');
+
+  return out.trim();
 }

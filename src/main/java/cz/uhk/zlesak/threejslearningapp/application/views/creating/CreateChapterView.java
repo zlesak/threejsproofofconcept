@@ -14,6 +14,7 @@ import com.vaadin.flow.router.BeforeLeaveEvent;
 import com.vaadin.flow.router.Route;
 import cz.uhk.zlesak.threejslearningapp.application.components.BeforeLeaveActionDialog;
 import cz.uhk.zlesak.threejslearningapp.application.components.ModelListDialog;
+import cz.uhk.zlesak.threejslearningapp.application.components.UploadComponent;
 import cz.uhk.zlesak.threejslearningapp.application.components.notifications.ErrorNotification;
 import cz.uhk.zlesak.threejslearningapp.application.controllers.ChapterController;
 import cz.uhk.zlesak.threejslearningapp.application.controllers.ModelController;
@@ -32,6 +33,7 @@ import org.springframework.context.ApplicationContextException;
 import org.springframework.context.annotation.Scope;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -87,15 +89,43 @@ public class CreateChapterView extends ChapterScaffold {
         Button createChapterButton = getCreateChapterButton();
         Button createModelButton = getCreateModelButton();
         chooseAlreadyCreatedModelButton = getChooseAlreadyCreatedModelButton(createModelButton);
-        HorizontalLayout chapterContentButtons = new HorizontalLayout(createModelButton, chooseAlreadyCreatedModelButton, createChapterButton);
+
+        UploadComponent mdUpload = getUploadComponent();
+        mdUpload.getStyle().set("align-self", "stretch");
+
+        HorizontalLayout chapterContentButtons = new HorizontalLayout(createModelButton, chooseAlreadyCreatedModelButton, mdUpload, createChapterButton);
         chapterContentButtons.setWidthFull();
         chapterContentButtons.setSpacing(true);
         chapterContentButtons.setPadding(false);
         chapterContentButtons.setAlignItems(FlexComponent.Alignment.STRETCH);
         chapterContentButtons.setFlexGrow(0, createModelButton);
         chapterContentButtons.setFlexGrow(0, chooseAlreadyCreatedModelButton);
+        chapterContentButtons.setFlexGrow(0, mdUpload);
         chapterContentButtons.setFlexGrow(1, createChapterButton);
         return chapterContentButtons;
+    }
+
+    @NotNull
+    private UploadComponent getUploadComponent() {
+        UploadComponent mdUpload = new UploadComponent(List.of(".md", "text/markdown", "text/plain"), true, false);
+        mdUpload.setDropLabel(new com.vaadin.flow.component.html.Span("Přetáhněte .md soubor"));
+        mdUpload.setUploadButton(new Button("Importovat MD", new Icon(VaadinIcon.UPLOAD)));
+        mdUpload.setUploadListener((fileName, uploadedMultipartFile) -> {
+            try {
+                String md = new String(uploadedMultipartFile.getBytes(), StandardCharsets.UTF_8);
+                editorjs.isMarkdownMode().thenAccept(isMd -> {
+                    if (!isMd) {
+                        editorjs.toggleMarkdownMode();
+                    }
+                    editorjs.loadMarkdown(md);
+                });
+            } catch (Exception ex) {
+                log.error("Chyba při načítání MD souboru: {}", ex.getMessage(), ex);
+                new ErrorNotification("Nepodařilo se načíst MD soubor: " + ex.getMessage(), 5000);
+            }
+        });
+        mdUpload.addFileRejectedListener(e -> new ErrorNotification("Nahrávání selhalo: " + e.getErrorMessage(), 5000));
+        return mdUpload;
     }
 
     /**

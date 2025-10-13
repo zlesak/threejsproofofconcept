@@ -102,7 +102,7 @@
       "workbox-core": "7.3.0",
       "workbox-precaching": "7.3.0"
     },
-    "hash": "2811b6facd2aafb5f3d7135cb47d05d7ee8c7d47ca6943af9ab5bc00163ace36"
+    "hash": "d2ffa5fc9c1f5d44af54ddf0aef9bd9e9d493c9c179059203e2dc7678811d232"
   },
   "type": "module",
   "overrides": {

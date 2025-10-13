@@ -185,4 +185,34 @@ public class EditorJsComponent extends Component implements HasSize, HasStyle {
     public interface TextureColorAreaClickListener {
         void onTextureColorAreaClick(String textureId, String hexColor, String text);
     }
+
+    /**
+     * Loads provided Markdown string into the editor (converts it to EditorJS blocks).
+     * @param markdown markdown content
+     */
+    public void loadMarkdown(String markdown) {
+        getElement().callJsFunction("loadMarkdown", markdown);
+    }
+
+    /**
+     * Retrieves current content as Markdown (converts blocks if in block mode).
+     * @return future with markdown string
+     */
+    public CompletableFuture<String> getMarkdown() {
+        return getElement()
+                .callJsFunction("getMarkdown")
+                .toCompletableFuture()
+                .thenApply(JsonValue::asString);
+    }
+
+    /**
+     * Checks if the editor is currently in Markdown mode.
+     * @return CompletableFuture that resolves to true if in Markdown mode, false otherwise.
+     */
+    public CompletableFuture<Boolean> isMarkdownMode() {
+        return getElement()
+                .callJsFunction("isMarkdownMode")
+                .toCompletableFuture()
+                .thenApply(JsonValue::asBoolean);
+    }
 }
