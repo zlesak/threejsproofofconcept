@@ -50,8 +50,10 @@
     "rollup-plugin-visualizer": "5.14.0",
     "strip-css-comments": "5.0.0",
     "transform-ast": "2.4.4",
+    "ts-node": "10.9.2",
+    "tsx": "^4.20.6",
     "typescript": "5.8.3",
-    "vite": "6.3.5",
+    "vite": "^6.3.6",
     "vite-plugin-checker": "0.9.3",
     "workbox-build": "7.3.0",
     "workbox-core": "7.3.0",
@@ -100,7 +102,7 @@
       "workbox-core": "7.3.0",
       "workbox-precaching": "7.3.0"
     },
-    "hash": "c2c12400c1393c969b77d5c149d1b2051679111548ebb1ac78e1561b9fa86ae5"
+    "hash": "2811b6facd2aafb5f3d7135cb47d05d7ee8c7d47ca6943af9ab5bc00163ace36"
   },
   "type": "module",
   "overrides": {
@@ -197,5 +199,8 @@
     "@vaadin/router": "2.0.0",
     "@vaadin/vertical-layout": "24.8.6",
     "@vaadin/virtual-list": "24.8.6"
+  },
+  "scripts": {
+    "test:md": "npx tsx scripts/test-md-converters.ts"
   }
 }

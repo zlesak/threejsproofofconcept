@@ -155,6 +155,30 @@ public class EditorJsComponent extends Component implements HasSize, HasStyle {
     }
 
     /**
+     * Switches EditorJS to MD editor and vice versa.
+     */
+    public void toggleMarkdownMode() {
+        getElement().callJsFunction("toggleMarkdownMode");
+    }
+
+    /**
+     * Listener interface for handling MD editor/EditorJS changes.
+     */
+    public interface MarkdownModeChangedListener {
+        void onMarkdownModeChanged(boolean markdownMode);
+    }
+
+    /**
+     * Adds a listener for editor change (MD to EditorJS or vice versa).
+     */
+    public void addMarkdownModeChangedListener(MarkdownModeChangedListener listener) {
+        getElement().addEventListener("markdown-mode-changed", e -> {
+            boolean mode = e.getEventData().getBoolean("event.detail.markdownMode");
+            listener.onMarkdownModeChanged(mode);
+        }).addEventData("event.detail.markdownMode");
+    }
+
+    /**
      * Listener interface for handling texture color area click events.
      * Implement this interface to define custom behavior when a texture color area is clicked.
      */

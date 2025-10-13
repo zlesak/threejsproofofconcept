@@ -3,6 +3,11 @@ package cz.uhk.zlesak.threejslearningapp.application.views.scaffolds;
 import com.vaadin.flow.component.Composite;
 import com.vaadin.flow.component.Tag;
 import com.vaadin.flow.component.dependency.JavaScript;
+import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
+import com.vaadin.flow.component.icon.Icon;
+import com.vaadin.flow.component.icon.VaadinIcon;
+import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.Scroller;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
@@ -74,7 +79,32 @@ public abstract class ChapterScaffold extends Composite<VerticalLayout> implemen
         //Content layout
         Scroller chapterContentScroller = new Scroller(editorjs, Scroller.ScrollDirection.VERTICAL);
         chapterContentScroller.setSizeFull();
-        chapterContent.add(nameTextField, chapterContentScroller);
+
+        Button markdownToggleButton = new Button("Markdown", new Icon(VaadinIcon.CODE));
+        markdownToggleButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE, ButtonVariant.LUMO_SMALL);
+        markdownToggleButton.getElement().setProperty("title", "Přepnout na Markdown režim (nebo zpět)");
+        markdownToggleButton.addClickListener(e -> editorjs.toggleMarkdownMode());
+        editorjs.addMarkdownModeChangedListener(mode -> {
+            if (mode) {
+                markdownToggleButton.setText("Blokový editor");
+                markdownToggleButton.setIcon(new Icon(VaadinIcon.FILE_TEXT_O));
+                markdownToggleButton.getElement().setProperty("title", "Přepnout zpět na blokový Editor.js");
+            } else {
+                markdownToggleButton.setText("Markdown");
+                markdownToggleButton.setIcon(new Icon(VaadinIcon.CODE));
+                markdownToggleButton.getElement().setProperty("title", "Přepnout na Markdown režim");
+            }
+        });
+        HorizontalLayout titleBar = new HorizontalLayout(nameTextField, markdownToggleButton);
+        titleBar.setWidthFull();
+        titleBar.setAlignItems(FlexComponent.Alignment.BASELINE);
+        titleBar.setSpacing(true);
+        titleBar.getStyle().set("flex-wrap", "wrap");
+        nameTextField.setWidthFull();
+        titleBar.setFlexGrow(1, nameTextField);
+        titleBar.setFlexGrow(1, markdownToggleButton);
+
+        chapterContent.add(titleBar, chapterContentScroller);
         chapterContent.addClassName(Gap.MEDIUM);
         chapterContent.setFlexGrow(1, chapterContentScroller);
         chapterContent.setSizeFull();
