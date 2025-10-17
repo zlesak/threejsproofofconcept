@@ -4,9 +4,14 @@ import com.flowingcode.vaadin.addons.markdown.MarkdownEditor;
 import com.vaadin.flow.component.Composite;
 import com.vaadin.flow.component.Tag;
 import com.vaadin.flow.component.dependency.JavaScript;
+import com.vaadin.flow.component.html.Span;
+import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.Scroller;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.splitlayout.SplitLayout;
+import com.vaadin.flow.component.tabs.Tab;
+import com.vaadin.flow.component.tabs.TabSheet;
 import com.vaadin.flow.theme.lumo.LumoUtility.Gap;
 import cz.uhk.zlesak.threejslearningapp.application.components.*;
 import cz.uhk.zlesak.threejslearningapp.application.components.editors.EditorJsComponent;
@@ -54,13 +59,15 @@ public abstract class ChapterScaffold extends Composite<VerticalLayout> implemen
         chapterNavigation = new VerticalLayout();
         chapterContent = new VerticalLayout();
         chapterModel = new VerticalLayout();
-        chapterPageLayout.add(chapterNavigation, chapterContent, chapterModel);
+
+        SplitLayout splitLayout = new SplitLayout(chapterContent, chapterModel);
+
+        chapterPageLayout.add(chapterNavigation, splitLayout);
         chapterPageLayout.setSizeFull();
         chapterPageLayout.setClassName("chapterPageLayout");
         chapterPageLayout.addClassName(Gap.MEDIUM);
         chapterPageLayout.setFlexGrow(0, chapterNavigation);
-        chapterPageLayout.setFlexGrow(1, chapterContent);
-        chapterPageLayout.setFlexGrow(1, chapterModel);
+        chapterPageLayout.setFlexGrow(1, splitLayout);
         chapterPageLayout.getStyle().set("min-width", "0");
         chapterPageLayout.getStyle().set("min-height", "0");
 
@@ -78,17 +85,25 @@ public abstract class ChapterScaffold extends Composite<VerticalLayout> implemen
 
         //Content layout
         Scroller chapterContentScroller = new ChapterContentScroller(editorjs, mdEditor);
+        Scroller modelsScroller = new Scroller();
 
-        chapterContent.add(nameTextField, chapterContentScroller);
+
+        TabSheet tabs = new TabSheet();
+        Tab tabContent = new Tab(VaadinIcon.TEXT_INPUT.create(), new Span("Obsah"));
+        Tab tabModels = new Tab(VaadinIcon.CHART_3D.create(), new Span("3D Modely"));
+        tabs.add(tabContent, chapterContentScroller);
+        tabs.add(tabModels, modelsScroller);
+        tabs.setPrefixComponent(nameTextField);
+
+        Scroller tabsScroller = new Scroller(tabs, Scroller.ScrollDirection.VERTICAL);
+        tabsScroller.setSizeFull();
+
+        chapterContent.add(tabsScroller);
         chapterContent.addClassName(Gap.MEDIUM);
-        chapterContent.setFlexGrow(1, chapterContentScroller);
         chapterContent.setSizeFull();
         chapterContent.setPadding(false);
-        chapterContent.getStyle().set("min-width", "0");
-        chapterContent.getStyle().set("flex-grow", "1");
 
         //Model layout
-
         chapterModel.add(modelDiv);
         chapterModel.addClassName(Gap.MEDIUM);
         chapterModel.setSizeFull();

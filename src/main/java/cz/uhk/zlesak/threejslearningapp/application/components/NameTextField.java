@@ -12,6 +12,7 @@ public class NameTextField extends TextField {
         setMaxLength(255);
         setRequired(true);
         setRequiredIndicatorVisible(true);
-        setWidthFull();
+        getStyle().set("flex", "1 1 auto");
+        getStyle().set("min-width", "0");
     }
 }
