@@ -12,6 +12,7 @@ import cz.uhk.zlesak.threejslearningapp.application.controllers.ChapterControlle
 import cz.uhk.zlesak.threejslearningapp.application.i18n.CustomI18NProvider;
 import cz.uhk.zlesak.threejslearningapp.application.models.entities.ChapterEntity;
 import cz.uhk.zlesak.threejslearningapp.application.models.records.PageResult;
+import cz.uhk.zlesak.threejslearningapp.application.utils.ViewUtils;
 import cz.uhk.zlesak.threejslearningapp.application.views.scaffolds.ListingScaffold;
 import jakarta.annotation.security.PermitAll;
 import lombok.extern.slf4j.Slf4j;
@@ -70,15 +71,8 @@ public class ChapterListView extends ListingScaffold {
      */
     @Override
     public void afterNavigation(AfterNavigationEvent event) {
-        int page = 1;
-        int limit = 10;
-        if (event.getLocation().getQueryParameters().getParameters().containsKey("page")) {
-            page = Integer.parseInt(event.getLocation().getQueryParameters().getParameters().get("page").getFirst());
-        }
-        if (event.getLocation().getQueryParameters().getParameters().containsKey("limit")) {
-            limit = Integer.parseInt(event.getLocation().getQueryParameters().getParameters().get("limit").getFirst());
-        }
-        listChapters(page, limit);
+        int[] pageLimit = ViewUtils.extractPageAndLimit(event.getLocation());
+        listChapters(pageLimit[0], pageLimit[1]);
     }
 
     /**

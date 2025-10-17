@@ -1,4 +1,4 @@
-package cz.uhk.zlesak.threejslearningapp.application.components;
+package cz.uhk.zlesak.threejslearningapp.application.components.editors;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -8,6 +8,7 @@ import com.vaadin.flow.component.HasStyle;
 import com.vaadin.flow.component.Tag;
 import com.vaadin.flow.component.dependency.JsModule;
 import com.vaadin.flow.component.dependency.NpmPackage;
+import cz.uhk.zlesak.threejslearningapp.application.components.SearchTextField;
 import cz.uhk.zlesak.threejslearningapp.application.models.entities.quickEntities.QuickTextureEntity;
 import cz.uhk.zlesak.threejslearningapp.application.models.records.TextureAreaForSelectRecord;
 import cz.uhk.zlesak.threejslearningapp.application.models.records.TextureListingForSelectRecord;

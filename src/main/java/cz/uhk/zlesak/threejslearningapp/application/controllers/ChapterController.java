@@ -31,7 +31,7 @@ import java.util.Objects;
 @Slf4j
 @Component
 @Scope("prototype")
-public class ChapterController {
+public class ChapterController implements IController {
     private final ChapterApiClient chapterApiClient;
     private ChapterEntity chapterEntity = null;
     @Setter

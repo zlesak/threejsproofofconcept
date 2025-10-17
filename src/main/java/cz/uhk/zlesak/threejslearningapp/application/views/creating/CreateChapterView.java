@@ -4,8 +4,6 @@ import com.vaadin.flow.component.Tag;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
-import com.vaadin.flow.component.icon.Icon;
-import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.router.AfterNavigationEvent;
@@ -13,8 +11,9 @@ import com.vaadin.flow.router.BeforeEnterEvent;
 import com.vaadin.flow.router.BeforeLeaveEvent;
 import com.vaadin.flow.router.Route;
 import cz.uhk.zlesak.threejslearningapp.application.components.BeforeLeaveActionDialog;
-import cz.uhk.zlesak.threejslearningapp.application.components.ModelListDialog;
+import cz.uhk.zlesak.threejslearningapp.application.components.MarkdownUploadComponent;
 import cz.uhk.zlesak.threejslearningapp.application.components.UploadComponent;
+import cz.uhk.zlesak.threejslearningapp.application.components.buttons.MarkdownToggleButton;
 import cz.uhk.zlesak.threejslearningapp.application.components.notifications.ErrorNotification;
 import cz.uhk.zlesak.threejslearningapp.application.controllers.ChapterController;
 import cz.uhk.zlesak.threejslearningapp.application.controllers.ModelController;
@@ -23,7 +22,6 @@ import cz.uhk.zlesak.threejslearningapp.application.models.entities.ChapterEntit
 import cz.uhk.zlesak.threejslearningapp.application.models.entities.quickEntities.QuickModelEntity;
 import cz.uhk.zlesak.threejslearningapp.application.models.entities.quickEntities.QuickTextureEntity;
 import cz.uhk.zlesak.threejslearningapp.application.utils.TextureMapHelper;
-import cz.uhk.zlesak.threejslearningapp.application.views.listing.ModelListView;
 import cz.uhk.zlesak.threejslearningapp.application.views.scaffolds.ChapterScaffold;
 import jakarta.annotation.security.RolesAllowed;
 import lombok.extern.slf4j.Slf4j;
@@ -33,7 +31,6 @@ import org.springframework.context.ApplicationContextException;
 import org.springframework.context.annotation.Scope;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -46,14 +43,12 @@ import java.util.List;
 @Route("createChapter")
 @Tag("create-chapter")
 @Scope("prototype")
-@RolesAllowed(value="ADMIN")
+@RolesAllowed(value = "ADMIN")
 public class CreateChapterView extends ChapterScaffold {
     private final TextureController textureController;
     private final ModelController modelController;
     private final ChapterController chapterController;
     private boolean skipBeforeLeaveDialog = false;
-
-    private Button chooseAlreadyCreatedModelButton;
 
     /**
      * Constructor for CreateChapterView.
@@ -82,104 +77,80 @@ public class CreateChapterView extends ChapterScaffold {
     /**
      * Creates and returns a HorizontalLayout containing buttons for creating a chapter, creating a model, and choosing an existing model.
      * The layout is configured to stretch and space the buttons appropriately.
+     *
      * @return the HorizontalLayout with chapter content buttons
      */
     @NotNull
     private HorizontalLayout getHorizontalLayout() {
         Button createChapterButton = getCreateChapterButton();
-        Button createModelButton = getCreateModelButton();
-        chooseAlreadyCreatedModelButton = getChooseAlreadyCreatedModelButton(createModelButton);
+        Button markdownToggleButton = new MarkdownToggleButton(mdEditor, editorjs);
+        Button mdUploadedButton = new Button();
+        mdUploadedButton.setVisible(false);
+        UploadComponent getMdUploadComponent = new MarkdownUploadComponent(editorjs, mdEditor, mdUploadedButton);
 
-        UploadComponent mdUpload = getUploadComponent();
-        mdUpload.getStyle().set("align-self", "stretch");
-
-        HorizontalLayout chapterContentButtons = new HorizontalLayout(createModelButton, chooseAlreadyCreatedModelButton, mdUpload, createChapterButton);
+        HorizontalLayout chapterContentButtons = new HorizontalLayout(markdownToggleButton, mdUploadedButton, getMdUploadComponent, createChapterButton);
         chapterContentButtons.setWidthFull();
         chapterContentButtons.setSpacing(true);
         chapterContentButtons.setPadding(false);
         chapterContentButtons.setAlignItems(FlexComponent.Alignment.STRETCH);
-        chapterContentButtons.setFlexGrow(0, createModelButton);
-        chapterContentButtons.setFlexGrow(0, chooseAlreadyCreatedModelButton);
-        chapterContentButtons.setFlexGrow(0, mdUpload);
+        chapterContentButtons.setFlexGrow(0, markdownToggleButton);
+        chapterContentButtons.setFlexGrow(0, getMdUploadComponent);
         chapterContentButtons.setFlexGrow(1, createChapterButton);
         return chapterContentButtons;
     }
 
-    @NotNull
-    private UploadComponent getUploadComponent() {
-        UploadComponent mdUpload = new UploadComponent(List.of(".md", "text/markdown", "text/plain"), true, false);
-        mdUpload.setDropLabel(new com.vaadin.flow.component.html.Span("Přetáhněte .md soubor"));
-        mdUpload.setUploadButton(new Button("Importovat MD", new Icon(VaadinIcon.UPLOAD)));
-        mdUpload.setUploadListener((fileName, uploadedMultipartFile) -> {
-            try {
-                String md = new String(uploadedMultipartFile.getBytes(), StandardCharsets.UTF_8);
-                editorjs.isMarkdownMode().thenAccept(isMd -> {
-                    if (!isMd) {
-                        editorjs.toggleMarkdownMode();
-                    }
-                    editorjs.loadMarkdown(md);
-                });
-            } catch (Exception ex) {
-                log.error("Chyba při načítání MD souboru: {}", ex.getMessage(), ex);
-                new ErrorNotification("Nepodařilo se načíst MD soubor: " + ex.getMessage(), 5000);
-            }
-        });
-        mdUpload.addFileRejectedListener(e -> new ErrorNotification("Nahrávání selhalo: " + e.getErrorMessage(), 5000));
-        return mdUpload;
-    }
-
-    /**
-     * Creates and returns a button for creating a model.
-     * When clicked, it opens a CreateModelDialog for model creation.
-     * Once a model is created, it updates the button text and icon, disables the button, and loads the model into the renderer.
-     *
-     * @return the button for creating a model
-     */
-    @NotNull
-    private Button getCreateModelButton() {
-        CreateModelDialog dialog = new CreateModelDialog(this.modelController);
-        Button createModelButton = new Button("Vytvořit model");
-
-        createModelButton.addClickListener(e -> dialog.open());
-        dialog.setModelCreatedListener(entity -> {
-            this.chapterController.setUploadedModel(entity);
-            createModelButton.setText("Model přidán: " + entity.getModel().getName());
-            createModelButton.setIcon(new Icon(VaadinIcon.CHECK));
-            createModelButton.setEnabled(false);
-            chooseAlreadyCreatedModelButton.setVisible(false);
-            rendererSelectsAndEditorPreparation(entity);
-        });
-        return createModelButton;
-    }
-
-    /**
-     * Creates and returns a button for choosing an already created model.
-     * When clicked, it opens a ModelListDialog for selecting an existing model.
-     * Once a model is selected, it updates the createModelButton text and icon, disables both buttons, and loads the model into the renderer.
-     *
-     * @param createModelButton the button for creating a model, which will be updated upon model selection
-     * @return the button for choosing an already created model
-     */
-    @NotNull
-    private Button getChooseAlreadyCreatedModelButton(Button createModelButton) {
-        Button chooseAlreadyCreatedModelButton = new Button("Přidat existující model");
-
-        ModelListDialog modelListDialog = new ModelListDialog(new ModelListView(modelController));
-        modelListDialog.setModelSelectedListener(entity -> {
-            chapterController.setUploadedModel(entity);
-            createModelButton.setText("Model přidán: " + entity.getModel().getName());
-            createModelButton.setIcon(new Icon(VaadinIcon.CHECK));
-            createModelButton.setEnabled(false);
-            chooseAlreadyCreatedModelButton.setVisible(false);
-            try {
-                rendererSelectsAndEditorPreparation(entity);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        });
-        chooseAlreadyCreatedModelButton.addClickListener(e -> modelListDialog.open());
-        return chooseAlreadyCreatedModelButton;
-    }
+//    /**
+//     * Creates and returns a button for creating a model.
+//     * When clicked, it opens a CreateModelDialog for model creation.
+//     * Once a model is created, it updates the button text and icon, disables the button, and loads the model into the renderer.
+//     *
+//     * @return the button for creating a model
+//     */
+//    @NotNull
+//    private Button getCreateModelButton() {
+//        CreateModelDialog dialog = new CreateModelDialog(this.modelController);
+//        Button createModelButton = new Button("Vytvořit model");
+//
+//        createModelButton.addClickListener(e -> dialog.open());
+//        dialog.setModelCreatedListener(entity -> {
+//            this.chapterController.setUploadedModel(entity);
+//            createModelButton.setText("Model přidán: " + entity.getModel().getName());
+//            createModelButton.setIcon(new Icon(VaadinIcon.CHECK));
+//            createModelButton.setEnabled(false);
+//            chooseAlreadyCreatedModelButton.setVisible(false);
+//            rendererSelectsAndEditorPreparation(entity);
+//        });
+//        return createModelButton;
+//    }
+//
+//    /**
+//     * Creates and returns a button for choosing an already created model.
+//     * When clicked, it opens a ModelListDialog for selecting an existing model.
+//     * Once a model is selected, it updates the createModelButton text and icon, disables both buttons, and loads the model into the renderer.
+//     *
+//     * @param createModelButton the button for creating a model, which will be updated upon model selection
+//     * @return the button for choosing an already created model
+//     */
+//    @NotNull
+//    private Button getChooseAlreadyCreatedModelButton(Button createModelButton) {
+//        Button chooseAlreadyCreatedModelButton = new Button("Přidat existující model");
+//
+//        ModelListDialog modelListDialog = new ModelListDialog(new ModelListView(modelController));
+//        modelListDialog.setModelSelectedListener(entity -> {
+//            chapterController.setUploadedModel(entity);
+//            createModelButton.setText("Model přidán: " + entity.getModel().getName());
+//            createModelButton.setIcon(new Icon(VaadinIcon.CHECK));
+//            createModelButton.setEnabled(false);
+//            chooseAlreadyCreatedModelButton.setVisible(false);
+//            try {
+//                rendererSelectsAndEditorPreparation(entity);
+//            } catch (IOException e) {
+//                throw new RuntimeException(e);
+//            }
+//        });
+//        chooseAlreadyCreatedModelButton.addClickListener(e -> modelListDialog.open());
+//        return chooseAlreadyCreatedModelButton;
+//    }
 
     /**
      * Creates and returns a button for creating a chapter.
@@ -192,26 +163,32 @@ public class CreateChapterView extends ChapterScaffold {
     @NotNull Button getCreateChapterButton() {
         Button createChapterButton = new Button("Vytvořit kapitolu");
         createChapterButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
-        createChapterButton.addClickListener(e -> editorjs.getData().whenComplete((body, error) -> {
-            try {
-                if (error != null) {
-                    throw new ApplicationContextException("Chyba při získávání obsahu: ", error);
+        createChapterButton.addClickListener(e ->
+            editorjs.isMarkdownMode().thenAccept(isMarkdownMode -> {
+                if (isMarkdownMode) {
+                    editorjs.toggleMarkdownMode();
                 }
-                ChapterEntity created = chapterController.createChapter(nameTextField.getValue().trim(), body);
-                if (created != null) {
-                    skipBeforeLeaveDialog = true;
-                    UI.getCurrent().navigate("chapter/" + created.getId());
-                } else {
-                    throw new ApplicationContextException("Kapitola nebyla uložena, zkuste to znovu později.");
-                }
-            } catch (ApplicationContextException ex) {
-                log.error("Chyba při ukládání kapitoly: {}", ex.getMessage(), ex);
-                new ErrorNotification("Chyba při ukládání kapitoly: " + ex.getMessage(), 5000);
-            } catch (Exception ex) {
-                log.error("Neočekávaná chyba při ukládání kapitoly: {}", ex.getMessage(), ex);
-                new ErrorNotification("Neočekávaná chyba při vytváření kapitoly: " + ex.getMessage(), 5000);
-            }
-        }));
+                editorjs.getData().whenComplete((body, error) -> {
+                    try {
+                        if (error != null) {
+                            throw new ApplicationContextException("Chyba při získávání obsahu: ", error);
+                        }
+                        ChapterEntity created = chapterController.createChapter(nameTextField.getValue().trim(), body);
+                        if (created != null) {
+                            skipBeforeLeaveDialog = true;
+                            UI.getCurrent().navigate("chapter/" + created.getId());
+                        } else {
+                            throw new ApplicationContextException("Kapitola nebyla uložena, zkuste to znovu později.");
+                        }
+                    } catch (ApplicationContextException ex) {
+                        log.error("Chyba při ukládání kapitoly: {}", ex.getMessage(), ex);
+                        new ErrorNotification("Chyba při ukládání kapitoly: " + ex.getMessage(), 5000);
+                    } catch (Exception ex) {
+                        log.error("Neočekávaná chyba při ukládání kapitoly: {}", ex.getMessage(), ex);
+                        new ErrorNotification("Neočekávaná chyba při vytváření kapitoly: " + ex.getMessage(), 5000);
+                    }
+                });
+            }));
         return createChapterButton;
     }
 
@@ -297,7 +274,7 @@ public class CreateChapterView extends ChapterScaffold {
         }
         modelDiv.renderer.loadModel(modelUrl, textureUrl);
 
-        if(textureUrl != null) {
+        if (textureUrl != null) {
             List<QuickTextureEntity> allTextures = new ArrayList<>(quickModelEntity.getOtherTextures());
             modelDiv.renderer.addOtherTextures(TextureMapHelper.otherTexturesMap(allTextures, textureController));
 

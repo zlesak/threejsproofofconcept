@@ -26,7 +26,7 @@ import java.util.List;
 @Slf4j
 @Component
 @Scope("prototype")
-public class TextureController {
+public class TextureController implements IController{
     protected final TextureApiClient textureApiClient;
     protected final ObjectMapper objectMapper;
     private TextureEntity textureEntity = null;

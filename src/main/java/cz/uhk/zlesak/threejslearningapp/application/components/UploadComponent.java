@@ -34,7 +34,7 @@ public class UploadComponent extends Upload {
     protected final CustomI18NProvider i18nProvider = SpringContextUtils.getBean(CustomI18NProvider.class);
     private final VerticalLayout fileListLayout = new VerticalLayout();
     @Getter
-    private List<InputStreamMultipartFile> uploadedFiles = new ArrayList<>();
+    private final List<InputStreamMultipartFile> uploadedFiles = new ArrayList<>();
     @Setter
     private BiConsumer<String, InputStreamMultipartFile> uploadListener;
 
@@ -46,6 +46,10 @@ public class UploadComponent extends Upload {
      * @param canNameFiles      If true, display names can be entered by the user for individual files.
      */
     public UploadComponent(List<String> acceptedFileTypes, boolean maxOneFile, boolean canNameFiles) {
+        this(acceptedFileTypes, maxOneFile, canNameFiles, true);
+    }
+
+    public UploadComponent(List<String> acceptedFileTypes, boolean maxOneFile, boolean canNameFiles, boolean dragAndDropEnabled) {
         super();
         InMemoryUploadHandler temporaryFileUploadHandler = UploadHandler.inMemory(
                 (metadata, data) -> {
@@ -68,7 +72,13 @@ public class UploadComponent extends Upload {
         }
         setAcceptedFileTypes(acceptedFileTypes);
         setMaxFileSize(50 * 1024 * 1024);
-        setDropAllowed(true);
+        if(dragAndDropEnabled) {
+            setDropLabel(new Span(i18nProvider.getTranslation("upload.dropLabel.information", UI.getCurrent().getLocale())));
+        }
+        else {
+            setDropAllowed(false);
+            setDropLabel(null);
+        }
 
         fileListLayout.setPadding(false);
         fileListLayout.setSpacing(true);
@@ -100,7 +110,6 @@ public class UploadComponent extends Upload {
                 .withText(toolTipText)
                 .withPosition(Tooltip.TooltipPosition.TOP_START);
         setUploadButton(new Button(i18nProvider.getTranslation("upload.file", UI.getCurrent().getLocale()) + " (" + String.join(", ", acceptedFileTypes) + ")"));
-        setDropLabel(new Span(i18nProvider.getTranslation("upload.dropLabel.information", UI.getCurrent().getLocale())));
     }
 
     /**

@@ -14,6 +14,7 @@ import cz.uhk.zlesak.threejslearningapp.application.models.entities.quickEntitie
 import cz.uhk.zlesak.threejslearningapp.application.models.entities.quickEntities.QuickModelEntity;
 import cz.uhk.zlesak.threejslearningapp.application.models.records.PageResult;
 import cz.uhk.zlesak.threejslearningapp.application.utils.SpringContextUtils;
+import cz.uhk.zlesak.threejslearningapp.application.utils.ViewUtils;
 import cz.uhk.zlesak.threejslearningapp.application.views.scaffolds.ListingScaffold;
 import jakarta.annotation.security.PermitAll;
 import lombok.Setter;
@@ -73,15 +74,8 @@ public class ModelListView extends ListingScaffold {
      */
     @Override
     public void afterNavigation(AfterNavigationEvent event) {
-        int page = 1;
-        int limit = 10;
-        if (event.getLocation().getQueryParameters().getParameters().containsKey("page")) {
-            page = Integer.parseInt(event.getLocation().getQueryParameters().getParameters().get("page").getFirst());
-        }
-        if (event.getLocation().getQueryParameters().getParameters().containsKey("limit")) {
-            limit = Integer.parseInt(event.getLocation().getQueryParameters().getParameters().get("limit").getFirst());
-        }
-        listModels(page, limit, true);
+        int[] pageLimit = ViewUtils.extractPageAndLimit(event.getLocation());
+        listModels(pageLimit[0], pageLimit[1], true);
     }
 
     /**

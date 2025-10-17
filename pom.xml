@@ -79,6 +79,11 @@
             <artifactId>playwright</artifactId>
             <version>1.54.0</version>
         </dependency>
+        <dependency>
+            <groupId>com.flowingcode.vaadin.addons</groupId>
+            <artifactId>markdown-editor-addon</artifactId>
+            <version>2.0.1</version>
+        </dependency>
     </dependencies>
 
     <build>
