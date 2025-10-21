@@ -1,7 +1,6 @@
 //Editrojs - search functions
-export async function searchInEditor(editor: any, searchText: string, markdownMode: boolean, editorReadyPromise: Promise<void>) {
+export async function searchInEditor(editor: any, searchText: string, editorReadyPromise: Promise<void>) {
   await editorReadyPromise;
-  if (markdownMode) { return; }
   if (!editor || !editor.blocks) { console.error('search: editor not ready'); return; }
   clearSearchHighlights(editor);
   if (!searchText || searchText.trim() === '') return;
@@ -29,7 +28,7 @@ export async function searchInEditor(editor: any, searchText: string, markdownMo
   }
 }
 
-export function clearSearchHighlights(editor: any) {
+function clearSearchHighlights(editor: any) {
   if (!editor || !editor.blocks) return;
   for (let i = 0; i < editor.blocks.getBlocksCount(); i++) {
     const blockElement = editor.blocks.getBlockByIndex(i)?.holder;

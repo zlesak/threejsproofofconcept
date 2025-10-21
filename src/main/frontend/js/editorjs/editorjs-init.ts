@@ -16,11 +16,13 @@ import TextureColorLinkTool from 'Frontend/js/editorjs/textureColorLinkTool/text
 
 function initializeEditorJs({
   holder,
+  models = [],
   textures = [],
   colors = [],
   placeholder = 'Začněte tvořit...'
 }: {
   holder: HTMLElement,
+  models?: any[],
   textures?: any[],
   colors?: any[],
   placeholder?: string
@@ -69,6 +71,7 @@ function initializeEditorJs({
       textureColorLinkTool: {
         class: TextureColorLinkTool,
         config: {
+          models,
           textures,
           colors
         }
@@ -131,7 +134,7 @@ async function initializeContainer(parentElement: HTMLElement): Promise<HTMLElem
   return container;
 }
 
-export async function initializeEditor(parentElement: HTMLElement, options: {textures?: any[], colors?: any[], placeholder?: string} = {}): Promise<any> {
+export async function initializeEditor(parentElement: HTMLElement, options: {models?: any[], textures?: any[], colors?: any[], placeholder?: string} = {}): Promise<any> {
   let container = await initializeContainer(parentElement);
   try {
     const editor = initializeEditorJs({

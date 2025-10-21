@@ -14,19 +14,23 @@ export default class TextureColorLinkTool {
   static globalColors = [];
 
   /**
-   * Static method to set global textures and colors.
+   * Static method to set global models, textures and colors.
    * Called before Editor.js initialization.
    * Provides static data to all instances of the tool as the data are cleared after every close of the tool.
+   *
+   * @param models
    * @param textures
    * @param colors
    */
-  static setGlobalTexturesAndColors(textures, colors) {
-    TextureColorLinkTool.globalTextures = textures;
-    TextureColorLinkTool.globalColors = colors;
+  static setGlobalModelsTexturesAndColors(models, textures, colors) {
+    TextureColorLinkTool.globalModels = models || [];
+    TextureColorLinkTool.globalTextures = textures || [];
+    TextureColorLinkTool.globalColors = colors || [];
   }
 
   textures = [];
   colors = [];
+  models = [];
 
   /**
    * Constructor of the Tool class.
@@ -49,6 +53,9 @@ export default class TextureColorLinkTool {
       inputLabel: null,
       input: null,
 
+      selectModelLabel: null,
+      selectModel: null,
+
       selectTextureLabel: null,
       selectTexture: null,
 
@@ -67,6 +74,7 @@ export default class TextureColorLinkTool {
 
     this.textures = TextureColorLinkTool.globalTextures;
     this.colors = TextureColorLinkTool.globalColors;
+    this.models = TextureColorLinkTool.globalModels;
   }
 
   /**
@@ -108,28 +116,64 @@ export default class TextureColorLinkTool {
       this.nodes.input.value = '';
     }
 
+    // Model select
+    this.nodes.selectModelLabel = document.createElement('label');
+    this.nodes.selectModel = document.createElement('select');
+    this.addOption(this.nodes.selectModel, this.i18n.t('Vyberte model'), '');
+    this.models.forEach((model) => {
+      this.addOption(this.nodes.selectModel, model.modelName ?? model.name ?? model.id, model.id);
+    });
+
+    // Texture select
     this.nodes.selectTextureLabel = document.createElement('label');
     this.nodes.selectTexture = document.createElement('select');
     this.addOption(this.nodes.selectTexture, this.i18n.t('Vyberte texturu'), '');
-    this.textures.forEach((texture) => {
-      this.addOption(this.nodes.selectTexture, texture.textureName, texture.id);
-    });
 
+    // Color select
     this.nodes.selectColorLabel = document.createElement('label');
     this.nodes.selectColor = document.createElement('select');
     this.addOption(this.nodes.selectColor, this.i18n.t('Vyberte barvu'), '');
+
+    // Model change, populate textures filtered by model
+    this.nodes.selectModel.addEventListener('change', () => {
+      const selectedModelId = this.nodes.selectModel.value;
+      // clear residual from possible previous iteration
+      this.nodes.selectTexture.innerHTML = '';
+      this.addOption(this.nodes.selectTexture, this.i18n.t('Vyberte texturu'), '');
+      this.nodes.selectColor.innerHTML = '';
+      this.addOption(this.nodes.selectColor, this.i18n.t('Vyberte barvu'), '');
+
+      if (selectedModelId) {
+        this.textures
+          .filter((texture) => String(texture.modelId) === String(selectedModelId) || String(texture.model) === String(selectedModelId))
+          .forEach((texture) => {
+            this.addOption(this.nodes.selectTexture, texture.textureName, texture.id);
+          });
+      }
+    });
+
+    // Texture change, populate colors filtered by texture
     this.nodes.selectTexture.addEventListener('change', () => {
       this.nodes.selectColor.innerHTML = '';
       this.addOption(this.nodes.selectColor, this.i18n.t('Vyberte barvu'), '');
       const selectedTextureId = this.nodes.selectTexture.value;
       if (selectedTextureId) {
         this.colors
-          .filter((color) => color.textureId === selectedTextureId)
+          .filter((color) => String(color.textureId) === String(selectedTextureId))
           .forEach((color) => {
             this.addOption(this.nodes.selectColor, color.areaName, color.hexColor);
           });
       }
     });
+
+    const initialModelId = this.nodes.selectModel.value;
+    if (initialModelId) {
+      this.textures
+        .filter((texture) => String(texture.modelId) === String(initialModelId) || String(texture.model) === String(initialModelId))
+        .forEach((texture) => {
+          this.addOption(this.nodes.selectTexture, texture.textureName, texture.id);
+        });
+    }
 
     const initialTextureId = this.nodes.selectTexture.value;
     if (initialTextureId) {
@@ -148,6 +192,7 @@ export default class TextureColorLinkTool {
     });
 
     this.nodes.div.appendChild(this.nodes.input);
+    this.nodes.div.appendChild(this.nodes.selectModel);
     this.nodes.div.appendChild(this.nodes.selectTexture);
     this.nodes.div.appendChild(this.nodes.selectColor);
     this.nodes.div.appendChild(this.nodes.buttonSave);
@@ -164,10 +209,12 @@ export default class TextureColorLinkTool {
     event.stopImmediatePropagation();
 
     let text = this.nodes.input.value || '';
+    let model = this.nodes.selectModel || '';
     let texture = this.nodes.selectTexture.value || '';
     let color = this.nodes.selectColor.value || '';
 
     this._savedText = text;
+    this._savedModel = model;
     this._savedTexture = texture;
     this._savedColor = color;
 
@@ -184,6 +231,7 @@ export default class TextureColorLinkTool {
     if (range && this._savedText && this._savedTexture && this._savedColor) {
       const a = document.createElement('a');
       a.href = '#';
+      a.setAttribute('data-model-id', this._savedModel || '');
       a.setAttribute('data-texture-id', this._savedTexture || '');
       a.setAttribute('data-hex-color', this._savedColor || '');
       a.textContent = this._savedText || range.toString();
@@ -195,6 +243,7 @@ export default class TextureColorLinkTool {
       range.insertNode(a);
 
       this._savedText = null;
+      this._savedModel = null;
       this._savedTexture = null;
       this._savedColor = null;
     }
@@ -238,6 +287,7 @@ export default class TextureColorLinkTool {
     return {
       a: {
         href: true,
+        'data-model-id': true,
         'data-texture-id': true,
         'data-hex-color': true
       }
@@ -248,6 +298,7 @@ export default class TextureColorLinkTool {
    * Used to clear the tool. Called by Editor.js API.
    */
   clear() {
+    this.models = [];
     this.textures = [];
     this.colors = [];
 

@@ -22,7 +22,7 @@ export function genId(): string {
 }
 
 // Pomocné funkce pro inline formátování
-// Custom pro TextureColorLinkTool: [[text|textureId|hexColor]]
+// Custom pro TextureColorLinkTool: [[text|modelId|textureId|hexColor]]
 export function inlineHtmlToMarkdown(html: string): string {
   if (!html) return '';
   let out = html;
@@ -31,12 +31,13 @@ export function inlineHtmlToMarkdown(html: string): string {
   out = out.replace(/<br\s*\/?>(?:(?=\s)|)/gi, '  \n');
 
   out = out.replace(/<a\b([^>]*)>([\s\S]*?)<\/a>/gi, (match, attrs: string, inner: string) => {
+    const model = /data-model-id="([^"]+)"/i.exec(attrs)?.[1];
     const texId = /data-texture-id="([^"]+)"/i.exec(attrs)?.[1];
     const hex = /data-hex-color="([^"]+)"/i.exec(attrs)?.[1];
-    if (texId && hex) {
+    if (texId && hex && model) {
       const innerConverted = inlineHtmlToMarkdown(inner);
       const safeInner = innerConverted.replace(/\|/g, '\\|');
-      return `[[${safeInner}|${texId}|${hex}]]`;
+      return `[[${safeInner}|${model}|${texId}|${hex}]]`;
     }
     const href = /href="([^"]+)"/i.exec(attrs)?.[1];
     if (href) {
@@ -81,11 +82,11 @@ export function inlineMarkdownToHtml(md: string): string {
     return txt;
   }
 
-  // Custom texture odkazy [[text|textureId|hexColor]]
-  out = out.replace(/\[\[([^|\]]+?)\|([^|\]]+?)\|([^|\]]+?)]]/g, (_m, text, textureId, hexColor) => {
+  // Custom texture odkazy [[text|modelId|textureId|hexColor]]
+  out = out.replace(/\[\[([^|\]]+?)\|([^|\]]+?)\|([^|\]]+?)\|([^|\]]+?)]]/g, (_m, text, modelId, textureId, hexColor) => {
     const restoredText = text.replace(/\\\|/g, '|');
     const formatted = applyInlineFormatting(restoredText);
-    return `<a href="#" data-texture-id="${textureId}" data-hex-color="${hexColor}">${formatted}</a>`;
+    return `<a href="#" data-model-id="${modelId}" data-texture-id="${textureId}" data-hex-color="${hexColor}">${formatted}</a>`;
   });
 
   // Běžné odkazy [text](url)

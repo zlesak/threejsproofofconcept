@@ -2,7 +2,7 @@ import { LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import { initializeEditor } from './editorjs-init';
 import { attachTextureColorListeners } from './texture-utils';
-import { clearSearchHighlights, searchInEditor } from './search-utils';
+import { searchInEditor } from './search-utils';
 import { convertEditorJsToMarkdown, convertMarkdownToEditorJs } from 'Frontend/js/editorjs/markdownConvertors/convert';
 import TextureColorLinkTool from 'Frontend/js/editorjs/textureColorLinkTool/textureColorLinkTool';
 import { OutputData } from '@editorjs/editorjs';
@@ -11,11 +11,6 @@ import { OutputData } from '@editorjs/editorjs';
 export class EditorJs extends LitElement {
   @state()
   private editor: any;
-
-  @state()
-  private markdownMode: boolean = false;
-  @state()
-  private markdownText: string = '';
 
   readonly editorReadyPromise: Promise<void>;
   private resolveEditorReadyPromise!: () => void;
@@ -68,20 +63,14 @@ export class EditorJs extends LitElement {
     }
   }
 
+// @ts-ignore - Method is used by external components
   public async search(searchText: string): Promise<void> {
-    await searchInEditor(this.editor, searchText, this.markdownMode, this.editorReadyPromise);
-  }
-
-  public clearSearchHighlights(): void {
-    clearSearchHighlights(this.editor);
+    await searchInEditor(this.editor, searchText, this.editorReadyPromise);
   }
 
   // @ts-ignore - Method is used by external components
   public async getMarkdown(): Promise<string> {
     await this.editorReadyPromise;
-    if (this.markdownMode) {
-      return this.markdownText;
-    }
     if (!this.editor) return '';
     try {
       const data = await this.editor.save();
@@ -96,9 +85,7 @@ export class EditorJs extends LitElement {
   public async loadMarkdown(md: string): Promise<void> {
     await this.editorReadyPromise;
     try {
-      console.log("md " + md)
       const outputData = await convertMarkdownToEditorJs(md);
-      console.log(outputData)
       await this.setData(outputData);
     } catch (e) {
       console.error('loadMarkdown error:', e);
@@ -108,16 +95,13 @@ export class EditorJs extends LitElement {
   // @ts-ignore - Method is used by external components
   async getData(): Promise<any> {
     await this.editorReadyPromise;
-    if (this.markdownMode) {
-      try {
-        return await convertMarkdownToEditorJs(this.markdownText);
-      } catch (e) {
-        console.error('Konverze markdown -> bloky selhala v getData:', e);
-        return { time: Date.now(), version: '', blocks: [] };
-      }
-    }
     if (!this.editor) throw new Error('Editor not initialized in getData');
-    try { return JSON.stringify(await this.editor.save()); } catch (error) { console.error('Error saving editor data in getData:', error); throw error; }
+    try {
+      return JSON.stringify(await this.editor.save());
+    } catch (error) {
+      console.error('Error saving editor data in getData:', error);
+      throw error;
+    }
   }
 
   // @ts-ignore - Method is used by external components
@@ -153,6 +137,7 @@ export class EditorJs extends LitElement {
       return;
     }
     await this.setData(this._chapterContentData);
+    attachTextureColorListeners();
   }
 
   async setData(value: OutputData): Promise<void> {
@@ -183,31 +168,27 @@ export class EditorJs extends LitElement {
     await this.editor.readOnly.toggle(readOnly);
   }
 
-  public async clear() {
-    await this.editorReadyPromise;
-    if (!this.editor) {
-      throw new Error('Editor not initialized in clear');
-    }
-    this.editor.clear();
-  }
-
   // @ts-ignore - Method is used by external components
-  public async initializeTextureSelects(texturesJson?: string, areasJson?: string): Promise<void> {
+  public async initializeModelTextureAreaSelects(texturesJson?: string, areasJson?: string, modelsJson?: string): Promise<void> {
     await this.editorReadyPromise;
     if (!this.editor || !this.editor.blocks) {
-      console.error('initializeTextureSelects: Editor or editor.blocks not fully initialized even after promise resolved.');
+      console.error('initializeModelTextureAreaSelects: Editor or editor.blocks not fully initialized even after promise resolved.');
       return;
     }
     try {
       let textures = [];
       let colors = [];
+      let models = [];
       if (texturesJson) {
         textures = JSON.parse(texturesJson);
       }
       if (areasJson) {
         colors = JSON.parse(areasJson);
       }
-      TextureColorLinkTool.setGlobalTexturesAndColors(textures, colors);
+      if (modelsJson) {
+        models = JSON.parse(modelsJson);
+      }
+      TextureColorLinkTool.setGlobalModelsTexturesAndColors(models, textures, colors);
     } catch (error) {
       console.error('Error initializing texture selects:', error);
       throw error;
@@ -244,5 +225,4 @@ export class EditorJs extends LitElement {
       throw error;
     }
   }
-
 }

@@ -3,7 +3,7 @@
 export function attachTextureColorListeners() {
   const editorContainer = document.getElementById('editorjs');
   if (!editorContainer) return;
-  const links = editorContainer.querySelectorAll('a[data-texture-id][data-hex-color]');
+  const links = editorContainer.querySelectorAll('a[data-model-id][data-texture-id][data-hex-color]');
   links.forEach(link => {
     if (!link.hasAttribute('data-texture-color-listener')) {
       link.addEventListener('click', (event) => {
@@ -14,6 +14,7 @@ export function attachTextureColorListeners() {
             bubbles: true,
             composed: true,
             detail: {
+              modelId: link.getAttribute('data-model-id'),
               textureId: link.getAttribute('data-texture-id'),
               hexColor: link.getAttribute('data-hex-color'),
               text: link.textContent
