@@ -18,7 +18,6 @@ import cz.uhk.zlesak.threejslearningapp.application.utils.ViewUtils;
 import cz.uhk.zlesak.threejslearningapp.application.views.scaffolds.ListingScaffold;
 import jakarta.annotation.security.PermitAll;
 import lombok.Setter;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 
 import java.util.List;
@@ -43,11 +42,9 @@ public class ModelListView extends ListingScaffold {
      * Constructor for ModelListView.
      * It initializes the view with the necessary controllers and providers.
      *
-     * @param modelController    controller for handling model-related operations
      */
-    @Autowired
-    public ModelListView(ModelController modelController) {
-        this.modelController = modelController;
+    public ModelListView() {
+        this.modelController = SpringContextUtils.getBean(ModelController.class);
         this.customI18NProvider = SpringContextUtils.getBean(CustomI18NProvider.class);
     }
 

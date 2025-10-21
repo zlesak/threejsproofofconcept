@@ -19,7 +19,7 @@ import java.util.Map;
  * This class main purpose is to provide a bridge between the Java backend and the JavaScript Three.js library.
  */
 @Slf4j
-@JsModule("./js/three-javascript.js")
+@JsModule("./js/threejs/three-javascript.js")
 @NpmPackage(value = "three", version = "0.172.0")
 @Tag("canvas")
 @Scope("prototype")

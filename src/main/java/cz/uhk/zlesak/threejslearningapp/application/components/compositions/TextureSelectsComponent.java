@@ -11,6 +11,12 @@ import org.springframework.context.annotation.Scope;
 import java.util.List;
 import java.util.Objects;
 
+/**
+ * A component that combines texture listing and texture area selection for 3D rendering.
+ * It allows users to select textures and apply them to specific areas of a 3D model.
+ * The component interacts with a ThreeJsComponent to update the displayed texture based on user selections.
+ *
+ */
 @Scope("prototype")
 @Getter
 public class TextureSelectsComponent extends HorizontalLayout {

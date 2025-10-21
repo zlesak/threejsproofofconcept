@@ -1,7 +1,11 @@
 package cz.uhk.zlesak.threejslearningapp.application.controllers;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import cz.uhk.zlesak.threejslearningapp.application.clients.ChapterApiClient;
 import cz.uhk.zlesak.threejslearningapp.application.clients.interfaces.IChapterApiClient;
+import cz.uhk.zlesak.threejslearningapp.application.components.notifications.ErrorNotification;
 import cz.uhk.zlesak.threejslearningapp.application.models.entities.ChapterEntity;
 import cz.uhk.zlesak.threejslearningapp.application.models.entities.quickEntities.QuickModelEntity;
 import cz.uhk.zlesak.threejslearningapp.application.models.entities.quickEntities.QuickTextureEntity;
@@ -11,7 +15,6 @@ import cz.uhk.zlesak.threejslearningapp.application.utils.TextureMapHelper;
 import elemental.json.Json;
 import elemental.json.JsonArray;
 import elemental.json.JsonObject;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContextException;
@@ -34,8 +37,8 @@ import java.util.Objects;
 public class ChapterController implements IController {
     private final ChapterApiClient chapterApiClient;
     private ChapterEntity chapterEntity = null;
-    @Setter
-    private QuickModelEntity uploadedModel = null;
+    private final ObjectMapper objectMapper;
+    private final List<QuickModelEntity> uploadedModels = new ArrayList<>();
 
     /**
      * Constructor for ChapterController that initializes the ChapterApiClient.
@@ -43,8 +46,9 @@ public class ChapterController implements IController {
      * @param chapterApiClient The API client used to interact with chapter-related operations.
      */
     @Autowired
-    public ChapterController(ChapterApiClient chapterApiClient) {
+    public ChapterController(ChapterApiClient chapterApiClient, ObjectMapper objectMapper) {
         this.chapterApiClient = chapterApiClient;
+        this.objectMapper = objectMapper;
     }
 
     /**
@@ -55,31 +59,65 @@ public class ChapterController implements IController {
      *
      * @param name    the name of the chapter
      * @param content the content of the chapter in JSON format
-     * @return the created ChapterEntity coming back from BE as proof of successful creation
+     * @return created ChapterEntity ID coming back from BE as proof of successful creation
      * @throws Exception if there is an error during chapter creation or if validation fails
      */
-    public ChapterEntity createChapter(String name, String content) throws Exception {
+    public String createChapter(String name, String content, Map<String, QuickModelEntity> allModels) throws Exception {
 
         if (name == null || name.isEmpty()) {
-            log.debug("Název kapitoly je prázdný.");
             throw new ApplicationContextException("Název kapitoly nesmí být prázdný.");
         }
         if (content == null || content.isEmpty()) {
-            log.debug("Obsah kapitoly je prázdný.");
             throw new ApplicationContextException("Obsah kapitoly nesmí být prázdný.");
         }
-        if (uploadedModel == null) {
-            log.debug("Kapitola nemá přiřazen žádný model.");
+        if (allModels == null || allModels.isEmpty()) {
             throw new ApplicationContextException("Kapitola musí mít alespoň jeden model.");
         }
+
+
+        try {
+            ObjectNode bodyJson = (ObjectNode) objectMapper.readTree(content);
+            ArrayNode blocks = (ArrayNode) bodyJson.get("blocks");
+
+            if(blocks.isEmpty()){
+                throw new ApplicationContextException("Obsah kapitoly nesmí být prázdný.");
+            }
+
+            blocks.forEach(blockNode -> {
+                if (blockNode.has("id") &&  allModels.containsKey(blockNode.get("id").asText())) {
+                    String blockId = blockNode.get("id").asText();
+                    QuickModelEntity model = allModels.get(blockId);
+                    ObjectNode dataNode = (ObjectNode) blockNode.get("data");
+                    dataNode.put("modelId", model.getModel().getId());
+                }
+            });
+            content = objectMapper.writeValueAsString(bodyJson);
+        } catch (ApplicationContextException e) {
+            throw e;
+        } catch (Exception e) {
+            log.error("Chyba při úpravě bloků editorjs: {}", e.getMessage(), e);
+            new ErrorNotification("Chyba při úpravě bloků editorjs: " + e.getMessage(), 5000);
+        }
+
+        List<QuickModelEntity> modelsList = new ArrayList<>();
+
+        allModels.forEach((key, model) -> {
+            if (!key.equals("main")) {
+                modelsList.addLast(model);
+            } else {
+                modelsList.addFirst(model);
+            }
+        });
+
+        uploadedModels.addAll(modelsList);
 
         ChapterEntity chapter = ChapterEntity.builder()
                 .Name(name)
                 .Content(content)
-                .Models(List.of(uploadedModel))
+                .Models(uploadedModels)
                 .build();
         try {
-            return chapterApiClient.createChapter(chapter);
+            return chapterApiClient.createChapter(chapter).getId();
         } catch (Exception e) {
             log.error("Chyba při vytváření kapitoly: {}", e.getMessage(), e);
             throw e;

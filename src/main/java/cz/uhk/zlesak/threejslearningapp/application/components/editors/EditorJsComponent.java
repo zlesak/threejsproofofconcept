@@ -1,14 +1,15 @@
 package cz.uhk.zlesak.threejslearningapp.application.components.editors;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.vaadin.flow.component.Component;
-import com.vaadin.flow.component.HasSize;
-import com.vaadin.flow.component.HasStyle;
-import com.vaadin.flow.component.Tag;
+import com.vaadin.flow.component.*;
 import com.vaadin.flow.component.dependency.JsModule;
 import com.vaadin.flow.component.dependency.NpmPackage;
+import com.vaadin.flow.shared.Registration;
 import cz.uhk.zlesak.threejslearningapp.application.components.SearchTextField;
+import cz.uhk.zlesak.threejslearningapp.application.events.MarkdownModeToggleEvent;
+import cz.uhk.zlesak.threejslearningapp.application.events.MarkdownValueChangedEvent;
 import cz.uhk.zlesak.threejslearningapp.application.models.entities.quickEntities.QuickTextureEntity;
 import cz.uhk.zlesak.threejslearningapp.application.models.records.TextureAreaForSelectRecord;
 import cz.uhk.zlesak.threejslearningapp.application.models.records.TextureListingForSelectRecord;
@@ -18,7 +19,9 @@ import cz.uhk.zlesak.threejslearningapp.application.utils.TextureMapHelper;
 import elemental.json.JsonValue;
 import org.springframework.context.annotation.Scope;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -29,10 +32,12 @@ import java.util.concurrent.CompletableFuture;
  * This is the heart of the Editor.js integration, allowing for rich text editing capabilities within a Vaadin application.
  */
 @Tag("editor-js")
-@JsModule("./js/editor-js.ts")
+@JsModule("./js/editorjs/editor-js.ts")
 @NpmPackage(value = "@editorjs/editorjs", version = "2.30.8")
 @Scope("prototype")
 public class EditorJsComponent extends Component implements HasSize, HasStyle {
+    private final List<Registration> registrations = new ArrayList<>();
+    
     /**
      * Default constructor for EditorJsComponent.
      * Does not take any parameters as they are not needed at the time of instantiation.
@@ -46,10 +51,11 @@ public class EditorJsComponent extends Component implements HasSize, HasStyle {
      * @return JSON as string with data retrieved from Editor.js.
      */
     public CompletableFuture<String> getData() {
-        return getElement()
-                .callJsFunction("getDataAsString")
-                .toCompletableFuture()
-                .thenApply(JsonValue::asString);
+        return getElement().callJsFunction("getData").toCompletableFuture()
+            .thenApply(json -> {
+                String result = json.asString();
+                return (result == null || result.isEmpty()) ? "{}" : result;
+            });
     }
 
     /**
@@ -156,30 +162,6 @@ public class EditorJsComponent extends Component implements HasSize, HasStyle {
     }
 
     /**
-     * Switches EditorJS to MD editor and vice versa.
-     */
-    public void toggleMarkdownMode() {
-        getElement().callJsFunction("toggleMarkdownMode");
-    }
-
-    /**
-     * Listener interface for handling MD editor/EditorJS changes.
-     */
-    public interface MarkdownModeChangedListener {
-        void onMarkdownModeChanged(boolean markdownMode);
-    }
-
-    /**
-     * Adds a listener for editor change (MD to EditorJS or vice versa).
-     */
-    public void addMarkdownModeChangedListener(MarkdownModeChangedListener listener) {
-        getElement().addEventListener("markdown-mode-changed", e -> {
-            boolean mode = e.getEventData().getBoolean("event.detail.markdownMode");
-            listener.onMarkdownModeChanged(mode);
-        }).addEventData("event.detail.markdownMode");
-    }
-
-    /**
      * Listener interface for handling texture color area click events.
      * Implement this interface to define custom behavior when a texture color area is clicked.
      */
@@ -207,13 +189,67 @@ public class EditorJsComponent extends Component implements HasSize, HasStyle {
     }
 
     /**
-     * Checks if the editor is currently in Markdown mode.
-     * @return CompletableFuture that resolves to true if in Markdown mode, false otherwise.
+     * Retrieves a map of subchapter IDs to their names from the Editor.js instance, that has not yet been saved into the database.
+     *
+     * @return CompletableFuture that resolves to a Map where keys are subchapter IDs and values are subchapter names.
      */
-    public CompletableFuture<Boolean> isMarkdownMode() {
-        return getElement()
-                .callJsFunction("isMarkdownMode")
-                .toCompletableFuture()
-                .thenApply(JsonValue::asBoolean);
+    public CompletableFuture<Map<String, String>> getSubchaptersNames() {
+        return getElement().callJsFunction("getSubchaptersNames").toCompletableFuture().thenApply(jsonValue -> {
+            String jsonString = jsonValue.asString();
+            ObjectMapper objectMapper = new ObjectMapper();
+            try {
+                return objectMapper.readValue(jsonString, new TypeReference<>() {
+                });
+            } catch (JsonProcessingException e) {
+                throw new RuntimeException("Chyba při parsování subchapter names JSON: " + e.getMessage());
+            }
+        });
+    }
+
+    /**
+     * Adds a listener for Markdown mode toggle events.
+     * This listener is triggered when the Markdown mode is toggled.
+     *
+     */
+    @Override
+    protected void onAttach(AttachEvent attachEvent) {
+        super.onAttach(attachEvent);
+        registrations.add(ComponentUtil.addListener(
+                attachEvent.getUI(),
+                MarkdownModeToggleEvent.class,
+                event -> {
+                    if (event.isMarkdownMode()) {
+                        getMarkdown().whenComplete((markdown, throwable) -> {
+                            if (throwable != null) {
+                                throw new RuntimeException("Chyba při získávání markdown hodnoty: " + throwable.getMessage());
+                            } else {
+                                ComponentUtil.fireEvent(UI.getCurrent(), new MarkdownValueChangedEvent(UI.getCurrent(), markdown, true));
+                                setVisible(false);
+                            }
+                        });
+                    } else {
+                        setVisible(true);
+                    }
+                }
+        ));
+
+        registrations.add(
+                ComponentUtil.addListener(
+                        attachEvent.getUI(),
+                        MarkdownValueChangedEvent.class,
+                        event -> {
+                            if(!event.isMarkdownMode()) {
+                                loadMarkdown(event.getMarkdownValue());
+                            }
+                        }
+                )
+        );
+    }
+
+    @Override
+    protected void onDetach(DetachEvent detachEvent) {
+        super.onDetach(detachEvent);
+        registrations.forEach(Registration::remove);
+        registrations.clear();
     }
 }

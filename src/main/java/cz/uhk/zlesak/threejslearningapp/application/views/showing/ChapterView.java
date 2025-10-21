@@ -39,7 +39,7 @@ public class ChapterView extends ChapterScaffold {
      */
     @Autowired
     public ChapterView(ChapterController chapterController, ModelController modelController, TextureController textureController) {
-        super();
+        super(false);
         this.chapterController = chapterController;
         this.modelController = modelController;
         this.textureController = textureController;

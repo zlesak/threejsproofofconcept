@@ -1,17 +1,12 @@
 package cz.uhk.zlesak.threejslearningapp.application.views.scaffolds;
 
-import com.flowingcode.vaadin.addons.markdown.MarkdownEditor;
 import com.vaadin.flow.component.Composite;
 import com.vaadin.flow.component.Tag;
 import com.vaadin.flow.component.dependency.JavaScript;
-import com.vaadin.flow.component.html.Span;
-import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.Scroller;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.splitlayout.SplitLayout;
-import com.vaadin.flow.component.tabs.Tab;
-import com.vaadin.flow.component.tabs.TabSheet;
 import com.vaadin.flow.theme.lumo.LumoUtility.Gap;
 import cz.uhk.zlesak.threejslearningapp.application.components.*;
 import cz.uhk.zlesak.threejslearningapp.application.components.editors.EditorJsComponent;
@@ -39,19 +34,20 @@ public abstract class ChapterScaffold extends Composite<VerticalLayout> implemen
     protected final SearchTextField searchTextField = new SearchTextField("Hledat v kapitole");
     protected final ChapterSelect chapterSelect = new ChapterSelect();
     protected final NavigationContentComponent navigationContentLayout = new NavigationContentComponent();
+    protected final MarkdownEditorComponent mdEditor = new MarkdownEditorComponent();
     protected final EditorJsComponent editorjs = new EditorJsComponent();
     protected final NameTextField nameTextField = new NameTextField("Název kapitoly");
     protected final VerticalLayout chapterNavigation, chapterContent, chapterModel;
     protected final CustomI18NProvider i18NProvider;
     protected final ModelDiv modelDiv = new ModelDiv();
-    protected final MarkdownEditor mdEditor = new MarkdownEditorComponent();
+    protected ChapterTabSheetSecondaryNavigationComponent secondaryNavigation = null;
 
     /**
      * Constructor for ChapterScaffold.
      * Initializes the layout and components based on the specified view type.
      *
      */
-    public ChapterScaffold() {
+    public ChapterScaffold(boolean areWeInCreateOrEditChapterView) {
         this.i18NProvider = SpringContextUtils.getBean(CustomI18NProvider.class);
 
         //Main page layout
@@ -84,21 +80,20 @@ public abstract class ChapterScaffold extends Composite<VerticalLayout> implemen
         chapterNavigation.setPadding(false);
 
         //Content layout
-        Scroller chapterContentScroller = new ChapterContentScroller(editorjs, mdEditor);
-        Scroller modelsScroller = new Scroller();
 
+        ChapterContentScroller chapterContentScroller = new ChapterContentScroller(editorjs, mdEditor);
+        ModelsSelectScrollerComponent modelsScroller = new ModelsSelectScrollerComponent();
 
-        TabSheet tabs = new TabSheet();
-        Tab tabContent = new Tab(VaadinIcon.TEXT_INPUT.create(), new Span("Obsah"));
-        Tab tabModels = new Tab(VaadinIcon.CHART_3D.create(), new Span("3D Modely"));
-        tabs.add(tabContent, chapterContentScroller);
-        tabs.add(tabModels, modelsScroller);
-        tabs.setPrefixComponent(nameTextField);
-
-        Scroller tabsScroller = new Scroller(tabs, Scroller.ScrollDirection.VERTICAL);
-        tabsScroller.setSizeFull();
-
-        chapterContent.add(tabsScroller);
+        if (areWeInCreateOrEditChapterView) {
+            secondaryNavigation = new ChapterTabSheetSecondaryNavigationComponent(nameTextField, chapterContentScroller, modelsScroller);
+            Scroller tabsScroller = new Scroller(secondaryNavigation, Scroller.ScrollDirection.VERTICAL);
+            tabsScroller.setSizeFull();
+            chapterContent.add(tabsScroller);
+        }
+        else  {
+            nameTextField.setWidthFull();
+            chapterContent.add(nameTextField, chapterContentScroller);
+        }
         chapterContent.addClassName(Gap.MEDIUM);
         chapterContent.setSizeFull();
         chapterContent.setPadding(false);
