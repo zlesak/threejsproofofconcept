@@ -169,7 +169,7 @@ export class EditorJs extends LitElement {
   }
 
   // @ts-ignore - Method is used by external components
-  public async initializeModelTextureAreaSelects(texturesJson?: string, areasJson?: string, modelsJson?: string): Promise<void> {
+  public async initializeModelTextureAreaSelects(modelsJson?: string, texturesJson?: string, areasJson?: string): Promise<void> {
     await this.editorReadyPromise;
     if (!this.editor || !this.editor.blocks) {
       console.error('initializeModelTextureAreaSelects: Editor or editor.blocks not fully initialized even after promise resolved.');

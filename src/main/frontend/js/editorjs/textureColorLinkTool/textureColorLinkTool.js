@@ -120,9 +120,11 @@ export default class TextureColorLinkTool {
     this.nodes.selectModelLabel = document.createElement('label');
     this.nodes.selectModel = document.createElement('select');
     this.addOption(this.nodes.selectModel, this.i18n.t('Vyberte model'), '');
-    this.models.forEach((model) => {
-      this.addOption(this.nodes.selectModel, model.modelName ?? model.name ?? model.id, model.id);
-    });
+    if (this.models) {
+      this.models.forEach((model) => {
+        this.addOption(this.nodes.selectModel, model.modelName ?? model.name ?? model.id, model.id);
+      });
+    }
 
     // Texture select
     this.nodes.selectTextureLabel = document.createElement('label');
@@ -143,7 +145,7 @@ export default class TextureColorLinkTool {
       this.nodes.selectColor.innerHTML = '';
       this.addOption(this.nodes.selectColor, this.i18n.t('Vyberte barvu'), '');
 
-      if (selectedModelId) {
+      if (this.textures && selectedModelId && this.textures.length !== 0) {
         this.textures
           .filter((texture) => String(texture.modelId) === String(selectedModelId) || String(texture.model) === String(selectedModelId))
           .forEach((texture) => {
@@ -157,7 +159,7 @@ export default class TextureColorLinkTool {
       this.nodes.selectColor.innerHTML = '';
       this.addOption(this.nodes.selectColor, this.i18n.t('Vyberte barvu'), '');
       const selectedTextureId = this.nodes.selectTexture.value;
-      if (selectedTextureId) {
+      if (this.colors && selectedTextureId && this.colors.length !== 0) {
         this.colors
           .filter((color) => String(color.textureId) === String(selectedTextureId))
           .forEach((color) => {

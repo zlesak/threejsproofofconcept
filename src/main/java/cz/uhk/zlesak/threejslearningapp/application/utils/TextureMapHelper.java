@@ -1,6 +1,7 @@
 package cz.uhk.zlesak.threejslearningapp.application.utils;
 
 import cz.uhk.zlesak.threejslearningapp.application.controllers.TextureController;
+import cz.uhk.zlesak.threejslearningapp.application.models.entities.quickEntities.QuickModelEntity;
 import cz.uhk.zlesak.threejslearningapp.application.models.entities.quickEntities.QuickTextureEntity;
 
 import java.io.IOException;
@@ -27,6 +28,22 @@ public abstract class TextureMapHelper {
                 String textureId = textureEntity.getTextureFileId();
                 if (textureEntity.getCsvContent() != null && !textureEntity.getCsvContent().isEmpty()) {
                     textureIdCsvMap.put(textureId, textureEntity.getCsvContent());
+                }
+            }
+        }
+        return textureIdCsvMap;
+    }
+    public static Map<String, String> createCsvMap(Map<String, QuickModelEntity> quickModelEntityMap) {
+        Map<String, String> textureIdCsvMap = new HashMap<>();
+        for (QuickModelEntity modelEntity : quickModelEntityMap.values()) {
+            if (modelEntity != null && modelEntity.getOtherTextures() != null) {
+                for (QuickTextureEntity textureEntity : modelEntity.getOtherTextures()) {
+                    if (textureEntity != null) {
+                        String textureId = textureEntity.getTextureFileId();
+                        if (textureEntity.getCsvContent() != null && !textureEntity.getCsvContent().isEmpty()) {
+                            textureIdCsvMap.put(textureId, textureEntity.getCsvContent());
+                        }
+                    }
                 }
             }
         }

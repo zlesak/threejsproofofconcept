@@ -168,7 +168,9 @@ public class CreateChapterView extends ChapterScaffold {
             List<QuickTextureEntity> allTextures = new ArrayList<>(quickModelEntity.getOtherTextures());
             modelDiv.renderer.addOtherTextures(TextureMapHelper.otherTexturesMap(allTextures, textureController));
 
-            editorjs.initializeTextureSelects(quickModelEntity.getOtherTextures());
+            Map<String, QuickModelEntity> allModels = secondaryNavigation.getModelsScroller().getAllModelsMappedToChapterHeaderBlockId();
+            editorjs.initializeTextureSelects(allModels);
+
             editorjs.addTextureColorAreaClickListener((textureId, hexColor, text) -> {
                 modelDiv.textureSelectsComponent.getTextureListingSelect().setSelectedTextureById(textureId);
                 modelDiv.textureSelectsComponent.getTextureAreaSelect().setSelectedAreaByHexColor(hexColor, textureId);

@@ -45,7 +45,7 @@ public class TextureListingSelect extends GenericSelect<TextureListingForSelectR
      * @param quickTextureEntityList the list of quick texture entities to be displayed in the select
      */
     public void initializeTextureListingSelect(List<QuickTextureEntity> quickTextureEntityList) {
-        initialize(TextureListingDataParser.textureListingForSelectDataParser(quickTextureEntityList), true);
+        initialize(TextureListingDataParser.textureListingForSelectListDataParser(quickTextureEntityList), true);
     }
 
     /**
