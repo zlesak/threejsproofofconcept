@@ -1,4 +1,5 @@
 import { IconLink } from '@codexteam/icons';
+import { attachTextureColorListeners } from 'Frontend/js/editorjs/texture-utils.js';
 
 /**
  * TextureColorLinkTool for Editor.js
@@ -105,8 +106,22 @@ export default class TextureColorLinkTool {
       this._selectedRange = null;
     }
 
-    this.nodes.div = document.createElement('div');
+    let existingLink = null;
+    if (this._selectedRange) {
+      let node = this._selectedRange.startContainer;
+      while (node && node.nodeType === 3) node = node.parentNode;
+      while (node && node.nodeType === 1) {
+        if (node.tagName && node.tagName.toLowerCase() === 'a') {
+          if (node.hasAttribute('data-model-id') && node.hasAttribute('data-texture-id') && node.hasAttribute('data-hex-color')) {
+            existingLink = node;
+            break;
+          }
+        }
+        node = node.parentNode;
+      }
+    }
 
+    this.nodes.div = document.createElement('div');
     this.nodes.inputLabel = document.createElement('label');
     this.nodes.input = document.createElement('input');
 
@@ -122,7 +137,7 @@ export default class TextureColorLinkTool {
     this.addOption(this.nodes.selectModel, this.i18n.t('Vyberte model'), '');
     if (this.models) {
       this.models.forEach((model) => {
-        this.addOption(this.nodes.selectModel, model.modelName ?? model.name ?? model.id, model.id);
+        this.addOption(this.nodes.selectModel, model.modelName, model.id);
       });
     }
 
@@ -168,22 +183,21 @@ export default class TextureColorLinkTool {
       }
     });
 
-    const initialModelId = this.nodes.selectModel.value;
-    if (initialModelId) {
-      this.textures
-        .filter((texture) => String(texture.modelId) === String(initialModelId) || String(texture.model) === String(initialModelId))
-        .forEach((texture) => {
-          this.addOption(this.nodes.selectTexture, texture.textureName, texture.id);
-        });
-    }
+    if (existingLink) {
+      this.existingLink = existingLink;
+      const modelId = existingLink.getAttribute('data-model-id') || '';
+      const textureId = existingLink.getAttribute('data-texture-id') || '';
+      const hexColor = existingLink.getAttribute('data-hex-color') || '';
 
-    const initialTextureId = this.nodes.selectTexture.value;
-    if (initialTextureId) {
-      this.colors
-        .filter((color) => color.textureId === initialTextureId)
-        .forEach((color) => {
-          this.addOption(this.nodes.selectColor, color.areaName, color.hexColor);
-        });
+      this.nodes.selectModel.value = modelId;
+      this.nodes.selectModel.dispatchEvent(new Event('change'));
+      setTimeout(() => {
+        this.nodes.selectTexture.value = textureId;
+        this.nodes.selectTexture.dispatchEvent(new Event('change'));
+        setTimeout(() => {
+          this.nodes.selectColor.value = hexColor;
+        }, 0);
+      }, 0);
     }
 
     this.nodes.buttonSave = document.createElement('button');
@@ -211,7 +225,7 @@ export default class TextureColorLinkTool {
     event.stopImmediatePropagation();
 
     let text = this.nodes.input.value || '';
-    let model = this.nodes.selectModel || '';
+    let model = this.nodes.selectModel.value || '';
     let texture = this.nodes.selectTexture.value || '';
     let color = this.nodes.selectColor.value || '';
 
@@ -222,6 +236,9 @@ export default class TextureColorLinkTool {
 
     const range = this._selectedRange;
     this.surround(range);
+
+    attachTextureColorListeners();
+    this.clear();
   }
 
   /**
@@ -231,19 +248,24 @@ export default class TextureColorLinkTool {
    */
   surround(range) {
     if (range && this._savedText && this._savedTexture && this._savedColor) {
-      const a = document.createElement('a');
-      a.href = '#';
-      a.setAttribute('data-model-id', this._savedModel || '');
-      a.setAttribute('data-texture-id', this._savedTexture || '');
-      a.setAttribute('data-hex-color', this._savedColor || '');
-      a.textContent = this._savedText || range.toString();
-      a.addEventListener('click', function(event) {
-        event.preventDefault();
-        //TODO fire event to change the selects here?
-      });
-      range.deleteContents();
-      range.insertNode(a);
-
+      if (this.existingLink) {
+        this.existingLink.setAttribute('data-model-id', this._savedModel || '');
+        this.existingLink.setAttribute('data-texture-id', this._savedTexture || '');
+        this.existingLink.setAttribute('data-hex-color', this._savedColor || '');
+        this.existingLink.textContent = this._savedText || range.toString();
+      }else {
+        const a = document.createElement('a');
+        a.href = '#';
+        a.setAttribute('data-model-id', this._savedModel || '');
+        a.setAttribute('data-texture-id', this._savedTexture || '');
+        a.setAttribute('data-hex-color', this._savedColor || '');
+        a.textContent = this._savedText || range.toString();
+        a.addEventListener('click', function(event) {
+          event.preventDefault();
+        });
+        range.deleteContents();
+        range.insertNode(a);
+      }
       this._savedText = null;
       this._savedModel = null;
       this._savedTexture = null;

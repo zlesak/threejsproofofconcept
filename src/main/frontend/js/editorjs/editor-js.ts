@@ -54,6 +54,7 @@ export class EditorJs extends LitElement {
   async firstUpdated() {
     try {
       this.editor = await initializeEditor(this);
+      TextureColorLinkTool.setGlobalModelsTexturesAndColors([], [], []);
       this.resolveEditorReadyPromise();
       attachTextureColorListeners();
     } catch (e) {
