@@ -3,7 +3,7 @@ package cz.uhk.zlesak.threejslearningapp.application.components;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.progressbar.ProgressBar;
-import cz.uhk.zlesak.threejslearningapp.application.components.compositions.TextureSelectsComponent;
+import cz.uhk.zlesak.threejslearningapp.application.components.compositions.ModelTextureAreaSelectComponent;
 
 /**
  * ModelDiv is a custom Div component that contains a ThreeJsComponent for rendering 3D models,
@@ -16,7 +16,7 @@ public class ModelDiv extends Div {
     private final Div overlayBackground;
     private final Span actionDescription;
     public final ThreeJsComponent renderer;
-    public final TextureSelectsComponent textureSelectsComponent;
+    public final ModelTextureAreaSelectComponent modelTextureAreaSelectComponent;
 
     /**
      * Constructor for ModelDiv component.
@@ -30,18 +30,19 @@ public class ModelDiv extends Div {
         getStyle().set("overflow", "hidden");
 
         renderer = new ThreeJsComponent();
-        textureSelectsComponent = new TextureSelectsComponent(renderer);
+        modelTextureAreaSelectComponent = new ModelTextureAreaSelectComponent(renderer);
         overlayBackground = getOverlayBackgroundDiv();
         overlayProgressBar = getOverlayProgressBar();
         actionDescription = getActionDescriptionSpan();
         Div rendererContainer = getRendererContainer();
 
-        add(textureSelectsComponent, rendererContainer);
+        add(modelTextureAreaSelectComponent, rendererContainer);
     }
 
     /**
      * Creates and configures the container Div for the ThreeJsComponent renderer,
      * including the overlay background, progress bar, and action description.
+     *
      * @return the configured container Div
      */
     private Div getRendererContainer() {
@@ -68,6 +69,7 @@ public class ModelDiv extends Div {
     /**
      * Creates and configures the overlay ProgressBar component.
      * The progress bar is styled to be centered and overlayed on top of the renderer.
+     *
      * @return the configured ProgressBar instance
      */
     private ProgressBar getOverlayProgressBar() {
@@ -86,10 +88,11 @@ public class ModelDiv extends Div {
     /**
      * Creates and configures the Span component for displaying action descriptions.
      * The span is styled to be centered and overlayed on top of the renderer, below the progress bar.
+     *
      * @return the configured Span instance
      */
     private Span getActionDescriptionSpan() {
-        Span actionDescriptionSpan  = new Span();
+        Span actionDescriptionSpan = new Span();
         actionDescriptionSpan.getStyle().set("position", "absolute");
         actionDescriptionSpan.getStyle().set("top", "55%");
         actionDescriptionSpan.getStyle().set("left", "50%");
@@ -102,6 +105,7 @@ public class ModelDiv extends Div {
     /**
      * Creates and configures the overlay background Div component.
      * The background is styled to cover the entire renderer area with a semi-transparent overlay.
+     *
      * @return the configured Div instance
      */
     private Div getOverlayBackgroundDiv() {

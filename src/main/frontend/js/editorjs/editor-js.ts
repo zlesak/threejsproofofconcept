@@ -1,7 +1,7 @@
 import { LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import { initializeEditor } from './editorjs-init';
-import { attachTextureColorListeners } from './texture-utils';
+import { attachTextureColorListeners, removeLinksByModelIds } from './texture-utils';
 import { searchInEditor } from './search-utils';
 import { convertEditorJsToMarkdown, convertMarkdownToEditorJs } from 'Frontend/js/editorjs/markdownConvertors/convert';
 import TextureColorLinkTool from 'Frontend/js/editorjs/textureColorLinkTool/textureColorLinkTool';
@@ -190,6 +190,7 @@ export class EditorJs extends LitElement {
         models = JSON.parse(modelsJson);
       }
       TextureColorLinkTool.setGlobalModelsTexturesAndColors(models, textures, colors);
+      removeLinksByModelIds(models)
     } catch (error) {
       console.error('Error initializing texture selects:', error);
       throw error;

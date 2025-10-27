@@ -8,5 +8,5 @@ package cz.uhk.zlesak.threejslearningapp.application.models.records;
  * @param hexColor The hex color associated with the texture area.
  * @param areaName The name of the texture area.
  */
-public record TextureAreaForSelectRecord(String textureId, String hexColor, String areaName) {
+public record TextureAreaForSelectRecord(String textureId, String hexColor, String areaName, String modelId) {
 }

@@ -11,7 +11,6 @@ import com.vaadin.flow.server.StreamRegistration;
 import com.vaadin.flow.server.StreamResource;
 import com.vaadin.flow.server.VaadinSession;
 import cz.uhk.zlesak.threejslearningapp.application.components.NameTextField;
-import cz.uhk.zlesak.threejslearningapp.application.components.ThreeJsComponent;
 import cz.uhk.zlesak.threejslearningapp.application.components.UploadComponent;
 import cz.uhk.zlesak.threejslearningapp.application.components.UploadLabelDiv;
 import cz.uhk.zlesak.threejslearningapp.application.events.*;
@@ -45,6 +44,8 @@ public class ModelUploadFormScrollerComposition extends Scroller {
     private final Map<String, String> csvMap = new HashMap<>();
     protected String modelUrl = null;
     protected String textureUrl = null;
+    private String textureName = null;
+    private String modelFileName = null;
     protected List<String> otherTexturesUrls = new ArrayList<>();
     protected List<String> csvBase64 = new ArrayList<>();
 
@@ -88,10 +89,13 @@ public class ModelUploadFormScrollerComposition extends Scroller {
                         contentType = "model/gltf-binary";
                     }
                     modelUrl = registerStreamUrl(fileName, contentType, inputStreamMultipartFile.getInputStream());
+
+                    modelFileName = fileName;
+
                     if (!isAdvanced.getValue()) {
-                        fireEvent(new ModelLoadEvent(this, modelUrl, null));
+                        fireEvent(new ModelLoadEvent(this, modelUrl, null, "modelId", modelFileName, null));
                     } else if (textureUrl != null) {
-                        fireEvent(new ModelLoadEvent(this, modelUrl, textureUrl));
+                        fireEvent(new ModelLoadEvent(this, modelUrl, textureUrl, "modelId", modelFileName, textureName));
                     }
                 }
         );
@@ -112,16 +116,19 @@ public class ModelUploadFormScrollerComposition extends Scroller {
                     uploadOtherTexturesDiv.setEnabled(true);
                     csvOtherTexturesDiv.setEnabled(true);
                     textureUrl = registerStreamUrl(fileName, "image/jpeg", inputStreamMultipartFile.getInputStream());
+                    textureName = fileName;
                     if (modelUrl != null) {
-                        fireEvent(new ModelLoadEvent(this, modelUrl, textureUrl));
-                        fireEvent(new ModelTextureChangeEvent(this, textureUploaded(fileName)));
+                        fireEvent(new ModelLoadEvent(this, modelUrl, textureUrl, "modelId", modelFileName, textureName));
+                        this.quickTextureEntityMap.put("main", new QuickTextureEntity(fileName, fileName, this.csvMap.getOrDefault(fileName, null)));
+                        fireEvent(new ModelTextureChangeEvent(this, this.quickTextureEntityMap));
                     }
                 }
         );
 
         mainTextureUploadComponent.addFileRemovedListener(event -> {
             fireEvent(new ModelClearEvent(this));
-            fireEvent(new ModelTextureChangeEvent(this, textureDeleted(event.getFileName())));
+            this.quickTextureEntityMap.remove("main");
+            fireEvent(new ModelTextureChangeEvent(this, this.quickTextureEntityMap));
             uploadOtherTexturesDiv.setEnabled(false);
             csvOtherTexturesDiv.setEnabled(false);
             textureUrl = null;
@@ -134,12 +141,14 @@ public class ModelUploadFormScrollerComposition extends Scroller {
                     Map<String, String> otherTextures = new HashMap<>();
                     otherTextures.put(fileName, textureUrl);
                     fireEvent(new OtherTextureLoadedEvent(this, otherTextures));
-                    fireEvent(new ModelTextureChangeEvent(this, textureUploaded(fileName)));
+                    this.quickTextureEntityMap.put(fileName, new QuickTextureEntity(fileName, fileName, this.csvMap.getOrDefault(fileName, null)));
+                    fireEvent(new ModelTextureChangeEvent(this, this.quickTextureEntityMap));
                 });
 
         otherTexturesUploadComponent.addFileRemovedListener(event -> {
             fireEvent(new OtherTextureRemovedEvent(this, event.getFileName()));
-            fireEvent(new ModelTextureChangeEvent(this, textureDeleted(event.getFileName())));
+            this.quickTextureEntityMap.remove(event.getFileName());
+            fireEvent(new ModelTextureChangeEvent(this, this.quickTextureEntityMap));
         });
 
 
@@ -181,7 +190,8 @@ public class ModelUploadFormScrollerComposition extends Scroller {
 
     /**
      * Registers resource URL to provide files via streaming endpoint from front end side.
-     * @param fileName name of the file
+     *
+     * @param fileName    name of the file
      * @param contentType content type of the file
      * @param inputStream file in input stream format
      * @return registered stream URL in Vaadin session
@@ -311,11 +321,10 @@ public class ModelUploadFormScrollerComposition extends Scroller {
      *
      * @param name the name of the uploaded texture file
      * @return the current list of QuickTextureEntity objects
-     * @see ThreeJsComponent#addOtherTextures(Map)
      */
-    private List<QuickTextureEntity> textureUploaded(String name) {
-        if (!this.quickTextureEntityMap.containsKey(name)) {
-            this.quickTextureEntityMap.put(name, new QuickTextureEntity(name, name, this.csvMap.getOrDefault(name, null)));
+    private List<QuickTextureEntity> textureUploaded(String name, String key) {
+        if (!this.quickTextureEntityMap.containsKey(key)) {
+            this.quickTextureEntityMap.put(key, new QuickTextureEntity(name, name, this.csvMap.getOrDefault(name, null)));
         }
         return this.quickTextureEntityMap.values().stream().toList();
     }
@@ -323,12 +332,11 @@ public class ModelUploadFormScrollerComposition extends Scroller {
     /**
      * Handles the event when a texture is deleted.
      *
-     * @param name the name of the deleted texture file
+     * @param key the name of the deleted texture file
      * @return the current list of QuickTextureEntity objects after deletion
-     * @see ThreeJsComponent#removeOtherTexture(String)
      */
-    private List<QuickTextureEntity> textureDeleted(String name) {
-        this.quickTextureEntityMap.remove(name);
+    private List<QuickTextureEntity> textureDeleted(String key) {
+        this.quickTextureEntityMap.remove(key);
         return this.quickTextureEntityMap.values().stream().toList();
     }
 
@@ -343,7 +351,7 @@ public class ModelUploadFormScrollerComposition extends Scroller {
         this.csvMap.put(key, csvContent);
         if (this.quickTextureEntityMap.containsKey(key)) {
             this.quickTextureEntityMap.get(key).setCsvContent(csvContent);
-            fireEvent(new ModelTextureChangeEvent(this, this.quickTextureEntityMap.values().stream().toList()));
+            fireEvent(new ModelTextureChangeEvent(this, this.quickTextureEntityMap));
         }
     }
 
@@ -357,7 +365,7 @@ public class ModelUploadFormScrollerComposition extends Scroller {
         this.csvMap.remove(key);
         if (this.quickTextureEntityMap.containsKey(key)) {
             this.quickTextureEntityMap.get(key).setCsvContent(null);
-            fireEvent(new ModelTextureChangeEvent(this, this.quickTextureEntityMap.values().stream().toList()));
+            fireEvent(new ModelTextureChangeEvent(this, this.quickTextureEntityMap));
         }
     }
 }

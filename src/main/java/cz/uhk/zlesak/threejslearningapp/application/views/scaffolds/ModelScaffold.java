@@ -9,14 +9,18 @@ import com.vaadin.flow.theme.lumo.LumoUtility;
 import cz.uhk.zlesak.threejslearningapp.application.components.ModelDiv;
 import cz.uhk.zlesak.threejslearningapp.application.components.compositions.ModelUploadFormScrollerComposition;
 import cz.uhk.zlesak.threejslearningapp.application.controllers.ModelController;
+import cz.uhk.zlesak.threejslearningapp.application.models.entities.quickEntities.QuickFileEntity;
 import cz.uhk.zlesak.threejslearningapp.application.models.entities.quickEntities.QuickModelEntity;
 import cz.uhk.zlesak.threejslearningapp.application.components.notifications.ErrorNotification;
 import cz.uhk.zlesak.threejslearningapp.application.components.notifications.InfoNotification;
+import cz.uhk.zlesak.threejslearningapp.application.models.entities.quickEntities.QuickTextureEntity;
 import cz.uhk.zlesak.threejslearningapp.application.views.IView;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationContextException;
 import org.springframework.context.annotation.Scope;
 
+import java.util.List;
+import java.util.Map;
 import java.util.function.Consumer;
 
 @Slf4j
@@ -24,6 +28,7 @@ import java.util.function.Consumer;
 public abstract class ModelScaffold extends Composite<VerticalLayout> implements IView {
     protected final ModelDiv modelDiv = new ModelDiv();
     protected final ModelUploadFormScrollerComposition modelUploadFormScrollerComposition;
+    private Map<String, QuickModelEntity> quickModelEntity;
 
     public ModelScaffold() {
         HorizontalLayout modelPageLayout = new HorizontalLayout();
@@ -31,15 +36,31 @@ public abstract class ModelScaffold extends Composite<VerticalLayout> implements
         modelUploadFormScrollerComposition = new ModelUploadFormScrollerComposition();
 
         modelUploadFormScrollerComposition.addModelLoadEventListener(
-                event -> modelDiv.renderer.loadModel(event.getModel(), event.getTexture())
+                event -> {
+                    quickModelEntity = Map.of(event.getModelId(), QuickModelEntity.builder()
+                            .model(QuickFileEntity.builder().id(event.getModelId()).name(event.getModelName()).build())
+                            .mainTexture(QuickTextureEntity.builder().textureFileId(event.getTextureName()).name(event.getTextureName()).build())
+                            .build());
+                    modelDiv.renderer.loadModel(event.getModel(), event.getTexture(), event.getModelId());
+                }
         ).addModelClearEventListener(
                 event -> modelDiv.renderer.clear()
         ).addOtherTextureLoadedEventListener(
-                event -> modelDiv.renderer.addOtherTextures(event.getBase64Textures())
+                event -> modelDiv.renderer.addOtherTextures(event.getBase64Textures(), "modelId")
         ).addOtherTextureRemovedEventListener(
-                event -> modelDiv.renderer.removeOtherTexture(event.getName())
+                event -> modelDiv.renderer.removeOtherTexture("modelId", event.getName())
         ).addTextureChangeEventListener(
-                event -> modelDiv.textureSelectsComponent.initializeData(event.getQuickTextureEntity())
+        event -> {
+            QuickModelEntity model = quickModelEntity.get("modelId");
+            model.setMainTexture(event.getQuickTextureEntity().get("main"));
+
+            List<QuickTextureEntity> textures = event.getQuickTextureEntity().entrySet().stream()
+                    .filter(e -> !e.getKey().equals("main")).map(Map.Entry::getValue)
+                    .toList();
+
+            model.setOtherTextures(textures);
+            modelDiv.modelTextureAreaSelectComponent.initializeData(quickModelEntity);
+        }
         );
 
         modelDiv.setId("modelDiv");

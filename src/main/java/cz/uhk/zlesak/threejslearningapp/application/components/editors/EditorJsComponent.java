@@ -15,7 +15,6 @@ import cz.uhk.zlesak.threejslearningapp.application.models.records.ModelForSelec
 import cz.uhk.zlesak.threejslearningapp.application.models.records.TextureAreaForSelectRecord;
 import cz.uhk.zlesak.threejslearningapp.application.models.records.TextureListingForSelectRecord;
 import cz.uhk.zlesak.threejslearningapp.application.models.records.parsers.ModelListingDataParser;
-import cz.uhk.zlesak.threejslearningapp.application.models.records.parsers.TextureAreaDataParser;
 import cz.uhk.zlesak.threejslearningapp.application.models.records.parsers.TextureListingDataParser;
 import cz.uhk.zlesak.threejslearningapp.application.utils.TextureMapHelper;
 import elemental.json.JsonValue;
@@ -119,8 +118,8 @@ public class EditorJsComponent extends Component implements HasSize, HasStyle {
      */
     public void initializeTextureSelects(Map<String, QuickModelEntity> quickModelEntityList) {
         List<ModelForSelectRecord> modelForSelectRecords = ModelListingDataParser.modelForSelectDataParser(quickModelEntityList);
-        List<TextureListingForSelectRecord> otherTexturesMap = TextureListingDataParser.textureListingForSelectDataParser(quickModelEntityList);
-        List<TextureAreaForSelectRecord> textureAreaForSelectRecord = TextureAreaDataParser.csvParse(TextureMapHelper.createCsvMap(quickModelEntityList));
+        List<TextureListingForSelectRecord> otherTexturesMap = TextureListingDataParser.textureListingForSelectDataParser(quickModelEntityList, false);
+        List<TextureAreaForSelectRecord> textureAreaForSelectRecord = TextureMapHelper.createTextureAreaForSelectRecordList(quickModelEntityList);
 
         ObjectMapper mapper = new ObjectMapper();
         try {
@@ -140,13 +139,15 @@ public class EditorJsComponent extends Component implements HasSize, HasStyle {
      *
      * @param listener the listener to be added
      */
-    public void addTextureColorAreaClickListener(TextureColorAreaClickListener listener) {
+    public void addModelTextureColorAreaClickListener(ModelTextureAreaClickListener listener) {
         getElement().addEventListener("texturecolorareaclick", event -> {
+                    String modelId = event.getEventData().getString("event.detail.modelId");
                     String textureId = event.getEventData().getString("event.detail.textureId");
                     String hexColor = event.getEventData().getString("event.detail.hexColor");
                     String text = event.getEventData().getString("event.detail.text");
-                    listener.onTextureColorAreaClick(textureId, hexColor, text);
-                }).addEventData("event.detail.textureId")
+                    listener.onTextureColorAreaClick(modelId, textureId, hexColor, text);
+                }).addEventData("event.detail.modelId")
+                .addEventData("event.detail.textureId")
                 .addEventData("event.detail.hexColor")
                 .addEventData("event.detail.text");
     }
@@ -170,8 +171,8 @@ public class EditorJsComponent extends Component implements HasSize, HasStyle {
      * Listener interface for handling texture color area click events.
      * Implement this interface to define custom behavior when a texture color area is clicked.
      */
-    public interface TextureColorAreaClickListener {
-        void onTextureColorAreaClick(String textureId, String hexColor, String text);
+    public interface ModelTextureAreaClickListener {
+        void onTextureColorAreaClick(String modelId, String textureId, String hexColor, String text);
     }
 
     /**

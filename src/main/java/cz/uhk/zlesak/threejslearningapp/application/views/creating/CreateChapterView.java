@@ -150,35 +150,27 @@ public class CreateChapterView extends ChapterScaffold {
     }
 
     /**
-     * Prepares the renderer and editor with the provided QuickModelEntity.
-     * Loads the model and main texture into the renderer and initializes the editor with other textures.
-     *
-     * @param quickModelEntity the QuickModelEntity containing model and texture information
-     * @throws IOException if there is an error loading the model or textures
+     * Load models into the renderer and prepare editor texture area selects.
+     * @param quickModelEntityMap Map of QuickModelEntity objects to be loaded into the renderer and prepared for editor texture area selects.
+     * @throws IOException if there is an error loading model or texture streams.
      */
-    private void rendererSelectsAndEditorPreparation(QuickModelEntity quickModelEntity) throws IOException {
-        String modelUrl = modelController.getModelStreamEndpoint(quickModelEntity.getModel().getId(), quickModelEntity.getMainTexture() != null);
-        String textureUrl = null;
-        if (quickModelEntity.getMainTexture() != null) {
-            textureUrl = textureController.getTextureStreamEndpointUrl(quickModelEntity.getMainTexture().getTextureFileId());
+    private void rendererSelectsAndEditorPreparation(Map<String, QuickModelEntity> quickModelEntityMap) throws IOException {
+        for (QuickModelEntity quickModelEntity : quickModelEntityMap.values()) {
+            String modelUrl = modelController.getModelStreamEndpoint(quickModelEntity.getModel().getId(), quickModelEntity.getMainTexture() != null);
+            String textureUrl = null;
+            if (quickModelEntity.getMainTexture() != null) {
+                textureUrl = textureController.getTextureStreamEndpointUrl(quickModelEntity.getMainTexture().getTextureFileId());
+            }
+            modelDiv.renderer.loadModel(modelUrl, textureUrl, quickModelEntity.getModel().getId());
+
+            if (textureUrl != null) {
+                List<QuickTextureEntity> allTextures = new ArrayList<>(quickModelEntity.getOtherTextures());
+                modelDiv.renderer.addOtherTextures(TextureMapHelper.otherTexturesMap(allTextures, textureController), quickModelEntity.getModel().getId());
+
+            }
         }
-        modelDiv.renderer.loadModel(modelUrl, textureUrl);
 
-        if (textureUrl != null) {
-            List<QuickTextureEntity> allTextures = new ArrayList<>(quickModelEntity.getOtherTextures());
-            modelDiv.renderer.addOtherTextures(TextureMapHelper.otherTexturesMap(allTextures, textureController));
-
-            Map<String, QuickModelEntity> allModels = secondaryNavigation.getModelsScroller().getAllModelsMappedToChapterHeaderBlockId();
-            editorjs.initializeTextureSelects(allModels);
-
-            editorjs.addTextureColorAreaClickListener((textureId, hexColor, text) -> {
-                modelDiv.textureSelectsComponent.getTextureListingSelect().setSelectedTextureById(textureId);
-                modelDiv.textureSelectsComponent.getTextureAreaSelect().setSelectedAreaByHexColor(hexColor, textureId);
-
-            });
-            allTextures.addFirst(quickModelEntity.getMainTexture());
-            modelDiv.textureSelectsComponent.initializeData(allTextures);
-        }
+        setupModelDiv(quickModelEntityMap);
     }
 
     /**

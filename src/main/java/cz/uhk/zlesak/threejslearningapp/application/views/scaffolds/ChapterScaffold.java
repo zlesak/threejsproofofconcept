@@ -14,10 +14,13 @@ import cz.uhk.zlesak.threejslearningapp.application.components.editors.MarkdownE
 import cz.uhk.zlesak.threejslearningapp.application.components.scrollers.ChapterContentScroller;
 import cz.uhk.zlesak.threejslearningapp.application.components.selects.ChapterSelect;
 import cz.uhk.zlesak.threejslearningapp.application.i18n.CustomI18NProvider;
+import cz.uhk.zlesak.threejslearningapp.application.models.entities.quickEntities.QuickModelEntity;
 import cz.uhk.zlesak.threejslearningapp.application.utils.SpringContextUtils;
 import cz.uhk.zlesak.threejslearningapp.application.views.IView;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Scope;
+
+import java.util.Map;
 
 /**
  * ChapterScaffold is an abstract base class for views related to chapter management, including creating, editing, and viewing chapters.
@@ -89,8 +92,7 @@ public abstract class ChapterScaffold extends Composite<VerticalLayout> implemen
             Scroller tabsScroller = new Scroller(secondaryNavigation, Scroller.ScrollDirection.VERTICAL);
             tabsScroller.setSizeFull();
             chapterContent.add(tabsScroller);
-        }
-        else  {
+        } else {
             nameTextField.setWidthFull();
             chapterContent.add(nameTextField, chapterContentScroller);
         }
@@ -122,5 +124,15 @@ public abstract class ChapterScaffold extends Composite<VerticalLayout> implemen
         searchTextField.addValueChangeListener(
                 event -> editorjs.search(event.getValue())
         );
+    }
+
+    protected void setupModelDiv(Map<String, QuickModelEntity> quickModelEntityMap) {
+        editorjs.addModelTextureColorAreaClickListener((modelId, textureId, hexColor, text) -> {
+            modelDiv.modelTextureAreaSelectComponent.getModelListingSelect().setSelectedModelById(modelId);
+            modelDiv.modelTextureAreaSelectComponent.getTextureListingSelect().setSelectedTextureById(textureId);
+            modelDiv.modelTextureAreaSelectComponent.getTextureAreaSelect().setSelectedAreaByHexColor(hexColor, textureId);
+        });
+        editorjs.initializeTextureSelects(quickModelEntityMap);
+        modelDiv.modelTextureAreaSelectComponent.initializeData(quickModelEntityMap);
     }
 }

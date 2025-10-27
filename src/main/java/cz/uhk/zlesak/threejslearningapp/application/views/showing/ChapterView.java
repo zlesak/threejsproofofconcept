@@ -9,12 +9,15 @@ import cz.uhk.zlesak.threejslearningapp.application.controllers.ChapterControlle
 import cz.uhk.zlesak.threejslearningapp.application.controllers.ModelController;
 import cz.uhk.zlesak.threejslearningapp.application.controllers.TextureController;
 import cz.uhk.zlesak.threejslearningapp.application.models.entities.quickEntities.QuickModelEntity;
+import cz.uhk.zlesak.threejslearningapp.application.utils.TextureMapHelper;
 import cz.uhk.zlesak.threejslearningapp.application.views.listing.ChapterListView;
 import cz.uhk.zlesak.threejslearningapp.application.views.scaffolds.ChapterScaffold;
 import jakarta.annotation.security.PermitAll;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
+
+import java.util.Map;
 
 /**
  * ChapterView Class - Shows the requested chapter from URL parameter. Initializes all the necessary elements
@@ -123,24 +126,22 @@ public class ChapterView extends ChapterScaffold {
             });
 
             try {
-                QuickModelEntity quickModelEntity = chapterController.getChapterFirstQuickModelEntity(chapterId);
-                String model = modelController.getModelFileBeEndpointUrl(quickModelEntity.getModel().getId());
-                String texture = null;
-                if (quickModelEntity.getMainTexture() != null) {
-                    texture = textureController.getTextureFileBeEndpointUrl(quickModelEntity.getMainTexture().getTextureFileId());
+                Map<String, QuickModelEntity> quickModelEntityMap = chapterController.getChaptersModels(chapterId);
+
+                for (QuickModelEntity quickModelEntity : quickModelEntityMap.values()) {
+
+                    String model = modelController.getModelFileBeEndpointUrl(quickModelEntity.getModel().getId());
+                    String texture = null;
+                    if (quickModelEntity.getMainTexture() != null) {
+                        texture = textureController.getTextureFileBeEndpointUrl(quickModelEntity.getMainTexture().getTextureFileId());
+                    }
+                    modelDiv.renderer.loadModel(model, texture, quickModelEntity.getModel().getId());
+
+                    if (quickModelEntity.getOtherTextures() != null && !quickModelEntity.getOtherTextures().isEmpty()) {
+                        modelDiv.renderer.addOtherTextures(TextureMapHelper.otherTexturesMap(quickModelEntity.getOtherTextures(), textureController), quickModelEntity.getModel().getId());
+                    }
                 }
-                modelDiv.renderer.loadModel(model, texture);
-
-                if (quickModelEntity.getOtherTextures() != null && !quickModelEntity.getOtherTextures().isEmpty()) {
-                    modelDiv.renderer.addOtherTextures(chapterController.getOtherTextures(chapterId, textureController));
-
-                    modelDiv.textureSelectsComponent.initializeData(chapterController.getAllChapterTextures(chapterId));
-                    editorjs.addTextureColorAreaClickListener((textureId, hexColor, text) -> {
-                        modelDiv.textureSelectsComponent.getTextureListingSelect().setSelectedTextureById(textureId);
-                        modelDiv.textureSelectsComponent.getTextureAreaSelect().setSelectedAreaByHexColor(hexColor, textureId);
-
-                    });
-                }
+                setupModelDiv(quickModelEntityMap);
             } catch (Exception e) {
                 log.error(e.getMessage());
                 new ErrorNotification("Nepovedlo se načíst model: " + e.getMessage(), 5000);

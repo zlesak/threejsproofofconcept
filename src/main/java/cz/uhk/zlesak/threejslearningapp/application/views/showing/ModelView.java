@@ -121,17 +121,15 @@ public class ModelView extends ModelScaffold {
                 textureUrl = textureController.getTextureFileBeEndpointUrl(quickModelEntity.getMainTexture().getTextureFileId());
             }
             modelUploadFormScrollerComposition.getModelName().setValue(quickModelEntity.getModel().getName());
-            modelDiv.renderer.loadModel(modelUrl, textureUrl);
+            modelDiv.renderer.loadModel(modelUrl, textureUrl, quickModelEntity.getModel().getId());
 
-            if (quickModelEntity.getOtherTextures() != null && !quickModelEntity.getOtherTextures().isEmpty()) {
-                try {
-                    Map<String, String> otherTexturesMap = TextureMapHelper.otherTexturesMap(quickModelEntity.getOtherTextures(), textureController);
-                    modelDiv.renderer.addOtherTextures(otherTexturesMap);
-                    modelDiv.textureSelectsComponent.initializeData(quickModelEntity.getAllTextures());
-                } catch (IOException e) {
-                    log.error(e.getMessage(), e);
-                    throw new ApplicationContextException(e.getMessage());
-                }
+            try {
+                Map<String, String> otherTexturesMap = TextureMapHelper.otherTexturesMap(quickModelEntity.getOtherTextures(), textureController);
+                modelDiv.renderer.addOtherTextures(otherTexturesMap, quickModelEntity.getModel().getId());
+                modelDiv.modelTextureAreaSelectComponent.initializeData(Map.of(quickModelEntity.getModel().getId() , quickModelEntity));
+            } catch (IOException e) {
+                log.error(e.getMessage(), e);
+                throw new ApplicationContextException(e.getMessage());
             }
         } catch (Exception e) {
             log.error(e.getMessage());

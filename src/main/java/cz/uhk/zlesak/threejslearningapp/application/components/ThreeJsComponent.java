@@ -1,6 +1,10 @@
 package cz.uhk.zlesak.threejslearningapp.application.components;
 
-import com.vaadin.flow.component.*;
+import com.google.gson.Gson;
+import com.vaadin.flow.component.ClientCallable;
+import com.vaadin.flow.component.Component;
+import com.vaadin.flow.component.ComponentEventListener;
+import com.vaadin.flow.component.Tag;
 import com.vaadin.flow.component.dependency.JsModule;
 import com.vaadin.flow.component.dependency.NpmPackage;
 import com.vaadin.flow.function.SerializableRunnable;
@@ -88,8 +92,9 @@ public class ThreeJsComponent extends Component {
      * This allows for more flexibility in handling different types of models  based on the selected model upload method.
      *
      * @param modelUrl the base64 encoded string of the model data.
+     * @param modelId  id of the loaded model.
      */
-    private void loadModel(String modelUrl) {
+    private void loadModel(String modelUrl, String modelId) {
         getElement().executeJs("""
                 try {
                     if (typeof window.loadModel === 'function') {
@@ -98,7 +103,7 @@ public class ThreeJsComponent extends Component {
                 } catch (e) {
                     console.error('[JS] Error in loadModel:', e);
                 }
-                """, getElement(), modelUrl);
+                """, getElement(), modelUrl, modelId);
     }
 
     /**
@@ -112,20 +117,21 @@ public class ThreeJsComponent extends Component {
      *
      * @param objectUrl  the base64 encoded string of the object data.
      * @param textureUrl the base64 encoded string of the texture data.
+     * @param modelId    id of the loaded model.
      */
-    public void loadModel(String objectUrl, String textureUrl) {
+    public void loadModel(String objectUrl, String textureUrl, String modelId) {
         if (textureUrl == null || textureUrl.isBlank()) {
-            loadModel(objectUrl);
+            loadModel(objectUrl, modelId);
         } else {
             getElement().executeJs("""
                     try {
                         if (typeof window.loadAdvancedModel === 'function') {
-                            window.loadAdvancedModel($0, $1, $2);
+                            window.loadAdvancedModel($0, $1, $2, $3);
                         }
                     } catch (e) {
                         console.error('[JS] Error in loadAdvancedModel:', e);
                     }
-                    """, getElement(), objectUrl, textureUrl);
+                    """, getElement(), objectUrl, textureUrl, modelId);
         }
     }
 
@@ -153,19 +159,20 @@ public class ThreeJsComponent extends Component {
      * This is used to apply textures to models in the scene.
      *
      * @param otherTexturesUrl the base64 encoded string of the texture data.
+     * @param modelId          id of the loaded model.
      */
-    public void addOtherTextures(Map<String, String> otherTexturesUrl) {
+    public void addOtherTextures(Map<String, String> otherTexturesUrl, String modelId) {
         if (otherTexturesUrl.isEmpty()) return;
-        String jsonTextures = new com.google.gson.Gson().toJson(otherTexturesUrl);
+        String jsonTextures = new Gson().toJson(otherTexturesUrl);
         getElement().executeJs("""
                 try {
                     if (typeof window.addOtherTextures === 'function') {
-                        window.addOtherTextures($0, $1);
+                        window.addOtherTextures($0, $1, $2);
                     }
                 } catch (e) {
                     console.error('[JS] Error in addOtherTexture:', e);
                 }
-                """, getElement(), jsonTextures);
+                """, getElement(), jsonTextures, modelId);
     }
 
     /**
@@ -173,37 +180,60 @@ public class ThreeJsComponent extends Component {
      * This method calls the JavaScript function removeOtherTexture to handle the removal process.
      * It is used to delete textures that are no longer needed or to free up resources.
      *
-     * @param id identification of the texture to be deleted
+     * @param textureId identification of the texture to be deleted
+     * @param modelId   identification of the model the texture belongs to
      * @see ModelUploadFormScrollerComposition for usage context
      */
-    public void removeOtherTexture(String id){
-        if (id.isEmpty()) return;
+    public void removeOtherTexture(String modelId, String textureId) {
+        if (textureId.isEmpty() || modelId.isEmpty()) return;
         getElement().executeJs("""
                 try {
                     if (typeof window.removeOtherTexture === 'function') {
-                        window.removeOtherTexture($0, $1);
+                        window.removeOtherTexture($0, $1, $2);
                     }
                 } catch (e) {
                     console.error('[JS] Error in removeOtherTexture:', e);
                 }
-                """, getElement(), id);
+                """, getElement(), modelId, textureId);
     }
 
     /**
      * Switches the currently displayed texture to another texture in the Three.js scene.
      * This method calls the JavaScript function switchOtherTexture to handle the switching process.
      * It is used to change the texture of the currently selected model or object in the scene.
+     *
+     * @param textureId identification of the texture to be switched to
+     * @param modelId   identification of the model the texture belongs to
      */
-    public void switchOtherTexture(String textureId) {
+    public void switchOtherTexture(String modelId, String textureId) {
         getElement().executeJs("""
                 try {
                     if (typeof window.switchOtherTexture === 'function') {
-                        window.switchOtherTexture($0, $1);
+                        window.switchOtherTexture($0, $1, $2);
                     }
                 } catch (e) {
                     console.error('[JS] Error in switchOtherTexture:', e);
                 }
-                """, getElement(), textureId);
+                """, getElement(), modelId, textureId);
+    }
+
+    /**
+     * Switches the currently displayed 3D model in the Three.js scene.
+     * This method calls the JavaScript function showModel to handle the model switching process.
+     * It is used to change the model being displayed in the scene.
+     *
+     * @param modelId identification of the model to be displayed
+     */
+    public void showModel(String modelId) {
+        getElement().executeJs("""
+                try {
+                    if (typeof window.showModel === 'function') {
+                        window.showModel($0, $1);
+                    }
+                } catch (e) {
+                    console.error('[JS] Error in switchOtherModel:', e);
+                }
+                """, getElement(), modelId);
     }
 
     /**
@@ -213,37 +243,21 @@ public class ThreeJsComponent extends Component {
      * This is used to visually modify the main texture by applying a color mask.
      * This is needed as the user can choose a color to be applied as a mask to the main texture based on the provided colours defining parts of the model.
      *
+     * @param modelId   identification of the model to which the texture belongs.
+     * @param textureId identification of the texture to which the mask will be applied.
      * @param maskColor the color to be applied as a mask to the main texture.
+     *
      */
-    public void applyMaskToMainTexture(String textureId, String maskColor) {
+    public void applyMaskToMainTexture(String modelId, String textureId, String maskColor) {
         getElement().executeJs("""
                 try {
                     if (typeof window.applyMaskToMainTexture === 'function') {
-                        window.applyMaskToMainTexture($0, $1, $2);
+                        window.applyMaskToMainTexture($0, $1, $2, $3, $4);
                     }
                 } catch (e) {
                     console.error('[JS] Error in applyMaskToMainTexture:', e);
                 }
-                """, getElement(), textureId, maskColor);
-    }
-
-    /**
-     * Used to return to the last selected texture in the Three.js scene.
-     * This method calls the JavaScript function returnToLastSelectedTexture to handle the process.
-     * It is used to revert any changes made to the texture selection, allowing the user to go back to the previously selected texture.
-     * This is useful in scenarios where the user wants to undo a texture change and return to the last known good state.
-     * This is a precondition to functionality of exercises.
-     */
-    public void returnToLastSelectedTexture() {
-        getElement().executeJs("""
-                try {
-                    if (typeof window.returnToLastSelectedTexture === 'function') {
-                        window.returnToLastSelectedTexture($0);
-                    }
-                } catch (e) {
-                    console.error('[JS] Error in returnToLastSelectedTexture:', e);
-                }
-                """, getElement());
+                """, getElement(), modelId, textureId, maskColor);
     }
 
     /**
@@ -251,11 +265,13 @@ public class ThreeJsComponent extends Component {
      * As of now it logs the selected color to the console and can be used to trigger further actions based on the chosen color.
      * This is a precondition to functionality of exercises
      *
-     * @param hexColor the selected color in hexadecimal format.
+     * @param modelId   the id of the model where the color was picked.
+     * @param textureId the id of the texture where the color was picked.
+     * @param hexColor  the selected color in hexadecimal format.
      */
     @ClientCallable
-    public void onColorPicked(String hexColor) { //TODO implement proper functionality based on chosen logic of transferring color to the JAVA side when properly thought through
-        new InfoNotification("Vybraná barva: " + hexColor);
+    public void onColorPicked(String modelId, String textureId, String hexColor) { //TODO implement proper functionality based on chosen logic of transferring color to the JAVA side when properly thought through
+        new InfoNotification("Model: " + modelId + ", textura: " + textureId + ", vybraná barva: " + hexColor);
     }
 
     /**

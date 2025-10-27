@@ -26,3 +26,21 @@ export function attachTextureColorListeners() {
     }
   });
 }
+
+export function removeLinksByModelIds(allowedModelIds: any) {
+  const editorContainer = document.getElementById('editorjs');
+  if (!editorContainer) return;
+  const links = editorContainer.querySelectorAll('a[data-model-id]');
+  links.forEach(link => {
+    const modelId = link.getAttribute('data-model-id');
+    const exists = allowedModelIds.some((model: any) => model.id === modelId);
+    if (!exists) {
+      const parent = link.parentNode;
+      while (link.firstChild) {
+        // @ts-ignore
+        parent.insertBefore(link.firstChild, link);
+      }
+      link.remove();
+    }
+  });
+}

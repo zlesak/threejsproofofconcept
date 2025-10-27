@@ -6,6 +6,7 @@ package cz.uhk.zlesak.threejslearningapp.application.models.records;
  *
  * @param id   the unique identifier of the sub-chapter
  * @param text the display text of the sub-chapter
+ * @param modelId the id of the model the subchapter belongs to
  */
-public record SubChapterForSelectRecord(String id, String text) {}
+public record SubChapterForSelectRecord(String id, String text, String modelId) {}
 

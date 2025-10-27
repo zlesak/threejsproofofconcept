@@ -10,19 +10,20 @@ class ThreeTest {
     this.renderer = null;
     this.controls = null;
     this.model = null;
+    this.models = [];
     this.animationId = null;
     this.isAnimating = false;
     this.ambientLight = null;
-    this.otherTextures = [];
-    this.mainTexture = null;
     this.lastSelectedTextureId = null;
     this.actionQueue = [];
     this._resizeObserver = null;
+    this.DEBUG_IMAGE = false;
+
   }
 
   init = (element) => {
     this.element = element;
-    this.doingActions("Initializing Three.js");
+    this.doingActions('Initializing Three.js');
     // Camera
     this.camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.25, 50);
     this.camera.position.set(-1.8, 0.6, 2.7);
@@ -135,39 +136,9 @@ class ThreeTest {
     this.render();
   };
 
-  loadModel = async (modelUrl) => {
-    this.doingActions("Loading model");
-    if (!this.scene) return;
-    if (this.model) {
-      this.disposeObject(this.model);
-      this.scene.remove(this.model);
-      this.model = null;
-    }
-    const loader = new GLTFLoader();
-    await new Promise((resolve, reject) => {
-      loader.load(modelUrl,
-        (gltf) => {
-          this.model = gltf.scene;
-          if (this.model.children[0]?.geometry) {
-            this.model.children[0].geometry.center();
-          }
-          this.scene.add(this.model);
-          this.centerCameraOnModel();
-          resolve();
-        },
-        undefined,
-        (error) => {
-          console.error('Error loading model:', error);
-          reject(error);
-        }
-      );
-    });
-    this.finishedActions();
-  };
-
   centerCameraOnModel = () => {
-    if (!this.model) return;
-    const box = new THREE.Box3().setFromObject(this.model);
+    if (!this.model.modelLoader) return;
+    const box = new THREE.Box3().setFromObject(this.model.modelLoader);
     const center = box.getCenter(new THREE.Vector3());
     const size = box.getSize(new THREE.Vector3());
 
@@ -182,123 +153,273 @@ class ThreeTest {
     this.onWindowResize();
   };
 
-  loadAdvancedModel = async (objUrl, mainTextureUrl) => {
-    this.doingActions("Loading advanced model");
-    const textureLoader = new THREE.TextureLoader();
-    const mainTexture = textureLoader.load(mainTextureUrl);
-    this.mainTexture = mainTexture;
-    const objLoader = new OBJLoader();
-    await new Promise((resolve, reject) => {
-      objLoader.load(objUrl, (obj) => {
-        obj.traverse((child) => {
-          if (child.isMesh) {
-            child.material = new THREE.MeshStandardMaterial({ map: mainTexture });
-          }
-        });
-        this.model = obj;
-        this.scene.add(this.model);
-        this.centerCameraOnModel();
-        resolve();
-      }, undefined, (error) => {
-        console.error('Error loading advanced model:', error);
-        reject(error);
+  loadModel = async (modelUrl, modelId) => {
+    this.doingActions('Loading model');
+    if (!this.models.some(m => m.id === modelId)) {
+      this.models.push({
+        id: modelId,
+        advanced: false,
+        model: modelUrl,
+        mainTexture: null,
+        otherTextures: [],
+        modelLoader: null,
+        textureLoader: null
       });
-    });
+    }
     this.finishedActions();
   };
 
-  addOtherTextures = async (textureMap) => {
-    this.doingActions("Adding other textures");
-    if (typeof textureMap === 'string') {
-      try {
-        textureMap = JSON.parse(textureMap);
-      } catch (e) {
-        console.error('addOtherTextures: JSON parse error', e);
-        this.finishedActions();
-        return;
-      }
-    }
-    if (typeof textureMap !== 'object' || textureMap === null || Array.isArray(textureMap)) {
-      console.error('addOtherTextures: textureMap není objekt', textureMap);
-      this.finishedActions();
-      return;
-    }
-    const textureLoader = new THREE.TextureLoader();
-    const entries = Object.entries(textureMap);
-    if (entries.length === 0) {
-      this.finishedActions();
-      return;
-    }
-    await Promise.all(entries.map(([id, url]) => {
-      return new Promise((resolve) => {
-        textureLoader.load(url, (texture) => {
-          this.otherTextures.push({ id, texture });
-          resolve();
-        }, undefined, (error) => {
-          console.error(`Error loading texture for id ${id}:`, error);
-          resolve();
-        });
+  loadAdvancedModel = async (objUrl, mainTextureUrl, modelId) => {
+    this.doingActions('Loading advanced model');
+    if (!this.models.some(m => m.id === modelId)) {
+      this.models.push({
+        id: modelId,
+        advanced: true,
+        model: objUrl,
+        mainTexture: mainTextureUrl,
+        otherTextures: [],
+        modelLoader: null,
+        textureLoader: null,
+        loadedMainTexture: null
       });
-    }));
+    }
     this.finishedActions();
   };
-  removeOtherTexture = async (id) => {
-    this.doingActions("Removing texture");
-    const index = this.otherTextures.findIndex(t => t.id === id);
-    if (index !== -1) {
-      const [removed] = this.otherTextures.splice(index, 1);
-      if (removed && removed.texture) {
-        try { removed.texture.dispose(); } catch(e) { /* ignore */ }
-      }
-      if (this.lastSelectedTextureId === id) {
-        this.lastSelectedTextureId = null;
-        await this.switchToMainTexture();
-      }
-    }
-    this.finishedActions();
-  }
 
-
-  switchOtherTexture = async (id) => {
-    this.doingActions("Switching to other texture");
-    if (!this.model || !this.otherTextures.length) {
+  showModelById = async (modelId) => {
+    this.scene.children;
+    this.doingActions('Switching model');
+    const modelObject = this.models.find(m => m.id === modelId);
+    if (this.model && this.model === modelObject) {
       this.finishedActions();
       return;
     }
-    const textureObject = this.otherTextures.find(t => t.id === id);
-    if (textureObject) {
-      const texture = textureObject.texture;
-      this.model.traverse((child) => {
-        if (child.isMesh && texture) {
-          child.material.map = texture;
-          child.material.needsUpdate = true;
+    if (modelObject) {
+      if (this.model) {
+        this.disposeObject(this.model.modelLoader);
+        try {
+          this.scene.remove(this.model.modelLoader);
+        } catch (e) { /* ignore */
         }
-      });
+        this.model = null;
+        this.lastSelectedTextureId = null;
+      }
+      this.model = modelObject;
+
+      if (modelObject.advanced) {
+        if (!modelObject.loadedMainTexture && modelObject.mainTexture) {
+          const textureLoader = new THREE.TextureLoader();
+          try {
+            modelObject.loadedMainTexture = await new Promise((resolve, reject) => {
+              textureLoader.load(modelObject.mainTexture, (texture) => {
+                texture.needsUpdate = true;
+                resolve(texture);
+              }, undefined, (err) => {
+                console.error('Error loading main texture:', err);
+                reject(err);
+              });
+            });
+          } catch (e) {
+            console.error('Failed to load main texture for advanced model:', e);
+            modelObject.loadedMainTexture = null;
+          }
+        }
+
+        const objLoader = new OBJLoader();
+        await new Promise((resolve, reject) => {
+          objLoader.load(modelObject.model, (obj) => {
+            obj.traverse((child) => {
+              if (child.isMesh) {
+                child.material = new THREE.MeshStandardMaterial({ map: modelObject.loadedMainTexture });
+                child.material.needsUpdate = true;
+              }
+            });
+            this.model.modelLoader = obj;
+            this.scene.add(this.model.modelLoader);
+            this.centerCameraOnModel();
+            resolve();
+          }, undefined, (error) => {
+            console.error('Error loading advanced model:', error);
+            reject(error);
+          });
+        });
+      } else {
+        const loader = new GLTFLoader();
+        await new Promise((resolve, reject) => {
+          loader.load(modelObject.model,
+            (gltf) => {
+              this.model.modelLoader = gltf.scene;
+              if (this.model.modelLoader && this.model.modelLoader.children[0]?.geometry) {
+                try {
+                  this.model.modelLoader.children[0].geometry.center();
+                } catch (e) { /* ignore */
+                }
+              }
+              this.scene.add(this.model.modelLoader);
+              this.centerCameraOnModel();
+              resolve();
+            },
+            undefined,
+            (error) => {
+              console.error('Error loading basic model:', error);
+              reject(error);
+            }
+          );
+        });
+      }
+
       await new Promise(resolve => setTimeout(resolve, 100));
       this.finishedActions();
-      this.lastSelectedTextureId = id;
       this.render();
     } else {
       this.finishedActions();
-      await this.switchToMainTexture();
     }
   };
 
-  switchToMainTexture = async () => {
-    this.doingActions("Switching to main texture");
-    if (!this.model || !this.mainTexture) {
+  addOtherTextures = async (textureMap, modelId) => {
+    this.doingActions('Adding other textures');
+    const modelObject = this.models.find(m => m.id === modelId);
+    if (modelObject) {
+      if (typeof textureMap === 'string') {
+        try {
+          textureMap = JSON.parse(textureMap);
+        } catch (e) {
+          console.error('addOtherTextures: JSON parse error', e);
+          this.finishedActions();
+          return;
+        }
+      }
+      if (typeof textureMap !== 'object' || textureMap === null || Array.isArray(textureMap)) {
+        console.error('addOtherTextures: textureMap není objekt', textureMap);
+        this.finishedActions();
+        return;
+      }
+      const entries = Object.entries(textureMap);
+      if (entries.length === 0) {
+        this.finishedActions();
+        return;
+      }
+      await Promise.all(entries.map(([id, url]) => {
+        return new Promise((resolve) => {
+          new THREE.TextureLoader().load(url, (texture) => {
+            modelObject.otherTextures.push({ id, texture });
+            resolve();
+          }, undefined, (error) => {
+            console.error(`Error loading texture for id ${id}:`, error);
+            resolve();
+          });
+        });
+      }));
+    } else {
+      console.error('addOtherTextures: model not found for id', modelId);
+    }
+    this.finishedActions();
+  };
+  removeOtherTexture = async (modelId, textureId) => {
+    this.doingActions('Removing texture');
+    const modelObject = this.models.find(m => m.id === modelId);
+    if (modelObject) {
+      const index = modelObject.otherTextures.findIndex(t => t.id === textureId);
+      if (index !== -1) {
+        const [removed] = modelObject.otherTextures.splice(index, 1);
+        if (removed && removed.texture) {
+          try {
+            removed.texture.dispose();
+          } catch (e) { /* ignore */
+          }
+        }
+        if (this.lastSelectedTextureId === textureId) {
+          this.lastSelectedTextureId = null;
+          await this.switchToMainTexture(modelId);
+        }
+      }
+    } else {
+      console.error('removeOtherTexture: model not found for id', modelId);
+    }
+    this.finishedActions();
+  };
+
+  switchOtherTexture = async (modelId, textureId) => {
+    this.scene.children;
+    this.doingActions('Switching to other texture');
+
+    if (!this.model || this.model.id !== modelId || !this.model.modelLoader) {
+      await this.showModelById(modelId);
+    }
+
+    if (!this.model || this.model.id !== modelId || !this.model.modelLoader) {
+      console.error('switchOtherTexture: model not available after showModelById', modelId);
       this.finishedActions();
       return;
     }
-    this.model.traverse((child) => {
-      if (child.isMesh) {
-        child.material.map = this.mainTexture;
-        child.material.needsUpdate = true;
+
+    const textureObject = this.model.otherTextures.find(t => t.id === textureId);
+    if (textureObject && textureObject.texture) {
+      const texture = textureObject.texture;
+      this.model.modelLoader.traverse((child) => {
+        if (child.isMesh && texture) {
+          child.material = new THREE.MeshStandardMaterial({ map: texture });
+          child.material.needsUpdate = true;
+        }
+      });
+      await new Promise(resolve => setTimeout(resolve, 50));
+      this.lastSelectedTextureId = textureId;
+      this.finishedActions();
+      this.render();
+    } else {
+      this.finishedActions();
+      await this.switchToMainTexture(modelId);
+    }
+  };
+
+  switchToMainTexture = async (modelId) => {
+    this.doingActions('Switching to main texture');
+
+    if (!this.model || this.model.id !== modelId || !this.model.modelLoader) {
+      await this.showModelById(modelId);
+    }
+
+    if (!this.model || this.model.id !== modelId || !this.model.modelLoader) {
+      console.error('switchToMainTexture: model not available', modelId);
+      this.finishedActions();
+      return;
+    }
+
+    const mainTextureUrl = this.model.mainTexture;
+    if (mainTextureUrl) {
+      if (!this.model.loadedMainTexture) {
+        const textureLoader = new THREE.TextureLoader();
+        try {
+          this.model.loadedMainTexture = await new Promise((resolve, reject) => {
+            textureLoader.load(mainTextureUrl, (tex) => {
+              tex.needsUpdate = true;
+              resolve(tex);
+            }, undefined, (err) => {
+              console.error('Error loading main texture in switchToMainTexture:', err);
+              reject(err);
+            });
+          });
+        } catch (e) {
+          console.error('switchToMainTexture: failed to load main texture', e);
+          this.finishedActions();
+          return;
+        }
       }
-    });
-    await new Promise(resolve => setTimeout(resolve, 100));
-    this.finishedActions();
-    this.render();
+
+      this.model.modelLoader.traverse((child) => {
+        if (child.isMesh) {
+          child.material = new THREE.MeshStandardMaterial({ map: this.model.loadedMainTexture });
+          child.material.needsUpdate = true;
+        }
+      });
+
+      this.lastSelectedTextureId = null;
+      await new Promise(resolve => setTimeout(resolve, 50));
+      this.finishedActions();
+      this.render();
+    } else {
+      this.finishedActions();
+    }
   };
 
   dispose = () => {
@@ -324,7 +445,8 @@ class ThreeTest {
           if (ext) {
             ext.loseContext();
           }
-        } catch (e) { /* ignore */ }
+        } catch (e) { /* ignore */
+        }
       });
       canvas.width = 1;
       canvas.height = 1;
@@ -334,20 +456,34 @@ class ThreeTest {
       if (obj.material) {
         if (Array.isArray(obj.material)) {
           obj.material.forEach(m => {
-            try { m.dispose(); m.needsUpdate = true; } catch(e) { /* ignore */ }
+            try {
+              m.dispose();
+              m.needsUpdate = true;
+            } catch (e) { /* ignore */
+            }
           });
         } else {
-          try { obj.material.dispose(); obj.material.needsUpdate = true; } catch(e) { /* ignore */ }
+          try {
+            obj.material.dispose();
+            obj.material.needsUpdate = true;
+          } catch (e) { /* ignore */
+          }
         }
       }
       if (obj.geometry) {
-        try { obj.geometry.dispose(); } catch(e) { /* ignore */ }
+        try {
+          obj.geometry.dispose();
+        } catch (e) { /* ignore */
+        }
         obj.geometry = null;
       }
     });
 
     if (this._resizeObserver) {
-      try { this._resizeObserver.disconnect(); } catch(e) { /* ignore */ }
+      try {
+        this._resizeObserver.disconnect();
+      } catch (e) { /* ignore */
+      }
       this._resizeObserver = null;
     }
   };
@@ -356,7 +492,11 @@ class ThreeTest {
     if (!object) return;
 
     if (object.geometry) {
-      try { object.geometry.dispose(); } catch(e) { /* ignore */ }
+      try {
+        object.geometry.dispose();
+      } catch (e) {
+        console.error('Error disposing geometry:', e);
+      }
     }
 
     if (object.material) {
@@ -368,7 +508,11 @@ class ThreeTest {
     }
 
     if (object.dispose) {
-      try { object.dispose(); } catch(e) { /* ignore */ }
+      try {
+        object.dispose();
+      } catch (e) {
+        console.error('Error disposing object:', e);
+      }
     }
 
     if (object.children) {
@@ -379,18 +523,26 @@ class ThreeTest {
   disposeMaterial = (material) => {
     if (!material) return;
 
-    try { material.dispose(); } catch(e) { /* ignore */ }
+    try {
+      material.dispose();
+    } catch (e) {
+      console.error('Error disposing material:', e);
+    }
 
     for (const prop in material) {
       const value = material[prop];
       if (value && value.isTexture) {
-        try { value.dispose(); } catch(e) { /* ignore */ }
+        try {
+          value.dispose();
+        } catch (e) {
+          console.error('Error disposing texture:', e);
+        }
       }
     }
   };
 
   clear = async () => {
-    this.doingActions("Clearing scene");
+    this.doingActions('Clearing scene');
     if (this.scene) {
       this.scene.traverse((obj) => {
         if (obj !== this.ambientLight && obj.type !== 'Scene' && obj.type !== 'CubeTexture') {
@@ -398,14 +550,18 @@ class ThreeTest {
             this.disposeMaterial(obj.material);
           }
           if (obj.geometry) {
-            try { obj.geometry.dispose(); } catch(e) { /* ignore */ }
+            try {
+              obj.geometry.dispose();
+            } catch (e) {
+              console.error('Error disposing geometry during clear:', e);
+            }
           }
           this.scene.remove(obj);
         }
       });
       if (this.model) {
-        this.disposeObject(this.model);
-        this.scene.remove(this.model);
+        this.disposeObject(this.model.modelLoader);
+        this.scene.remove(this.model.modelLoader);
         this.model = null;
       }
     }
@@ -416,21 +572,71 @@ class ThreeTest {
 
   getTextureColorAtClick = (event) => {
     if (!this.camera || !this.scene || !this.renderer) return;
+    if (this.lastSelectedTextureId === null || this.model === null) {
+      return;
+    }
+
     const rect = this.renderer.domElement.getBoundingClientRect();
     const mouse = new THREE.Vector2();
     mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
     mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
-
     const raycaster = new THREE.Raycaster();
     raycaster.setFromCamera(mouse, this.camera);
     const intersects = raycaster.intersectObjects(this.scene.children, true);
     if (intersects.length > 0) {
-      const intersect = intersects[0];
+      const intersect = intersects[intersects.length - 1];
       const uv = intersect.uv;
       const mesh = intersect.object;
       const texture = mesh.material?.map;
-      if (uv && texture && texture.image) {
-        const image = texture.image;
+      let image = null;
+
+      if (texture instanceof THREE.CanvasTexture) {
+        image = texture.image;
+      } else if (texture instanceof THREE.Texture && texture.image) {
+        image = texture.image;
+      } else if (texture?.source?.data) {
+        image = texture.source.data;
+      }
+      if (uv && texture && image) {
+        if (this.DEBUG_IMAGE && image) {
+          const maxDim = 300;
+          let scale = 1;
+          if (image.width > maxDim || image.height > maxDim) {
+            scale = Math.min(maxDim / image.width, maxDim / image.height);
+          }
+          const displayWidth = Math.round(image.width * scale);
+          const displayHeight = Math.round(image.height * scale);
+
+          let wrapper = document.getElementById('debug-texture-wrapper');
+          if (!wrapper) {
+            wrapper = document.createElement('div');
+            wrapper.id = 'debug-texture-wrapper';
+            document.body.appendChild(wrapper);
+          }
+          wrapper.innerHTML = '';
+          wrapper.style.position = 'fixed';
+          wrapper.style.top = '10px';
+          wrapper.style.left = '10px';
+          wrapper.style.zIndex = 9999;
+          wrapper.style.border = '2px solid red';
+          wrapper.style.background = 'white';
+          wrapper.style.overflow = 'auto';
+          wrapper.style.maxWidth = maxDim + 'px';
+          wrapper.style.maxHeight = maxDim + 'px';
+
+          const displayCanvas = document.createElement('canvas');
+          displayCanvas.width = displayWidth;
+          displayCanvas.height = displayHeight;
+          displayCanvas.style.width = displayWidth + 'px';
+          displayCanvas.style.height = displayHeight + 'px';
+          displayCanvas.style.display = 'block';
+          displayCanvas.style.margin = '0 auto';
+
+          const displayCtx = displayCanvas.getContext('2d');
+          displayCtx.drawImage(image, 0, 0, image.width, image.height, 0, 0, displayWidth, displayHeight);
+          wrapper.appendChild(displayCanvas);
+        }
+
         const canvas = document.createElement('canvas');
         canvas.width = image.width;
         canvas.height = image.height;
@@ -442,7 +648,7 @@ class ThreeTest {
         const hex = '#' + ((1 << 24) | (pixel[0] << 16) | (pixel[1] << 8) | pixel[2]).toString(16).slice(1);
 
         if (this.element && this.element.$server && typeof this.element.$server.onColorPicked === 'function') {
-          this.element.$server.onColorPicked(hex);
+          this.element.$server.onColorPicked(this.model.id, this.lastSelectedTextureId, hex);
         }
       }
     }
@@ -457,16 +663,32 @@ class ThreeTest {
     }
   };
 
-  applyMaskToMainTexture = async (id, maskColor) => {
-    this.doingActions("Applying mask to texture");
-    this.lastSelectedTextureId = id;
-    const mainImage = this.mainTexture?.image;
-    const textureObject = this.otherTextures.find(t => t.id === id);
+  applyMaskToMainTexture = async (modelId, textureId, maskColor) => {
+    this.doingActions('Applying mask to texture');
+
+    if (!this.model || this.model.id !== modelId || !this.model.modelLoader) {
+      await this.showModelById(modelId);
+    }
+
+    this.lastSelectedTextureId = textureId;
+    let mainImage;
     let maskImage;
-    if (textureObject) {
-      maskImage = textureObject.texture.image;
-    } else {
-      console.error('Error getting texture image:', id);
+    try {
+
+      if (!this.model.loadedMainTexture) {
+        const textureLoader = new THREE.TextureLoader();
+        this.model.loadedMainTexture = textureLoader.load(this.model.mainTexture);
+      }
+      mainImage = this.model.loadedMainTexture.image;
+      const textureObject = this.model.otherTextures.find(t => t.id === textureId);
+      if (textureObject) {
+        maskImage = textureObject.texture.image;
+      } else {
+        console.log(this.model);
+        console.error('Error getting texture image:', textureId);
+      }
+    } catch (err) {
+      console.error('Error loading images:', err);
     }
     if (!mainImage || !maskImage) {
       this.finishedActions();
@@ -499,7 +721,7 @@ class ThreeTest {
         ctx.putImageData(mainImageData, 0, 0);
         const resultTexture = new THREE.CanvasTexture(resultCanvas);
         if (this.model) {
-          this.model.traverse((child) => {
+          this.model.modelLoader.traverse((child) => {
             if (child.isMesh) {
               child.material.map = resultTexture;
               child.material.needsUpdate = true;
@@ -518,13 +740,7 @@ class ThreeTest {
     });
     this.render();
     this.finishedActions();
-  }
-
-  returnToLastSelectedTexture() {
-    if (this.lastSelectedTextureId) {
-      this.switchOtherTexture(this.lastSelectedTextureId);
-    }
-  }
+  };
 
   doingActions(description) {
     this.actionQueue.push(description);
@@ -576,7 +792,10 @@ function setInstance(element, inst) {
 window.initThree = function(element) {
   const existing = getInstance(element);
   if (existing) {
-    try { existing.dispose(); } catch(e) { /* ignore */ }
+    try {
+      existing.dispose();
+    } catch (e) { /* ignore */
+    }
   }
   const inst = new ThreeTest();
   setInstance(element, inst);
@@ -587,7 +806,10 @@ window.disposeThree = function(element) {
   return new Promise((resolve) => {
     const inst = getInstance(element);
     if (inst) {
-      try { inst.dispose(); } catch(e) { /* ignore */ }
+      try {
+        inst.dispose();
+      } catch (e) { /* ignore */
+      }
       instances.delete(element);
       setTimeout(() => resolve(), 100);
     } else {
@@ -596,17 +818,17 @@ window.disposeThree = function(element) {
   });
 };
 
-window.loadModel = async function(element, modelUrl) {
+window.loadModel = async function(element, modelUrl, modelId) {
   const inst = getInstance(element);
   if (inst) {
-    await inst.loadModel(modelUrl);
+    await inst.loadModel(modelUrl, modelId);
   }
 };
 
-window.loadAdvancedModel = async function(element, objUrl, textureUrl) {
+window.loadAdvancedModel = async function(element, objUrl, textureUrl, modelId) {
   const inst = getInstance(element);
   if (inst) {
-    await inst.loadAdvancedModel(objUrl, textureUrl);
+    await inst.loadAdvancedModel(objUrl, textureUrl, modelId);
   }
 };
 
@@ -617,40 +839,39 @@ window.clear = async function(element) {
   }
 };
 
-window.addOtherTextures = async function(element, textureJson) {
+window.addOtherTextures = async function(element, textureJson, modelId) {
   const inst = getInstance(element);
   if (inst) {
-    await inst.addOtherTextures(textureJson);
+    await inst.addOtherTextures(textureJson, modelId);
   }
 };
 
-window.removeOtherTexture = async function(element, id) {
+window.removeOtherTexture = async function(element, modelId, textureId) {
   const inst = getInstance(element);
   if (inst) {
-    await inst.removeOtherTexture(id);
+    await inst.removeOtherTexture(modelId, textureId);
   }
 };
 
-window.switchOtherTexture = async function(element, id) {
+window.switchOtherTexture = async function(element, modelId, textureId) {
   const inst = getInstance(element);
   if (inst) {
-    await inst.switchOtherTexture(id);
+    await inst.switchOtherTexture(modelId, textureId);
   }
 };
 
-window.returnToLastSelectedTexture = async function(element) {
+window.showModel = async function(element, modelId) {
   const inst = getInstance(element);
   if (inst) {
-    await inst.returnToLastSelectedTexture();
+    await inst.showModelById(modelId);
   }
 };
 
-window.applyMaskToMainTexture = async function(element, textureId, maskColor) {
+window.applyMaskToMainTexture = async function(element, modelId, textureId, maskColor) {
   const inst = getInstance(element);
   if (inst) {
-    await inst.applyMaskToMainTexture(textureId, maskColor);
+    await inst.applyMaskToMainTexture(modelId, textureId, maskColor);
   }
 };
-
 window.addEventListener('beforeunload', () => {
 });

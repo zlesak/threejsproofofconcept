@@ -23,7 +23,7 @@ public class ModelsSelectScrollerComponent extends Scroller {
     private Select<QuickModelEntity> mainModelSelect;
     private final Map<String, HorizontalLayout> otherModelsHorizontalLayouts = new HashMap<>();
     private final VerticalLayout scrollerLayout;
-    private Consumer<QuickModelEntity> modelSelectConsumer;
+    private Consumer<Map<String, QuickModelEntity>> modelSelectConsumer;
 
     public ModelsSelectScrollerComponent() {
         super(new VerticalLayout(), ScrollDirection.VERTICAL);
@@ -35,7 +35,6 @@ public class ModelsSelectScrollerComponent extends Scroller {
      * Get model select component.
      * @param label Label for the select component.
      * @return Select component for QuickModelEntity in deactivated state as the model is selected via dialog.
-     * @see #getChooseAlreadyCreatedModelButton(Select)
      */
     private Select<QuickModelEntity> getModelSelect(String label) {
         Select<QuickModelEntity> modelSelect = new Select<>();
@@ -50,7 +49,7 @@ public class ModelsSelectScrollerComponent extends Scroller {
      * Set consumer to be called when a model is selected on any of the selects.
      * @param onSelect Consumer to be called with the selected QuickModelEntity.
      */
-    public void setModelSelectedConsumer(Consumer<QuickModelEntity> onSelect) {
+    public void setModelSelectedConsumer(Consumer<Map<String, QuickModelEntity>> onSelect) {
         modelSelectConsumer = onSelect;
     }
 
@@ -115,7 +114,7 @@ public class ModelsSelectScrollerComponent extends Scroller {
             modelSelect.setItems(entity);
             modelSelect.setValue(entity);
             if (modelSelect.getValue() != null) {
-                modelSelectConsumer.accept(modelSelect.getValue());
+                modelSelectConsumer.accept(getAllModelsMappedToChapterHeaderBlockId());
             }
         });
         chooseAlreadyCreatedModelButton.addClickListener(e -> modelListDialog.open());
