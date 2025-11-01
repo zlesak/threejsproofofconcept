@@ -95,7 +95,7 @@ public class ChapterView extends ChapterScaffold {
     @Override
     public String getPageTitle() {
         try {
-            return this.i18NProvider.getTranslation("page.title.chapterView", UI.getCurrent().getLocale()) + " - " + chapterController.getChapterName(chapterId).trim();
+            return text("page.title.chapterView") + " - " + chapterController.getChapterName(chapterId).trim();
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

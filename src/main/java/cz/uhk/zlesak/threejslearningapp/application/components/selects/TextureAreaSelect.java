@@ -26,7 +26,7 @@ public class TextureAreaSelect extends GenericSelect<TextureAreaForSelectRecord,
                 TextureAreaChangeEvent.class,
                 (select, event) -> new TextureAreaChangeEvent((TextureAreaSelect) select, event.isFromClient(), event.getOldValue(), event.getValue()));
         setEmptySelectionAllowed(true);
-        setEmptySelectionCaption("Vyberte oblast textury");
+        setEmptySelectionCaption(text("textureAreaSelect.caption"));
         setWidthFull();
     }
 

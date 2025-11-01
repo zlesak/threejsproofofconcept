@@ -9,7 +9,6 @@ import com.vaadin.flow.router.Route;
 import cz.uhk.zlesak.threejslearningapp.application.components.ModelListItemComponent;
 import cz.uhk.zlesak.threejslearningapp.application.components.PaginationComponent;
 import cz.uhk.zlesak.threejslearningapp.application.controllers.ModelController;
-import cz.uhk.zlesak.threejslearningapp.application.i18n.CustomI18NProvider;
 import cz.uhk.zlesak.threejslearningapp.application.models.entities.quickEntities.QuickFile;
 import cz.uhk.zlesak.threejslearningapp.application.models.entities.quickEntities.QuickModelEntity;
 import cz.uhk.zlesak.threejslearningapp.application.models.records.PageResult;
@@ -34,7 +33,6 @@ import java.util.function.Consumer;
 @PermitAll
 public class ModelListView extends ListingScaffold {
     private final ModelController modelController;
-    private final CustomI18NProvider customI18NProvider;
     @Setter
     private Consumer<QuickModelEntity> modelSelectedListener;
 
@@ -45,7 +43,6 @@ public class ModelListView extends ListingScaffold {
      */
     public ModelListView() {
         this.modelController = SpringContextUtils.getBean(ModelController.class);
-        this.customI18NProvider = SpringContextUtils.getBean(CustomI18NProvider.class);
     }
 
     /**
@@ -57,7 +54,7 @@ public class ModelListView extends ListingScaffold {
     @Override
     public String getPageTitle() {
         try {
-            return customI18NProvider.getTranslation("page.title.modelListView", UI.getCurrent().getLocale());
+            return text("page.title.modelListView");
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

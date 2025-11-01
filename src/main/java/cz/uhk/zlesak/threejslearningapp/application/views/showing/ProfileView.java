@@ -1,12 +1,13 @@
 package cz.uhk.zlesak.threejslearningapp.application.views.showing;
 
 import com.vaadin.flow.component.Composite;
-import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.dependency.Uses;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
-import com.vaadin.flow.router.*;
-import cz.uhk.zlesak.threejslearningapp.application.i18n.CustomI18NProvider;
+import com.vaadin.flow.router.AfterNavigationEvent;
+import com.vaadin.flow.router.BeforeEnterEvent;
+import com.vaadin.flow.router.BeforeLeaveEvent;
+import com.vaadin.flow.router.Route;
 import cz.uhk.zlesak.threejslearningapp.application.views.IView;
 import jakarta.annotation.security.PermitAll;
 import org.springframework.context.annotation.Scope;
@@ -23,16 +24,15 @@ import org.springframework.context.annotation.Scope;
 @Scope("prototype")
 @PermitAll
 public class ProfileView extends Composite<VerticalLayout> implements IView {
-    CustomI18NProvider i18NProvider;
 
-    public ProfileView(CustomI18NProvider i18NProvider) {
-        this.i18NProvider = i18NProvider;
+    public ProfileView() {
 
     }
+
     @Override
     public String getPageTitle() {
         try {
-            return this.i18NProvider.getTranslation("page.title.profileView", UI.getCurrent().getLocale());
+            return text("page.title.profileView");
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

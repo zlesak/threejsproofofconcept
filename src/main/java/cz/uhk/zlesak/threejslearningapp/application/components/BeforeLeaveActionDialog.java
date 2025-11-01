@@ -8,6 +8,7 @@ import cz.uhk.zlesak.threejslearningapp.application.i18n.CustomI18NProvider;
 import cz.uhk.zlesak.threejslearningapp.application.utils.SpringContextUtils;
 
 import java.util.function.Consumer;
+import java.util.Locale;
 
 /**
  * BeforeLeaveActionDialog Class - Provides a dialog to confirm the user's intention to leave a page
@@ -15,43 +16,32 @@ import java.util.function.Consumer;
  */
 public class BeforeLeaveActionDialog {
     /**
-     * leave method - Displays a confirmation dialog when the user attempts to leave a page
+     * Leave method - Displays a confirmation dialog when the user attempts to leave a page
      * @param event the event of leaving from the current page implementing BeforeLeaveEvent
      */
     public static void leave(BeforeLeaveEvent event) {
-        CustomI18NProvider i18n = SpringContextUtils.getBean(CustomI18NProvider.class);
-        BeforeLeaveEvent.ContinueNavigationAction postponed = event.postpone();
-        Dialog confirmDialog = new Dialog();
-        confirmDialog.setHeaderTitle(i18n.getTranslation("beforeLeaveActionDialog.leave.info.assurance", UI.getCurrent().getLocale()));
-        confirmDialog.add(i18n.getTranslation("beforeLeaveActionDialog.leave.info.unsavedChanges", UI.getCurrent().getLocale()));
-        Button leaveButton = new Button(i18n.getTranslation("leave", UI.getCurrent().getLocale()), e -> {
-            confirmDialog.close();
-            postponed.proceed();
-        });
-        Button stayButton = new Button(i18n.getTranslation("stay", UI.getCurrent().getLocale()), e -> {
-            postponed.cancel();
-            confirmDialog.close();
-        });
-        confirmDialog.getFooter().add(leaveButton, stayButton);
-        confirmDialog.setCloseOnEsc(false);
-        confirmDialog.setCloseOnOutsideClick(false);
-        confirmDialog.open();
+        leave(event, null);
     }
 
     /**
-     * Overloaded leave method - Displays a confirmation dialog when the user attempts to leave a page when also
-     * disposing of renderer is necessary passing a consumer to handle the confirmation action
+     * Leave method - Displays a confirmation dialog when the user attempts to leave a page
      *
      * @param event the BeforeLeaveEvent
      * @param onConfirm a consumer receiving the postponed ContinueNavigationAction; must call proceed() or cancel()
      */
     public static void leave(BeforeLeaveEvent event, Consumer<BeforeLeaveEvent.ContinueNavigationAction> onConfirm) {
+        createAndOpenDialog(event, onConfirm);
+    }
+
+    private static void createAndOpenDialog(BeforeLeaveEvent event, Consumer<BeforeLeaveEvent.ContinueNavigationAction> onConfirm) {
         CustomI18NProvider i18n = SpringContextUtils.getBean(CustomI18NProvider.class);
+        Locale locale = UI.getCurrent().getLocale();
         BeforeLeaveEvent.ContinueNavigationAction postponed = event.postpone();
         Dialog confirmDialog = new Dialog();
-        confirmDialog.setHeaderTitle(i18n.getTranslation("beforeLeaveActionDialog.leave.info.assurance", UI.getCurrent().getLocale()));
-        confirmDialog.add(i18n.getTranslation("beforeLeaveActionDialog.leave.info.unsavedChanges", UI.getCurrent().getLocale()));
-        Button leaveButton = new Button(i18n.getTranslation("leave", UI.getCurrent().getLocale()), e -> {
+        confirmDialog.setHeaderTitle(i18n.getTranslation("beforeLeaveActionDialog.leave.info.assurance", locale));
+        confirmDialog.add(i18n.getTranslation("beforeLeaveActionDialog.leave.info.unsavedChanges", locale));
+
+        Button leaveButton = new Button(i18n.getTranslation("leave", locale), e -> {
             confirmDialog.close();
             try {
                 if (onConfirm != null) {
@@ -63,7 +53,7 @@ public class BeforeLeaveActionDialog {
                 postponed.proceed();
             }
         });
-        Button stayButton = new Button(i18n.getTranslation("stay", UI.getCurrent().getLocale()), e -> {
+        Button stayButton = new Button(i18n.getTranslation("stay", locale), e -> {
             postponed.cancel();
             confirmDialog.close();
         });

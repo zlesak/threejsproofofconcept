@@ -1,8 +1,9 @@
-package cz.uhk.zlesak.threejslearningapp.application.components;
+package cz.uhk.zlesak.threejslearningapp.application.components.divs;
 
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.progressbar.ProgressBar;
+import cz.uhk.zlesak.threejslearningapp.application.components.ThreeJsComponent;
 import cz.uhk.zlesak.threejslearningapp.application.components.compositions.ModelTextureAreaSelectComponent;
 
 /**

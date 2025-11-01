@@ -133,7 +133,7 @@ public class CreateChapterView extends ChapterScaffold {
     @Override
     public String getPageTitle() {
         try {
-            return this.i18NProvider.getTranslation("page.title.createChapterView", UI.getCurrent().getLocale());
+            return text("page.title.createChapterView");
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

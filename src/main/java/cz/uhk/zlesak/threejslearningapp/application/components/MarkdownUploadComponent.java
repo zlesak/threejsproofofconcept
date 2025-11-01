@@ -6,16 +6,17 @@ import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import cz.uhk.zlesak.threejslearningapp.application.components.editors.EditorJsComponent;
 import cz.uhk.zlesak.threejslearningapp.application.components.notifications.ErrorNotification;
+import cz.uhk.zlesak.threejslearningapp.application.i18n.I18nAware;
 import lombok.extern.slf4j.Slf4j;
 
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 @Slf4j
-public class MarkdownUploadComponent extends UploadComponent {
+public class MarkdownUploadComponent extends UploadComponent implements I18nAware {
     public MarkdownUploadComponent(EditorJsComponent editorjs, MarkdownEditor mdEditor, Button mdUploadedButton) {
         super(List.of(".md", "text/markdown", "text/plain"), true, false, false);
-        setUploadButton(new Button("Importovat MD", new Icon(VaadinIcon.UPLOAD)));
+        setUploadButton(new Button(text("markdownUploadButton.label"), new Icon(VaadinIcon.UPLOAD)));
         setUploadListener((fileName, uploadedMultipartFile) -> {
             try {
                 String md = new String(uploadedMultipartFile.getBytes(), StandardCharsets.UTF_8);

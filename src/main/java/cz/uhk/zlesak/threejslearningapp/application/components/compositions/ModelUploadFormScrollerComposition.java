@@ -12,7 +12,7 @@ import com.vaadin.flow.server.StreamResource;
 import com.vaadin.flow.server.VaadinSession;
 import cz.uhk.zlesak.threejslearningapp.application.components.NameTextField;
 import cz.uhk.zlesak.threejslearningapp.application.components.UploadComponent;
-import cz.uhk.zlesak.threejslearningapp.application.components.UploadLabelDiv;
+import cz.uhk.zlesak.threejslearningapp.application.components.divs.UploadLabelDiv;
 import cz.uhk.zlesak.threejslearningapp.application.events.*;
 import cz.uhk.zlesak.threejslearningapp.application.models.entities.quickEntities.QuickTextureEntity;
 import lombok.Getter;
@@ -313,31 +313,6 @@ public class ModelUploadFormScrollerComposition extends Scroller {
      */
     public void addTextureChangeEventListener(ComponentEventListener<ModelTextureChangeEvent> listener) {
         addListener(ModelTextureChangeEvent.class, listener);
-    }
-
-    /**
-     * Handles the event when a texture is uploaded.
-     * It updates the internal map of textures and returns the current list of QuickTextureEntity objects
-     *
-     * @param name the name of the uploaded texture file
-     * @return the current list of QuickTextureEntity objects
-     */
-    private List<QuickTextureEntity> textureUploaded(String name, String key) {
-        if (!this.quickTextureEntityMap.containsKey(key)) {
-            this.quickTextureEntityMap.put(key, new QuickTextureEntity(name, name, this.csvMap.getOrDefault(name, null)));
-        }
-        return this.quickTextureEntityMap.values().stream().toList();
-    }
-
-    /**
-     * Handles the event when a texture is deleted.
-     *
-     * @param key the name of the deleted texture file
-     * @return the current list of QuickTextureEntity objects after deletion
-     */
-    private List<QuickTextureEntity> textureDeleted(String key) {
-        this.quickTextureEntityMap.remove(key);
-        return this.quickTextureEntityMap.values().stream().toList();
     }
 
     /**

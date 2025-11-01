@@ -5,6 +5,7 @@ import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import cz.uhk.zlesak.threejslearningapp.application.events.CreateChapterEvent;
+import cz.uhk.zlesak.threejslearningapp.application.i18n.I18nAware;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -12,9 +13,10 @@ import lombok.extern.slf4j.Slf4j;
  * When clicked, it fires a CreateChapterEvent to notify listeners.
  */
 @Slf4j
-public class CreateChapterButton extends Button {
+public class CreateChapterButton extends Button implements I18nAware {
     public CreateChapterButton() {
-        super("Vytvořit kapitolu");
+        super();
+        setText(text("createChapterButton.label"));
         addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         addClickListener(e -> ComponentUtil.fireEvent(UI.getCurrent(), new CreateChapterEvent(UI.getCurrent())));
     }

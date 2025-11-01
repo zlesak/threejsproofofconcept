@@ -6,7 +6,7 @@ import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.theme.lumo.LumoUtility;
-import cz.uhk.zlesak.threejslearningapp.application.components.ModelDiv;
+import cz.uhk.zlesak.threejslearningapp.application.components.divs.ModelDiv;
 import cz.uhk.zlesak.threejslearningapp.application.components.compositions.ModelUploadFormScrollerComposition;
 import cz.uhk.zlesak.threejslearningapp.application.controllers.ModelController;
 import cz.uhk.zlesak.threejslearningapp.application.models.entities.quickEntities.QuickFileEntity;

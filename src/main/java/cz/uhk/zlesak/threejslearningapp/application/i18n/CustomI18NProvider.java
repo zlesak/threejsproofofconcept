@@ -4,14 +4,14 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.vaadin.flow.i18n.I18NProvider;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
+import org.springframework.core.io.support.ResourcePatternResolver;
 import org.springframework.stereotype.Component;
 
 import java.io.InputStream;
-import java.net.URL;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Custom I18NProvider for providing Czech translations.
@@ -20,54 +20,43 @@ import java.util.Map;
 @Slf4j
 @Component
 public class CustomI18NProvider implements I18NProvider {
-    private final Map<String, String> csTranslations;
+    private final Map<String, String> csTranslations = new HashMap<>();
+    private final ObjectMapper mapper;
 
-    /**
-     * Constructor for CustomI18NProvider.
-     * It loads the Czech translations from the properties file.
-     * If the file is not found or an error occurs during loading, it logs an error message.
-     * The properties file should be located in the classpath under texts/ directory with the name ending in "_cs.properties".
-     * For example: texts/pages_cs.properties.
-     */
-    public CustomI18NProvider() {
-        csTranslations = new HashMap<>();
-        try {
-            ClassLoader classLoader = getClass().getClassLoader();
-            URL textsDir = classLoader.getResource("texts");
-            if (textsDir != null) {
-                loadTranslationsFromResource(classLoader);
-            } else {
-                log.warn("Texts file nenalezeno");
-            }
-        } catch (Exception e) {
-            log.error("Chyba při načítání překladů z JSON: {}", e.getMessage(), e);
-        }
+    @Autowired
+    public CustomI18NProvider(ObjectMapper mapper) {
+        this.mapper = mapper;
+        loadAllCsJson();
     }
 
-    private void loadTranslationsFromResource(ClassLoader classLoader) {
-        ObjectMapper mapper = new ObjectMapper();
+    private void loadAllCsJson() {
+        ResourcePatternResolver resolver = new PathMatchingResourcePatternResolver(getClass().getClassLoader());
 
-        String[] translationFiles = {
-                "beforeLeaveActionDialog_cs.json",
-                "chapter_cs.json",
-                "generic_cs.json",
-                "pages_cs.json",
-                "upload_component_cs.json",
-                "loginForm_cs.json"
-        };
+        try {
+            Resource[] resources = resolver.getResources("classpath*:texts/*_cs.json");
+            List<Resource> sorted = Arrays.asList(resources);
 
-        for (String fileName : translationFiles) {
-            try (InputStream input = classLoader.getResourceAsStream("texts/" + fileName)) {
-                if (input != null) {
-                    Map<String, String> map = mapper.readValue(input, new TypeReference<>() {});
-                    csTranslations.putAll(map);
-                } else {
-                    log.warn("Nenalezeno: {}", fileName);
+            sorted.sort(Comparator.comparing(r -> Optional.ofNullable(r.getFilename()).orElse("")));
+
+            for (Resource resource : sorted) {
+                String filename = resource.getFilename();
+                if (filename == null) {
+                    continue;
                 }
-
-            } catch (Exception e) {
-                log.error("Chyba při načítání českých překladů z JSON: {}", e.getMessage(), e);
+                try (InputStream input = resource.getInputStream()) {
+                    Map<String, String> map = mapper.readValue(input, new TypeReference<>() {});
+                    for (String key : map.keySet()) {
+                        if (csTranslations.containsKey(key)) {
+                            log.debug("Duplicitní klíč '{}' v {} – přepisuje se novou hodnotou", key, filename);
+                        }
+                    }
+                    csTranslations.putAll(map);
+                } catch (Exception e) {
+                    log.error("Chyba při čtení souboru {}: {}", filename, e.getMessage(), e);
+                }
             }
+        } catch (Exception e) {
+            log.error("Chyba při vyhledávání *_cs.json souborů: {}", e.getMessage(), e);
         }
     }
 
@@ -84,11 +73,9 @@ public class CustomI18NProvider implements I18NProvider {
     @Override
     public String getTranslation(String key, Locale locale, Object... params) {
         if (locale.getLanguage().equals("cs")) {
-            if (csTranslations != null) {
-                String value = csTranslations.get(key);
-                if (value != null) {
-                    return value;
-                }
+            String value = csTranslations.get(key);
+            if (value != null) {
+                return value;
             }
         }
         log.warn("Překlad nenalezen pro klíč: {} v jazyce: {}", key, locale.getLanguage());

@@ -9,13 +9,12 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.splitlayout.SplitLayout;
 import com.vaadin.flow.theme.lumo.LumoUtility.Gap;
 import cz.uhk.zlesak.threejslearningapp.application.components.*;
+import cz.uhk.zlesak.threejslearningapp.application.components.divs.ModelDiv;
 import cz.uhk.zlesak.threejslearningapp.application.components.editors.EditorJsComponent;
 import cz.uhk.zlesak.threejslearningapp.application.components.editors.MarkdownEditorComponent;
 import cz.uhk.zlesak.threejslearningapp.application.components.scrollers.ChapterContentScroller;
 import cz.uhk.zlesak.threejslearningapp.application.components.selects.ChapterSelect;
-import cz.uhk.zlesak.threejslearningapp.application.i18n.CustomI18NProvider;
 import cz.uhk.zlesak.threejslearningapp.application.models.entities.quickEntities.QuickModelEntity;
-import cz.uhk.zlesak.threejslearningapp.application.utils.SpringContextUtils;
 import cz.uhk.zlesak.threejslearningapp.application.views.IView;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Scope;
@@ -41,7 +40,6 @@ public abstract class ChapterScaffold extends Composite<VerticalLayout> implemen
     protected final EditorJsComponent editorjs = new EditorJsComponent();
     protected final NameTextField nameTextField = new NameTextField("Název kapitoly");
     protected final VerticalLayout chapterNavigation, chapterContent, chapterModel;
-    protected final CustomI18NProvider i18NProvider;
     protected final ModelDiv modelDiv = new ModelDiv();
     protected ChapterTabSheetSecondaryNavigationComponent secondaryNavigation = null;
 
@@ -51,7 +49,6 @@ public abstract class ChapterScaffold extends Composite<VerticalLayout> implemen
      *
      */
     public ChapterScaffold(boolean areWeInCreateOrEditChapterView) {
-        this.i18NProvider = SpringContextUtils.getBean(CustomI18NProvider.class);
 
         //Main page layout
         HorizontalLayout chapterPageLayout = new HorizontalLayout();

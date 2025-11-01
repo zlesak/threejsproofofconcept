@@ -1,6 +1,7 @@
-package cz.uhk.zlesak.threejslearningapp.application.components;
+package cz.uhk.zlesak.threejslearningapp.application.components.divs;
 
 import com.vaadin.flow.component.html.Div;
+import cz.uhk.zlesak.threejslearningapp.application.components.UploadComponent;
 
 /**
  * A simple component that combines an UploadComponent with a label.

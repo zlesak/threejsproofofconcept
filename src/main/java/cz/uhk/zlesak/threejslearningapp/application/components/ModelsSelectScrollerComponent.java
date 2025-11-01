@@ -5,6 +5,7 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.component.orderedlayout.Scroller;
+import cz.uhk.zlesak.threejslearningapp.application.i18n.I18nAware;
 import cz.uhk.zlesak.threejslearningapp.application.models.entities.quickEntities.QuickModelEntity;
 import cz.uhk.zlesak.threejslearningapp.application.views.listing.ModelListView;
 import org.springframework.context.ApplicationContextException;
@@ -19,7 +20,7 @@ import java.util.function.Consumer;
  * The component allows dynamic initialization of selects based on existing sub-chapters.
  *
  */
-public class ModelsSelectScrollerComponent extends Scroller {
+public class ModelsSelectScrollerComponent extends Scroller implements I18nAware {
     private Select<QuickModelEntity> mainModelSelect;
     private final Map<String, HorizontalLayout> otherModelsHorizontalLayouts = new HashMap<>();
     private final VerticalLayout scrollerLayout;
@@ -60,7 +61,7 @@ public class ModelsSelectScrollerComponent extends Scroller {
      */
     public void initSelects(Map<String, String> subChapterForSelectRecords) {
         if(this.mainModelSelect == null) {
-            modelSelectHorizontalLayout("Hlavní model", "", true);
+            modelSelectHorizontalLayout(text("modelSelect.main.caption"), "", true);
         }
 
         otherModelsHorizontalLayouts.keySet().removeIf(id -> {
@@ -73,7 +74,7 @@ public class ModelsSelectScrollerComponent extends Scroller {
 
         subChapterForSelectRecords.forEach((id, text) -> {
             if(!otherModelsHorizontalLayouts.containsKey(id)) {
-                modelSelectHorizontalLayout("Vybrat model pro " + text, id, false);
+                modelSelectHorizontalLayout(text("modelSelect.other.caption") + text, id, false);
             }
         });
     }
@@ -107,7 +108,7 @@ public class ModelsSelectScrollerComponent extends Scroller {
      * @return Button to open ModelListDialog.
      */
     private Button getChooseAlreadyCreatedModelButton(Select<QuickModelEntity> modelSelect) {
-        Button chooseAlreadyCreatedModelButton = new Button("Vybrat model");
+        Button chooseAlreadyCreatedModelButton = new Button(text("modelSelectButton.label"));
 
         ModelListDialog modelListDialog = new ModelListDialog(new ModelListView());
         modelListDialog.setModelSelectedListener( entity -> {

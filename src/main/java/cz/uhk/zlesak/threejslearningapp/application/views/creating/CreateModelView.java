@@ -10,8 +10,6 @@ import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.VaadinSession;
 import cz.uhk.zlesak.threejslearningapp.application.components.BeforeLeaveActionDialog;
 import cz.uhk.zlesak.threejslearningapp.application.controllers.ModelController;
-import cz.uhk.zlesak.threejslearningapp.application.i18n.CustomI18NProvider;
-import cz.uhk.zlesak.threejslearningapp.application.utils.SpringContextUtils;
 import cz.uhk.zlesak.threejslearningapp.application.views.scaffolds.ModelScaffold;
 import jakarta.annotation.security.RolesAllowed;
 import lombok.extern.slf4j.Slf4j;
@@ -24,13 +22,11 @@ import org.springframework.context.annotation.Scope;
 @Scope("prototype")
 @RolesAllowed(value = "ADMIN")
 public class CreateModelView extends ModelScaffold {
-    private final CustomI18NProvider i18nProvider;
     private boolean skipBeforeLeaveDialog = false;
 
     @Autowired
     public CreateModelView(ModelController modelController) {
         super();
-        this.i18nProvider = SpringContextUtils.getBean(CustomI18NProvider.class);
 
         Button createButton = createModelButton(modelController, quickModelEntity -> {
             skipBeforeLeaveDialog = true;
@@ -55,7 +51,7 @@ public class CreateModelView extends ModelScaffold {
     @Override
     public String getPageTitle() {
         try {
-            return this.i18nProvider.getTranslation("page.title.createChapterView", UI.getCurrent().getLocale());
+            return text("page.title.createChapterView");
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

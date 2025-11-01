@@ -6,6 +6,7 @@ import com.vaadin.flow.component.tabs.Tab;
 import com.vaadin.flow.component.tabs.TabSheet;
 import cz.uhk.zlesak.threejslearningapp.application.components.editors.EditorJsComponent;
 import cz.uhk.zlesak.threejslearningapp.application.components.scrollers.ChapterContentScroller;
+import cz.uhk.zlesak.threejslearningapp.application.i18n.I18nAware;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -16,19 +17,19 @@ import lombok.extern.slf4j.Slf4j;
  *
  */
 @Slf4j
-public class ChapterTabSheetSecondaryNavigationComponent extends TabSheet {
+public class ChapterTabSheetSecondaryNavigationComponent extends TabSheet implements I18nAware {
 
     @Getter
     private final ModelsSelectScrollerComponent modelsScroller;
     private final ChapterContentScroller chapterContentScroller;
-
-    private final Tab tabModels = new Tab(VaadinIcon.CHART_3D.create(), new Span("3D Modely"));
+    private final Tab tabModels;
 
     public ChapterTabSheetSecondaryNavigationComponent(NameTextField nameTextField, ChapterContentScroller chapterContentScroller, ModelsSelectScrollerComponent modelsScroller) {
         super();
+        this.tabModels = new Tab(VaadinIcon.CHART_3D.create(), new Span(text("tab.models.label")));
         this.chapterContentScroller = chapterContentScroller;
         this.modelsScroller = modelsScroller;
-        Tab tabContent = new Tab(VaadinIcon.FILE_TEXT.create(), new Span("Obsah"));
+        Tab tabContent = new Tab(VaadinIcon.FILE_TEXT.create(), new Span(text("tab.content.label")));
         add(tabContent, chapterContentScroller);
         add(tabModels, modelsScroller);
         setPrefixComponent(nameTextField);
@@ -37,10 +38,18 @@ public class ChapterTabSheetSecondaryNavigationComponent extends TabSheet {
         setSelectedIndex(0);
     }
 
+    /**
+     * Sets the main content tab as selected.
+     * Important for resetting the view to the content tab.
+     */
     public void setMainContentTabSelected() {
         setSelectedIndex(0);
     }
 
+    /**
+     * Initializes the component with the given EditorJsComponent.
+     * @param editorJsComponent the EditorJsComponent to retrieve subchapter names from
+     */
     public void init(EditorJsComponent editorJsComponent) {
         addSelectedChangeListener(event -> {
             if(event.getSelectedTab() == tabModels) {

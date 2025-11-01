@@ -8,7 +8,6 @@ import com.vaadin.flow.server.VaadinSession;
 import cz.uhk.zlesak.threejslearningapp.application.components.notifications.ErrorNotification;
 import cz.uhk.zlesak.threejslearningapp.application.controllers.ModelController;
 import cz.uhk.zlesak.threejslearningapp.application.controllers.TextureController;
-import cz.uhk.zlesak.threejslearningapp.application.i18n.CustomI18NProvider;
 import cz.uhk.zlesak.threejslearningapp.application.models.entities.quickEntities.QuickModelEntity;
 import cz.uhk.zlesak.threejslearningapp.application.utils.TextureMapHelper;
 import cz.uhk.zlesak.threejslearningapp.application.views.listing.ModelListView;
@@ -34,7 +33,6 @@ import java.util.Map;
 @PermitAll
 public class ModelView extends ModelScaffold {
     private final ModelController modelController;
-    private final CustomI18NProvider i18nProvider;
     private final TextureController textureController;
     private QuickModelEntity quickModelEntity;
 
@@ -43,14 +41,12 @@ public class ModelView extends ModelScaffold {
      * Initializes the view with necessary controllers and providers.
      *
      * @param modelController   controller for handling model-related operations
-     * @param i18nProvider      provider for internationalization and localization
      * @param textureController controller for handling texture-related operations
      */
     @Autowired
-    public ModelView(ModelController modelController, CustomI18NProvider i18nProvider, TextureController textureController) {
+    public ModelView(ModelController modelController, TextureController textureController) {
         super();
         this.modelController = modelController;
-        this.i18nProvider = i18nProvider;
         this.textureController = textureController;
     }
 
@@ -102,7 +98,7 @@ public class ModelView extends ModelScaffold {
      */
     @Override
     public String getPageTitle() {
-        return i18nProvider.getTranslation("page.title.modelView", UI.getCurrent().getLocale());
+        return text("page.title.modelView");
     }
 
     /**
@@ -126,7 +122,7 @@ public class ModelView extends ModelScaffold {
             try {
                 Map<String, String> otherTexturesMap = TextureMapHelper.otherTexturesMap(quickModelEntity.getOtherTextures(), textureController);
                 modelDiv.renderer.addOtherTextures(otherTexturesMap, quickModelEntity.getModel().getId());
-                modelDiv.modelTextureAreaSelectComponent.initializeData(Map.of(quickModelEntity.getModel().getId() , quickModelEntity));
+                modelDiv.modelTextureAreaSelectComponent.initializeData(Map.of(quickModelEntity.getModel().getId(), quickModelEntity));
             } catch (IOException e) {
                 log.error(e.getMessage(), e);
                 throw new ApplicationContextException(e.getMessage());

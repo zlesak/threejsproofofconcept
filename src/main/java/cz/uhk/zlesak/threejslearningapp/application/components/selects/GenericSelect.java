@@ -7,6 +7,7 @@ import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.data.renderer.TextRenderer;
+import cz.uhk.zlesak.threejslearningapp.application.i18n.I18nAware;
 import cz.uhk.zlesak.threejslearningapp.application.models.records.TextureAreaForSelectRecord;
 import lombok.Getter;
 import org.springframework.context.annotation.Scope;
@@ -22,7 +23,7 @@ import java.util.function.BiFunction;
  * @param <E>
  */
 @Scope("prototype")
-public abstract class GenericSelect<T, E extends ComponentEvent<?>> extends Select<T> {
+public abstract class GenericSelect<T, E extends ComponentEvent<?>> extends Select<T> implements I18nAware {
     protected final ItemLabelGenerator<T> itemLabelGenerator;
     private final BiFunction<GenericSelect<T, E>, ValueChangeEvent<T>, E> eventFactory;
     private final Class<E> eventType;
