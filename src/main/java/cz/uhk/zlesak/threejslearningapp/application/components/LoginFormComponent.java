@@ -1,14 +1,17 @@
 package cz.uhk.zlesak.threejslearningapp.application.components;
 
-import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.login.LoginForm;
 import com.vaadin.flow.component.login.LoginI18n;
 import cz.uhk.zlesak.threejslearningapp.application.i18n.CustomI18NProvider;
+import cz.uhk.zlesak.threejslearningapp.application.i18n.I18nAware;
 import cz.uhk.zlesak.threejslearningapp.application.utils.SpringContextUtils;
 
-public class LoginFormComponent extends LoginForm {
+public class LoginFormComponent extends LoginForm implements I18nAware {
     CustomI18NProvider i18NProvider;
 
+    /**
+     * Constructor that initializes the LoginFormComponent with multiple language support.
+     */
     public LoginFormComponent() {
         super();
         this.i18NProvider = SpringContextUtils.getBean(CustomI18NProvider.class);
@@ -21,14 +24,14 @@ public class LoginFormComponent extends LoginForm {
     private LoginI18n getLoginI18n() {
         LoginI18n i18n = LoginI18n.createDefault();
         i18n.setHeader(new LoginI18n.Header());
-        i18n.getHeader().setTitle(i18NProvider.getTranslation("login.title", UI.getCurrent().getLocale()));
-        i18n.getHeader().setDescription(i18NProvider.getTranslation("login.description", UI.getCurrent().getLocale()));
-        i18n.getForm().setUsername(i18NProvider.getTranslation("login.username", UI.getCurrent().getLocale()));
-        i18n.getForm().setPassword(i18NProvider.getTranslation("login.password", UI.getCurrent().getLocale()));
-        i18n.getForm().setSubmit(i18NProvider.getTranslation("login.submit", UI.getCurrent().getLocale()));
-        i18n.getForm().setTitle(i18NProvider.getTranslation("login.form.title", UI.getCurrent().getLocale()));
-        i18n.getErrorMessage().setTitle(i18NProvider.getTranslation("login.error.title", UI.getCurrent().getLocale()));
-        i18n.getErrorMessage().setMessage(i18NProvider.getTranslation("login.error.message", UI.getCurrent().getLocale()));
+        i18n.getHeader().setTitle(text("login.title"));
+        i18n.getHeader().setDescription(text("login.description"));
+        i18n.getForm().setUsername(text("login.username"));
+        i18n.getForm().setPassword(text("login.password"));
+        i18n.getForm().setSubmit(text("login.submit"));
+        i18n.getForm().setTitle(text("login.form.title"));
+        i18n.getErrorMessage().setTitle(text("login.error.title"));
+        i18n.getErrorMessage().setMessage(text("login.error.message"));
         return i18n;
     }
 }

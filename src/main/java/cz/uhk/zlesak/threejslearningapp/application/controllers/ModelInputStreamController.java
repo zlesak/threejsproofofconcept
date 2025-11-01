@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
  * It uses ModelController and TextureController to fetch the files and serves them with appropriate headers.
  */
 @RestController
-public class ModelInputStreamController {
+public class ModelInputStreamController implements IController {
 
     @Autowired
     private ModelController modelController;

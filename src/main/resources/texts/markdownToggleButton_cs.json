@@ -1,0 +1,7 @@
+{
+    "markdownToggleButton.label.md": "Markdown",
+    "markdownToggleButton.label.editorjs": "Blokový editor",
+    "markdownToggleButton.mdModeTooltip": "Přepnout na Markdown režim",
+    "markdownToggleButton.editorjsToolTip": "Přepnout zpět na blokový Editor.js"
+
+}

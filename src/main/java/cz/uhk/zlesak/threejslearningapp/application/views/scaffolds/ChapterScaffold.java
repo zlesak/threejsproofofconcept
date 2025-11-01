@@ -6,14 +6,22 @@ import com.vaadin.flow.component.dependency.JavaScript;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.Scroller;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.splitlayout.SplitLayout;
 import com.vaadin.flow.theme.lumo.LumoUtility.Gap;
 import cz.uhk.zlesak.threejslearningapp.application.components.*;
+import cz.uhk.zlesak.threejslearningapp.application.components.divs.ModelDiv;
+import cz.uhk.zlesak.threejslearningapp.application.components.editors.EditorJsComponent;
+import cz.uhk.zlesak.threejslearningapp.application.components.editors.MarkdownEditorComponent;
+import cz.uhk.zlesak.threejslearningapp.application.components.scrollers.ChapterContentScroller;
 import cz.uhk.zlesak.threejslearningapp.application.components.selects.ChapterSelect;
-import cz.uhk.zlesak.threejslearningapp.application.i18n.CustomI18NProvider;
-import cz.uhk.zlesak.threejslearningapp.application.utils.SpringContextUtils;
+import cz.uhk.zlesak.threejslearningapp.application.components.textFields.NameTextField;
+import cz.uhk.zlesak.threejslearningapp.application.components.textFields.SearchTextField;
+import cz.uhk.zlesak.threejslearningapp.application.models.entities.quickEntities.QuickModelEntity;
 import cz.uhk.zlesak.threejslearningapp.application.views.IView;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Scope;
+
+import java.util.Map;
 
 /**
  * ChapterScaffold is an abstract base class for views related to chapter management, including creating, editing, and viewing chapters.
@@ -30,32 +38,34 @@ public abstract class ChapterScaffold extends Composite<VerticalLayout> implemen
     protected final SearchTextField searchTextField = new SearchTextField("Hledat v kapitole");
     protected final ChapterSelect chapterSelect = new ChapterSelect();
     protected final NavigationContentComponent navigationContentLayout = new NavigationContentComponent();
+    protected final MarkdownEditorComponent mdEditor = new MarkdownEditorComponent();
     protected final EditorJsComponent editorjs = new EditorJsComponent();
     protected final NameTextField nameTextField = new NameTextField("Název kapitoly");
     protected final VerticalLayout chapterNavigation, chapterContent, chapterModel;
-    protected final CustomI18NProvider i18NProvider;
     protected final ModelDiv modelDiv = new ModelDiv();
+    protected ChapterTabSheetSecondaryNavigationComponent secondaryNavigation = null;
 
     /**
      * Constructor for ChapterScaffold.
      * Initializes the layout and components based on the specified view type.
      *
      */
-    public ChapterScaffold() {
-        this.i18NProvider = SpringContextUtils.getBean(CustomI18NProvider.class);
+    public ChapterScaffold(boolean areWeInCreateOrEditChapterView) {
 
         //Main page layout
         HorizontalLayout chapterPageLayout = new HorizontalLayout();
         chapterNavigation = new VerticalLayout();
         chapterContent = new VerticalLayout();
         chapterModel = new VerticalLayout();
-        chapterPageLayout.add(chapterNavigation, chapterContent, chapterModel);
+
+        SplitLayout splitLayout = new SplitLayout(chapterContent, chapterModel);
+
+        chapterPageLayout.add(chapterNavigation, splitLayout);
         chapterPageLayout.setSizeFull();
         chapterPageLayout.setClassName("chapterPageLayout");
         chapterPageLayout.addClassName(Gap.MEDIUM);
         chapterPageLayout.setFlexGrow(0, chapterNavigation);
-        chapterPageLayout.setFlexGrow(1, chapterContent);
-        chapterPageLayout.setFlexGrow(1, chapterModel);
+        chapterPageLayout.setFlexGrow(1, splitLayout);
         chapterPageLayout.getStyle().set("min-width", "0");
         chapterPageLayout.getStyle().set("min-height", "0");
 
@@ -72,18 +82,24 @@ public abstract class ChapterScaffold extends Composite<VerticalLayout> implemen
         chapterNavigation.setPadding(false);
 
         //Content layout
-        Scroller chapterContentScroller = new Scroller(editorjs, Scroller.ScrollDirection.VERTICAL);
-        chapterContentScroller.setSizeFull();
-        chapterContent.add(nameTextField, chapterContentScroller);
+
+        ChapterContentScroller chapterContentScroller = new ChapterContentScroller(editorjs, mdEditor);
+        ModelsSelectScrollerComponent modelsScroller = new ModelsSelectScrollerComponent();
+
+        if (areWeInCreateOrEditChapterView) {
+            secondaryNavigation = new ChapterTabSheetSecondaryNavigationComponent(nameTextField, chapterContentScroller, modelsScroller);
+            Scroller tabsScroller = new Scroller(secondaryNavigation, Scroller.ScrollDirection.VERTICAL);
+            tabsScroller.setSizeFull();
+            chapterContent.add(tabsScroller);
+        } else {
+            nameTextField.setWidthFull();
+            chapterContent.add(nameTextField, chapterContentScroller);
+        }
         chapterContent.addClassName(Gap.MEDIUM);
-        chapterContent.setFlexGrow(1, chapterContentScroller);
         chapterContent.setSizeFull();
         chapterContent.setPadding(false);
-        chapterContent.getStyle().set("min-width", "0");
-        chapterContent.getStyle().set("flex-grow", "1");
 
         //Model layout
-
         chapterModel.add(modelDiv);
         chapterModel.addClassName(Gap.MEDIUM);
         chapterModel.setSizeFull();
@@ -107,5 +123,15 @@ public abstract class ChapterScaffold extends Composite<VerticalLayout> implemen
         searchTextField.addValueChangeListener(
                 event -> editorjs.search(event.getValue())
         );
+    }
+
+    protected void setupModelDiv(Map<String, QuickModelEntity> quickModelEntityMap) {
+        editorjs.addModelTextureColorAreaClickListener((modelId, textureId, hexColor, text) -> {
+            modelDiv.modelTextureAreaSelectComponent.getModelListingSelect().setSelectedModelById(modelId);
+            modelDiv.modelTextureAreaSelectComponent.getTextureListingSelect().setSelectedTextureById(textureId);
+            modelDiv.modelTextureAreaSelectComponent.getTextureAreaSelect().setSelectedAreaByHexColor(hexColor, textureId);
+        });
+        editorjs.initializeTextureSelects(quickModelEntityMap);
+        modelDiv.modelTextureAreaSelectComponent.initializeData(quickModelEntityMap);
     }
 }

@@ -23,7 +23,7 @@ public class ChapterSelect extends GenericSelect<SubChapterForSelectRecord, SubC
                 SubChapterChangeEvent.class,
                 (select, event) -> new SubChapterChangeEvent((ChapterSelect) select, event.isFromClient(), event.getOldValue(), event.getValue()));
         setEmptySelectionAllowed(true);
-        setEmptySelectionCaption("Vyberte podkapitolu");
+        setEmptySelectionCaption(text("chapterSelect.caption"));
         setWidthFull();
     }
 

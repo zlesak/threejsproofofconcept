@@ -1,0 +1,10 @@
+{
+  "filter.search.placeholder" : "Hledat...",
+  "filter.sort.direction.asc": "Vzestupně",
+  "filter.sort.direction.desc": "Sestupně",
+  "filter.orderBy.label": "Řadit podle",
+  "filter.sort.label": "Směr řazení",
+  "filter.name.label": "Název",
+  "filter.created.label": "Datum vytvoření",
+  "filter.updated.label": "Naposledy upraveno"
+}

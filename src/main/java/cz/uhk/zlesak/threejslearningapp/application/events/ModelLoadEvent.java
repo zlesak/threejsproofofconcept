@@ -11,8 +11,11 @@ import lombok.Getter;
  */
 @Getter
 public class ModelLoadEvent extends ComponentEvent<Component> {
+    private final String modelId;
     private final String model;
+    private final String modelName;
     private final String texture;
+    private final String textureName;
 
     /**
      * Constructor for ModelLoadEvent.
@@ -21,10 +24,13 @@ public class ModelLoadEvent extends ComponentEvent<Component> {
      * @param model   the base64-encoded model data
      * @param texture the base64-encoded texture data
      */
-    public ModelLoadEvent(Component source, String model, String texture) {
+    public ModelLoadEvent(Component source, String model, String texture, String modelId, String modelName, String textureName) {
         super(source, false);
         this.model = model;
         this.texture = texture;
+        this.modelId = modelId;
+        this.modelName = modelName;
+        this.textureName = textureName;
     }
 
 }

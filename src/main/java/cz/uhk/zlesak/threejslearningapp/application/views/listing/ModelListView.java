@@ -9,7 +9,6 @@ import com.vaadin.flow.router.Route;
 import cz.uhk.zlesak.threejslearningapp.application.components.ModelListItemComponent;
 import cz.uhk.zlesak.threejslearningapp.application.components.PaginationComponent;
 import cz.uhk.zlesak.threejslearningapp.application.controllers.ModelController;
-import cz.uhk.zlesak.threejslearningapp.application.i18n.CustomI18NProvider;
 import cz.uhk.zlesak.threejslearningapp.application.models.entities.quickEntities.QuickFile;
 import cz.uhk.zlesak.threejslearningapp.application.models.entities.quickEntities.QuickModelEntity;
 import cz.uhk.zlesak.threejslearningapp.application.models.records.PageResult;
@@ -17,7 +16,6 @@ import cz.uhk.zlesak.threejslearningapp.application.utils.SpringContextUtils;
 import cz.uhk.zlesak.threejslearningapp.application.views.scaffolds.ListingScaffold;
 import jakarta.annotation.security.PermitAll;
 import lombok.Setter;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 
 import java.util.List;
@@ -34,7 +32,6 @@ import java.util.function.Consumer;
 @PermitAll
 public class ModelListView extends ListingScaffold {
     private final ModelController modelController;
-    private final CustomI18NProvider customI18NProvider;
     @Setter
     private Consumer<QuickModelEntity> modelSelectedListener;
 
@@ -42,12 +39,9 @@ public class ModelListView extends ListingScaffold {
      * Constructor for ModelListView.
      * It initializes the view with the necessary controllers and providers.
      *
-     * @param modelController    controller for handling model-related operations
      */
-    @Autowired
-    public ModelListView(ModelController modelController) {
-        this.modelController = modelController;
-        this.customI18NProvider = SpringContextUtils.getBean(CustomI18NProvider.class);
+    public ModelListView() {
+        this.modelController = SpringContextUtils.getBean(ModelController.class);
     }
 
     /**
@@ -59,7 +53,7 @@ public class ModelListView extends ListingScaffold {
     @Override
     public String getPageTitle() {
         try {
-            return customI18NProvider.getTranslation("page.title.modelListView", UI.getCurrent().getLocale());
+            return text("page.title.modelListView");
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -73,15 +67,8 @@ public class ModelListView extends ListingScaffold {
      */
     @Override
     public void afterNavigation(AfterNavigationEvent event) {
-        int page = 1;
-        int limit = 10;
-        if (event.getLocation().getQueryParameters().getParameters().containsKey("page")) {
-            page = Integer.parseInt(event.getLocation().getQueryParameters().getParameters().get("page").getFirst());
-        }
-        if (event.getLocation().getQueryParameters().getParameters().containsKey("limit")) {
-            limit = Integer.parseInt(event.getLocation().getQueryParameters().getParameters().get("limit").getFirst());
-        }
-        listModels(page, limit, true);
+        afterNavigationAction(event);
+        listModels(this.page, this.pageSize, true, null);
     }
 
     /**
@@ -115,7 +102,7 @@ public class ModelListView extends ListingScaffold {
      * @param limit    the number of models to retrieve per page
      * @param listView boolean indicating whether to display the models in a list view format
      */
-    public void listModels(int page, int limit, boolean listView) {
+    public void listModels(int page, int limit, boolean listView, List<String> alreadySelectedIds) {
         clearList();
         PageResult<QuickFile> quickFilePageResult = modelController.getModels(page - 1, limit);
 
@@ -124,6 +111,9 @@ public class ModelListView extends ListingScaffold {
                 .map(f -> (QuickModelEntity) f)
                 .toList();
         for (QuickModelEntity model : quickModelEntities) {
+            if(alreadySelectedIds != null && alreadySelectedIds.contains(model.getModel().getId())) {
+                continue;
+            }
             ModelListItemComponent itemComponent = new ModelListItemComponent(model, listView);
             itemComponent.setSelectButtonClickListener(e -> {
                 if (modelSelectedListener != null) {
@@ -133,11 +123,10 @@ public class ModelListView extends ListingScaffold {
             itemListLayout.add(itemComponent);
         }
         PaginationComponent paginationComponent;
-        if(listView) {
-             paginationComponent = new PaginationComponent(page, limit, quickFilePageResult.total(), p -> UI.getCurrent().navigate("models?page=" + p + "&limit=" + limit));
-        }
-        else{
-            paginationComponent = new PaginationComponent(page, limit, quickFilePageResult.total(), p -> listModels(p, limit, false));
+        if (listView) {
+            paginationComponent = new PaginationComponent(page, limit, quickFilePageResult.total(), p -> UI.getCurrent().navigate("models?page=" + p + "&limit=" + limit));
+        } else {
+            paginationComponent = new PaginationComponent(page, limit, quickFilePageResult.total(), p -> listModels(p, limit, false, null));
         }
         paginationLayout.add(paginationComponent);
     }

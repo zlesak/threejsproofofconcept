@@ -29,11 +29,11 @@ public class QuickModelEntity extends QuickFile {
      */
     public List<QuickTextureEntity> getAllTextures(){
         List<QuickTextureEntity> allTextures = new ArrayList<>();
-        if(mainTexture != null){
-            allTextures.add(mainTexture);
-        }
         if(otherTextures != null && !otherTextures.isEmpty()){
             allTextures.addAll(otherTextures);
+        }
+        if(mainTexture != null){
+            allTextures.addFirst(mainTexture);
         }
         return allTextures;
     }

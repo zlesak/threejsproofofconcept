@@ -1,3 +1,10 @@
 {
-
+  "chapter.creator": "Vytvořil",
+  "chapter.creationDate": "Datum vytvoření",
+  "chapter.lastModified": "Naposledy upraveno",
+  "chapter.title": "Název kapitoly",
+  "chapter.content": "Obsah kapitoly",
+  "chapter.models": "Modely kapitoly",
+  "chapter.content.loadError": "Nepodařilo se načíst obsah kapitoly.",
+  "chapter.content.loading": "Načítám..."
 }

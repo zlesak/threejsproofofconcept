@@ -1,7 +1,6 @@
 package cz.uhk.zlesak.threejslearningapp.application.views.showing;
 
 import com.vaadin.flow.component.Composite;
-import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.login.LoginForm;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
@@ -11,19 +10,14 @@ import com.vaadin.flow.router.BeforeLeaveEvent;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
 import cz.uhk.zlesak.threejslearningapp.application.components.LoginFormComponent;
-import cz.uhk.zlesak.threejslearningapp.application.i18n.CustomI18NProvider;
 import cz.uhk.zlesak.threejslearningapp.application.views.IView;
-import org.springframework.beans.factory.annotation.Autowired;
 
 @Route("login")
 @AnonymousAllowed
 public class LoginView extends Composite<VerticalLayout> implements IView {
     private final LoginForm loginForm;
-    CustomI18NProvider i18NProvider;
 
-    @Autowired
-    public LoginView(CustomI18NProvider i18NProvider) {
-        this.i18NProvider = i18NProvider;
+    public LoginView() {
         loginForm = new LoginFormComponent();
         getContent().setWidth("100%");
         getContent().getStyle().set("flex-grow", "1");
@@ -34,7 +28,7 @@ public class LoginView extends Composite<VerticalLayout> implements IView {
     @Override
     public String getPageTitle() {
         try {
-            return this.i18NProvider.getTranslation("page.title.loginView", UI.getCurrent().getLocale());
+            return text("page.title.loginView");
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

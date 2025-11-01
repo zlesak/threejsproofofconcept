@@ -6,9 +6,7 @@ import com.vaadin.flow.component.notification.NotificationVariant;
 public class ErrorNotification extends Notification {
 
     public ErrorNotification(String message) {
-        super(message, 5000, Position.BOTTOM_END);
-        this.addThemeVariants(NotificationVariant.LUMO_ERROR);
-        open();
+        new ErrorNotification(message, 5000);
     }
 
     public ErrorNotification(String message, int duration) {

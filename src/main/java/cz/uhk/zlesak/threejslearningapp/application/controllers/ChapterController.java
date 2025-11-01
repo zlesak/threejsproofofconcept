@@ -1,27 +1,25 @@
 package cz.uhk.zlesak.threejslearningapp.application.controllers;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import cz.uhk.zlesak.threejslearningapp.application.clients.ChapterApiClient;
-import cz.uhk.zlesak.threejslearningapp.application.clients.interfaces.IChapterApiClient;
+import cz.uhk.zlesak.threejslearningapp.application.components.notifications.ErrorNotification;
 import cz.uhk.zlesak.threejslearningapp.application.models.entities.ChapterEntity;
 import cz.uhk.zlesak.threejslearningapp.application.models.entities.quickEntities.QuickModelEntity;
-import cz.uhk.zlesak.threejslearningapp.application.models.entities.quickEntities.QuickTextureEntity;
 import cz.uhk.zlesak.threejslearningapp.application.models.records.PageResult;
+import cz.uhk.zlesak.threejslearningapp.application.models.records.SortDirectionEnum;
 import cz.uhk.zlesak.threejslearningapp.application.models.records.SubChapterForSelectRecord;
-import cz.uhk.zlesak.threejslearningapp.application.utils.TextureMapHelper;
 import elemental.json.Json;
 import elemental.json.JsonArray;
 import elemental.json.JsonObject;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContextException;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
 /**
  * Controller for managing chapters in the application.
@@ -31,11 +29,11 @@ import java.util.Objects;
 @Slf4j
 @Component
 @Scope("prototype")
-public class ChapterController {
+public class ChapterController implements IController {
     private final ChapterApiClient chapterApiClient;
     private ChapterEntity chapterEntity = null;
-    @Setter
-    private QuickModelEntity uploadedModel = null;
+    private final ObjectMapper objectMapper;
+    private final List<QuickModelEntity> uploadedModels = new ArrayList<>();
 
     /**
      * Constructor for ChapterController that initializes the ChapterApiClient.
@@ -43,8 +41,9 @@ public class ChapterController {
      * @param chapterApiClient The API client used to interact with chapter-related operations.
      */
     @Autowired
-    public ChapterController(ChapterApiClient chapterApiClient) {
+    public ChapterController(ChapterApiClient chapterApiClient, ObjectMapper objectMapper) {
         this.chapterApiClient = chapterApiClient;
+        this.objectMapper = objectMapper;
     }
 
     /**
@@ -55,31 +54,65 @@ public class ChapterController {
      *
      * @param name    the name of the chapter
      * @param content the content of the chapter in JSON format
-     * @return the created ChapterEntity coming back from BE as proof of successful creation
+     * @return created ChapterEntity ID coming back from BE as proof of successful creation
      * @throws Exception if there is an error during chapter creation or if validation fails
      */
-    public ChapterEntity createChapter(String name, String content) throws Exception {
+    public String createChapter(String name, String content, Map<String, QuickModelEntity> allModels) throws Exception {
 
         if (name == null || name.isEmpty()) {
-            log.debug("Název kapitoly je prázdný.");
             throw new ApplicationContextException("Název kapitoly nesmí být prázdný.");
         }
         if (content == null || content.isEmpty()) {
-            log.debug("Obsah kapitoly je prázdný.");
             throw new ApplicationContextException("Obsah kapitoly nesmí být prázdný.");
         }
-        if (uploadedModel == null) {
-            log.debug("Kapitola nemá přiřazen žádný model.");
+        if (allModels == null || allModels.isEmpty()) {
             throw new ApplicationContextException("Kapitola musí mít alespoň jeden model.");
         }
+
+
+        try {
+            ObjectNode bodyJson = (ObjectNode) objectMapper.readTree(content);
+            ArrayNode blocks = (ArrayNode) bodyJson.get("blocks");
+
+            if(blocks.isEmpty()){
+                throw new ApplicationContextException("Obsah kapitoly nesmí být prázdný.");
+            }
+
+            blocks.forEach(blockNode -> {
+                if (blockNode.has("id") &&  allModels.containsKey(blockNode.get("id").asText())) {
+                    String blockId = blockNode.get("id").asText();
+                    QuickModelEntity model = allModels.get(blockId);
+                    ObjectNode dataNode = (ObjectNode) blockNode.get("data");
+                    dataNode.put("modelId", model.getModel().getId());
+                }
+            });
+            content = objectMapper.writeValueAsString(bodyJson);
+        } catch (ApplicationContextException e) {
+            throw e;
+        } catch (Exception e) {
+            log.error("Chyba při úpravě bloků editorjs: {}", e.getMessage(), e);
+            new ErrorNotification("Chyba při úpravě bloků editorjs: " + e.getMessage(), 5000);
+        }
+
+        List<QuickModelEntity> modelsList = new ArrayList<>();
+
+        allModels.forEach((key, model) -> {
+            if (!key.equals("main")) {
+                modelsList.addLast(model);
+            } else {
+                modelsList.addFirst(model);
+            }
+        });
+
+        uploadedModels.addAll(modelsList);
 
         ChapterEntity chapter = ChapterEntity.builder()
                 .Name(name)
                 .Content(content)
-                .Models(List.of(uploadedModel))
+                .Models(uploadedModels)
                 .build();
         try {
-            return chapterApiClient.createChapter(chapter);
+            return chapterApiClient.createChapter(chapter).getId();
         } catch (Exception e) {
             log.error("Chyba při vytváření kapitoly: {}", e.getMessage(), e);
             throw e;
@@ -157,7 +190,8 @@ public class ChapterController {
                 if ("header".equals(block.getString("type")) && block.getObject("data").getNumber("level") == 1) {
                     String id = block.hasKey("id") ? block.getString("id") : "fallback-" + java.util.UUID.randomUUID().toString().substring(0, 7);
                     String text = block.getObject("data").getString("text");
-                    subChapters.add(new SubChapterForSelectRecord(id, text));
+                    String modelId = block.getObject("data").hasKey("modelId") ? block.getObject("data").getString("modelId") : null;
+                    subChapters.add(new SubChapterForSelectRecord(id, text, modelId));
                 }
             }
             return subChapters;
@@ -304,62 +338,36 @@ public class ChapterController {
     }
 
     /**
-     * Retrieves the first QuickModelEntity from the chapter's models (there is just one model as of this time for each chapter).
+     * Retrieves a map of sub-chapter IDs to their corresponding QuickModelEntity objects for the specified chapter.
      * If the chapterEntity is not set or does not match the provided chapterId, it fetches the chapter details using the getChapter method.
-     *
-     * @param chapterId the ID of the chapter from which to retrieve the first QuickModelEntity
-     * @return the first QuickModelEntity of the chapter
-     * @throws Exception if there is an error retrieving the model data or if the chapter does not exist
+     * It then iterates through the sub-chapters and maps their IDs to the corresponding QuickModelEntity objects.
+     * @param chapterId the ID of the chapter whose sub-chapter models are to be retrieved
+     * @return a map where the keys are sub-chapter IDs and the values are QuickModelEntity objects
+     * @throws Exception if there is an error retrieving the chapter or sub-chapter models
      */
-    public QuickModelEntity getChapterFirstQuickModelEntity(String chapterId) throws Exception {
+    public Map<String, QuickModelEntity> getChaptersModels(String chapterId) throws Exception {
         if (chapterEntity == null || !Objects.equals(chapterEntity.getId(), chapterId)) {
             getChapter(chapterId);
         }
         try {
-            return chapterEntity.getModels().getFirst();
+            List<SubChapterForSelectRecord> subChaptersNames =  getSubChaptersNames(chapterId);
+            subChaptersNames.addFirst(new SubChapterForSelectRecord("main", null, null));
+            Map<String, QuickModelEntity> modelsMap = new HashMap<>();
+            for (SubChapterForSelectRecord subChapter : subChaptersNames) {
+                for (QuickModelEntity model : chapterEntity.getModels()) {
+                    if (Objects.equals(model.getModel().getId(), subChapter.modelId())) {
+                        modelsMap.put(subChapter.id(), model);
+                    }
+                    else {
+                        modelsMap.put("main", model);
+                    }
+                }
+            }
+            return  modelsMap;
         } catch (Exception e) {
-            log.error("Chyba při čtení dat modelu kapitoly: {}", e.getMessage(), e);
-            throw new Exception("Chyba při čtení dat modelu kapitoly: " + e.getMessage());
+            log.error("Chyba při čtení dat modelu kapitoly pro mapped verzi: {}", e.getMessage(), e);
+            throw new Exception("Chyba při čtení dat modelu kapitoly pro mapped verzi: " + e.getMessage());
         }
-    }
-
-    /**
-     * Retrieves all textures associated with the chapter's model.
-     * It combines the main texture and other textures of the chapter's first QuickModelEntity into a single list.
-     * If the chapterEntity is not set or does not match the provided chapterId, it fetches the chapter details using the getChapter method.
-     *
-     * @param chapterId the ID of the chapter from which to retrieve all textures
-     * @return a list of all QuickTextureEntity objects associated with the chapter's model
-     * @throws Exception if there is an error retrieving the textures or if the chapter does not exist
-     */
-    public List<QuickTextureEntity> getAllChapterTextures(String chapterId) throws Exception {
-        if (chapterEntity == null || !Objects.equals(chapterEntity.getId(), chapterId)) {
-            getChapter(chapterId);
-        }
-        QuickModelEntity quickModelEntity = getChapterFirstQuickModelEntity(chapterId);
-
-        List<QuickTextureEntity> allModelTextures = new ArrayList<>(quickModelEntity.getOtherTextures());
-        QuickTextureEntity mainTexture = quickModelEntity.getMainTexture();
-        if (mainTexture != null) {
-            allModelTextures.addFirst(mainTexture);
-        }
-        return allModelTextures;
-    }
-
-    /**
-     * Retrieves a map of other textures associated with the chapter's model.
-     * It uses the TextureMapHelper to convert the list of other textures into a map format suitable for use in the Three.js renderer.
-     * If the chapterEntity is not set or does not match the provided chapterId, it fetches the chapter details using the getChapter method.
-     *
-     * @param chapterId the ID of the chapter from which to retrieve other textures
-     * @param textureController the TextureController used to assist in mapping textures
-     * @return a map of texture names to their corresponding base64 representations
-     * @throws Exception if there is an error retrieving the textures or if the chapter does not exist
-     * @see TextureMapHelper#otherTexturesMap(List, TextureController)
-     */
-    public Map<String, String> getOtherTextures(String chapterId, TextureController textureController) throws Exception {
-        QuickModelEntity quickModelEntity = getChapterFirstQuickModelEntity(chapterId);
-        return TextureMapHelper.otherTexturesMap(quickModelEntity.getOtherTextures(), textureController);
     }
 
     /**
@@ -368,14 +376,25 @@ public class ChapterController {
      * If there is an error during the retrieval, it throws an Exception with details about the error.
      * @return a list of ChapterEntity objects representing all chapters
      * @throws RuntimeException if there is an error during the retrieval of chapters
-     * @see IChapterApiClient#getChapters(int, int)
      */
-    public PageResult<ChapterEntity> getChapters(int page, int limit) throws RuntimeException {
+    public PageResult<ChapterEntity> getChapters(int page, int limit, String orderBy, SortDirectionEnum sortDirection) throws RuntimeException {
         try {
-            return chapterApiClient.getChapters(page, limit);
+            return chapterApiClient.getChapters(page, limit, orderBy, sortDirection);
         } catch (Exception e) {
             log.error("Chyba při získávání stránkování kapitol pro page {}, limit {}, error message: {}", page, limit, e.getMessage(),  e);
-            throw new RuntimeException("Chyba při získávání modelu: " + e.getMessage(), e);
+            throw new RuntimeException("Chyba při získávání kapitol: " + e.getMessage(), e);
+        }
+    }
+
+    public List<ChapterEntity> getChapters(String text) throws ApplicationContextException {
+        if(text == null || text.isBlank()) {
+            throw new ApplicationContextException("Text pro filtrování kapitol nesmí být prázdný.");
+        }
+        try {
+            return chapterApiClient.getChaptersFiltered(text);
+        } catch (Exception e) {
+            log.error("Chyba při získávání kapitol filtrovaných pro text {}, error message: {}", text, e.getMessage(),  e);
+            throw new ApplicationContextException("Chyba při získávání kapitol: " + e.getMessage(), e);
         }
     }
 }

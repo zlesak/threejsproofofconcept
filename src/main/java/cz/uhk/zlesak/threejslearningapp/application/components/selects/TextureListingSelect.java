@@ -2,12 +2,14 @@ package cz.uhk.zlesak.threejslearningapp.application.components.selects;
 
 import com.vaadin.flow.component.ComponentEventListener;
 import cz.uhk.zlesak.threejslearningapp.application.events.TextureListingChangeEvent;
-import cz.uhk.zlesak.threejslearningapp.application.models.entities.quickEntities.QuickTextureEntity;
+import cz.uhk.zlesak.threejslearningapp.application.models.entities.quickEntities.QuickModelEntity;
 import cz.uhk.zlesak.threejslearningapp.application.models.records.TextureListingForSelectRecord;
 import cz.uhk.zlesak.threejslearningapp.application.models.records.parsers.TextureListingDataParser;
 import org.springframework.context.annotation.Scope;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * TextureListingSelect is a custom select for selecting texture listings.
@@ -42,15 +44,16 @@ public class TextureListingSelect extends GenericSelect<TextureListingForSelectR
      * This method is used to populate the select with texture listing records.
      * Calls the initialize method from the parent class to set the items.
      *
-     * @param quickTextureEntityList the list of quick texture entities to be displayed in the select
+     * @param models a map of model IDs to QuickModelEntity objects used to generate the texture listing records
      */
-    public void initializeTextureListingSelect(List<QuickTextureEntity> quickTextureEntityList) {
-        initialize(TextureListingDataParser.textureListingForSelectDataParser(quickTextureEntityList), true);
+    public void initializeTextureListingSelect(Map<String, QuickModelEntity> models) {
+        initialize(TextureListingDataParser.textureListingForSelectDataParser(models, true), true);
     }
 
     /**
      * Sets the selected texture in the select based on the provided texture ID.
      * If the texture ID is null or not found, no selection is made.
+     *
      * @param textureId the ID of the texture to be selected
      */
     public void setSelectedTextureById(String textureId) {
@@ -61,5 +64,23 @@ public class TextureListingSelect extends GenericSelect<TextureListingForSelectR
                 return;
             }
         }
+    }
+
+    /**
+     * Filters and shows only the textures associated with the specified model ID.
+     * Updates the items in the select to only include those that match the given model ID.
+     * Automatically selects the first texture in the filtered list.
+     *
+     * @param modelId the ID of the model whose textures should be displayed
+     */
+    public void showTexturesForSelectedModel(String modelId) {
+        List<TextureListingForSelectRecord> itemsToShow = new ArrayList<>();
+        for (TextureListingForSelectRecord item : this.getItems()) {
+            if (item.modelId().equals(modelId)) {
+                itemsToShow.add(item);
+            }
+        }
+        setItems(itemsToShow);
+        setSelectedTextureById(itemsToShow.getFirst().id());
     }
 }

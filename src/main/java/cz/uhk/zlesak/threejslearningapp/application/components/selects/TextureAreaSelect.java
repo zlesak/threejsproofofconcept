@@ -2,14 +2,14 @@ package cz.uhk.zlesak.threejslearningapp.application.components.selects;
 
 import com.vaadin.flow.component.ComponentEventListener;
 import cz.uhk.zlesak.threejslearningapp.application.events.TextureAreaChangeEvent;
-import cz.uhk.zlesak.threejslearningapp.application.models.entities.quickEntities.QuickTextureEntity;
+import cz.uhk.zlesak.threejslearningapp.application.models.entities.quickEntities.QuickModelEntity;
 import cz.uhk.zlesak.threejslearningapp.application.models.records.TextureAreaForSelectRecord;
-import cz.uhk.zlesak.threejslearningapp.application.models.records.parsers.TextureAreaDataParser;
 import cz.uhk.zlesak.threejslearningapp.application.utils.TextureMapHelper;
 import org.springframework.context.annotation.Scope;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * TextureAreaSelect is a custom select implementation for selecting texture areas to be shown in the renderer.
@@ -26,7 +26,7 @@ public class TextureAreaSelect extends GenericSelect<TextureAreaForSelectRecord,
                 TextureAreaChangeEvent.class,
                 (select, event) -> new TextureAreaChangeEvent((TextureAreaSelect) select, event.isFromClient(), event.getOldValue(), event.getValue()));
         setEmptySelectionAllowed(true);
-        setEmptySelectionCaption("Vyberte oblast textury");
+        setEmptySelectionCaption(text("textureAreaSelect.caption"));
         setWidthFull();
     }
 
@@ -44,10 +44,10 @@ public class TextureAreaSelect extends GenericSelect<TextureAreaForSelectRecord,
      * This method is used to populate the select with texture area records.
      * Calls the initialize method from the parent class to set the items.
      *
-     * @param quickTextureEntityList the list of quick texture entities to be displayed in the select
+     * @param models a map of model IDs to QuickModelEntity objects used to generate the texture area records
      */
-    public void initializeTextureAreaSelect(List<QuickTextureEntity> quickTextureEntityList) {
-        initialize(TextureAreaDataParser.csvParse(TextureMapHelper.createCsvMap(quickTextureEntityList)), false);
+    public void initializeTextureAreaSelect(Map<String, QuickModelEntity> models) {
+        initialize(TextureMapHelper.createTextureAreaForSelectRecordList(models), false);
     }
 
     /**
@@ -57,10 +57,6 @@ public class TextureAreaSelect extends GenericSelect<TextureAreaForSelectRecord,
      * @param textureId the ID of the texture to filter by
      */
     public void showSelectedTextureAreas(String textureId) {
-        if (textureId == null) {
-            setItems(this.getItems());
-            return;
-        }
         List<TextureAreaForSelectRecord> itemsToShow = new ArrayList<>();
         for (TextureAreaForSelectRecord item : this.getItems()) {
             if (item.textureId().equals(textureId)) {
