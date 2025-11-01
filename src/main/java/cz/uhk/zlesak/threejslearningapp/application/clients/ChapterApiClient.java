@@ -1,11 +1,14 @@
 package cz.uhk.zlesak.threejslearningapp.application.clients;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import cz.uhk.zlesak.threejslearningapp.application.clients.interfaces.IApiClient;
 import cz.uhk.zlesak.threejslearningapp.application.clients.interfaces.IChapterApiClient;
 import cz.uhk.zlesak.threejslearningapp.application.exceptions.ApiCallException;
 import cz.uhk.zlesak.threejslearningapp.application.models.entities.ChapterEntity;
 import cz.uhk.zlesak.threejslearningapp.application.models.records.PageResult;
+import cz.uhk.zlesak.threejslearningapp.application.models.records.SortDirectionEnum;
 import org.apache.commons.lang3.NotImplementedException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
@@ -14,6 +17,7 @@ import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * ChapterApiClient provides connection to the backend service for managing chapters.
@@ -139,8 +143,8 @@ public class ChapterApiClient implements IChapterApiClient {
      * @throws Exception Throws an exception if there is an error during the API call
      */
     @Override
-    public PageResult<ChapterEntity> getChapters(int page, int limit) throws Exception {
-        String url = baseUrl + "list?limit=" + limit + "&page=" + page;
+    public PageResult<ChapterEntity> getChapters(int page, int limit, String orderBy, SortDirectionEnum sortDirection) throws Exception {
+        String url = baseUrl + "list?limit=" + limit + "&page=" + page + "&orderBy=" + orderBy + "&sortDirection=" + sortDirection.name();
         try {
             ResponseEntity<String> response = restTemplate.exchange(
                     url,
@@ -169,5 +173,38 @@ public class ChapterApiClient implements IChapterApiClient {
     @Override
     public List<String> getChaptersByAuthor(String authorId) throws NotImplementedException {
         throw new NotImplementedException("Get chapters by author method is not implemented yet.");
+    }
+
+    /**
+     * API call function to get chapters filtered by text
+     * This method retrieves a list of chapters that match the provided text filter from the backend service.
+     * It uses the RestTemplate to make a GET request to the backend service.
+     * If the request is successful, it returns the list of matching chapters.
+     * If there is an error during the request, it throws an ApiCallException with details about the error.
+     * @param text Text filter to search chapters
+     * @return List of ChapterEntity objects that match the text filter
+     * @throws ApiCallException Throws an ApiCallException if there is an error during the API call
+     */
+    public List<ChapterEntity> getChaptersFiltered(String text) throws ApiCallException {
+        String url = baseUrl + "search-fulltext?keyword=" + text;
+
+        try {
+            ResponseEntity<String> response = restTemplate.exchange(
+                    url,
+                    HttpMethod.GET,
+                    null,
+                    String.class
+            );
+            if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
+                Map<String, List<ChapterEntity>> map = objectMapper.readValue(response.getBody(), new TypeReference<>() {});
+                return map.get("chapters");
+            } else {
+                throw new ApiCallException("Chyba při získávání filtrovaných kapitol", null, null, response.getStatusCode(), response.getBody(), null);
+            }
+        } catch (HttpStatusCodeException ex) {
+            throw new ApiCallException("Chyba při získávání filtrovaných kapitol", null, null, ex.getStatusCode(), ex.getResponseBodyAsString(), ex);
+        } catch (JsonProcessingException | ApiCallException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

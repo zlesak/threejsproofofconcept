@@ -38,7 +38,7 @@ import java.util.concurrent.CompletableFuture;
 @Scope("prototype")
 public class EditorJsComponent extends Component implements HasSize, HasStyle {
     private final List<Registration> registrations = new ArrayList<>();
-    
+
     /**
      * Default constructor for EditorJsComponent.
      * Does not take any parameters as they are not needed at the time of instantiation.
@@ -53,10 +53,10 @@ public class EditorJsComponent extends Component implements HasSize, HasStyle {
      */
     public CompletableFuture<String> getData() {
         return getElement().callJsFunction("getData").toCompletableFuture()
-            .thenApply(json -> {
-                String result = json.asString();
-                return (result == null || result.isEmpty()) ? "{}" : result;
-            });
+                .thenApply(json -> {
+                    String result = json.asString();
+                    return (result == null || result.isEmpty()) ? "{}" : result;
+                });
     }
 
     /**
@@ -155,10 +155,11 @@ public class EditorJsComponent extends Component implements HasSize, HasStyle {
     /**
      * Searches for the given text in the Editor.js instance.
      * This method triggers a search operation within the Editor.js content.
+     *
      * @param searchText the text to search for within the Editor.js content.
      * @see SearchTextField
      */
-    public void search(String searchText){
+    public void search(String searchText) {
         getElement().callJsFunction("search", searchText)
                 .toCompletableFuture()
                 .exceptionally(error -> {
@@ -177,6 +178,7 @@ public class EditorJsComponent extends Component implements HasSize, HasStyle {
 
     /**
      * Loads provided Markdown string into the editor (converts it to EditorJS blocks).
+     *
      * @param markdown markdown content
      */
     public void loadMarkdown(String markdown) {
@@ -185,6 +187,7 @@ public class EditorJsComponent extends Component implements HasSize, HasStyle {
 
     /**
      * Retrieves current content as Markdown (converts blocks if in block mode).
+     *
      * @return future with markdown string
      */
     public CompletableFuture<String> getMarkdown() {
@@ -244,7 +247,7 @@ public class EditorJsComponent extends Component implements HasSize, HasStyle {
                         attachEvent.getUI(),
                         MarkdownValueChangedEvent.class,
                         event -> {
-                            if(!event.isMarkdownMode()) {
+                            if (!event.isMarkdownMode()) {
                                 loadMarkdown(event.getMarkdownValue());
                             }
                         }

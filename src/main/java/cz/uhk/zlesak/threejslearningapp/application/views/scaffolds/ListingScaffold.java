@@ -5,8 +5,14 @@ import com.vaadin.flow.component.Tag;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.Scroller;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.router.AfterNavigationEvent;
+import cz.uhk.zlesak.threejslearningapp.application.components.FilterComponent;
+import cz.uhk.zlesak.threejslearningapp.application.models.records.SortDirectionEnum;
+import cz.uhk.zlesak.threejslearningapp.application.utils.ViewUtils;
 import cz.uhk.zlesak.threejslearningapp.application.views.IView;
 import org.springframework.context.annotation.Scope;
+
+import java.util.Objects;
 
 /**
  * ListingScaffold is an abstract base class for views that display listings of entities.
@@ -16,29 +22,72 @@ import org.springframework.context.annotation.Scope;
 @Scope("prototype")
 @Tag("listing-scaffold")
 public abstract class ListingScaffold extends Composite<VerticalLayout> implements IView {
-    protected final VerticalLayout listingLayout, itemListLayout, paginationLayout;
+    protected final VerticalLayout listingLayout, itemListLayout, paginationLayout, secondaryFilterLayout;
+    protected final FilterComponent filterComponent = new FilterComponent();
+
+    protected int page = 1;
+    protected int pageSize = 10;
+    protected SortDirectionEnum sortDirection = SortDirectionEnum.ASC;
+    protected String orderBy = "Name";
+    protected String searchText = "";
 
     /**
      * Constructor for ListingScaffold.
      * Initializes the layout with a vertical layout inside a scroller for displaying listing content.
+     * Includes secondary filter layout for search/filter per individual implementations on specific views.
+     *
      */
     public ListingScaffold() {
         this.listingLayout = new VerticalLayout();
         this.itemListLayout = new VerticalLayout();
         this.paginationLayout = new VerticalLayout();
+        this.secondaryFilterLayout = new VerticalLayout(filterComponent);
+
         Scroller modelListScroller = new Scroller(itemListLayout, Scroller.ScrollDirection.VERTICAL);
         itemListLayout.setSpacing(false);
         itemListLayout.getThemeList().add("spacing-s");
         modelListScroller.setSizeFull();
 
         paginationLayout.setAlignItems(FlexComponent.Alignment.CENTER);
+        paginationLayout.setPadding(false);
 
         listingLayout.setFlexGrow(1, modelListScroller);
         listingLayout.setSizeFull();
-        listingLayout.add(modelListScroller, paginationLayout);
+        listingLayout.setSpacing(false);
+        listingLayout.add(secondaryFilterLayout, modelListScroller, paginationLayout);
 
         getContent().setPadding(false);
         getContent().add(listingLayout);
         getContent().setSizeFull();
+    }
+
+    /**
+     * Handles actions to be performed after navigation events.
+     *
+     * @param event the AfterNavigationEvent containing navigation details
+     */
+    protected void afterNavigationAction(AfterNavigationEvent event) {
+        Object[] requestParams = ViewUtils.extractFilterRequestParameters(event.getLocation());
+        int newPage = ((Number) requestParams[0]).intValue();
+        int newPageSize = ((Number) requestParams[1]).intValue();
+        String orderBy = (String) requestParams[2];
+        SortDirectionEnum newSortDirection = (SortDirectionEnum) requestParams[3];
+        String searchText = (String) requestParams[4];
+
+        if (newPage != this.page) {
+            this.page = newPage;
+        }
+        if (newPageSize != this.pageSize) {
+            this.pageSize = newPageSize;
+        }
+        if (newSortDirection != this.sortDirection) {
+            this.sortDirection = newSortDirection;
+        }
+        if (!Objects.equals(orderBy, this.orderBy)) {
+            this.orderBy = orderBy;
+        }
+        if (!Objects.equals(orderBy, this.searchText)) {
+            this.searchText = searchText;
+        }
     }
 }

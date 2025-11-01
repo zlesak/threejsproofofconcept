@@ -4,11 +4,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import cz.uhk.zlesak.threejslearningapp.application.clients.ChapterApiClient;
-import cz.uhk.zlesak.threejslearningapp.application.clients.interfaces.IChapterApiClient;
 import cz.uhk.zlesak.threejslearningapp.application.components.notifications.ErrorNotification;
 import cz.uhk.zlesak.threejslearningapp.application.models.entities.ChapterEntity;
 import cz.uhk.zlesak.threejslearningapp.application.models.entities.quickEntities.QuickModelEntity;
 import cz.uhk.zlesak.threejslearningapp.application.models.records.PageResult;
+import cz.uhk.zlesak.threejslearningapp.application.models.records.SortDirectionEnum;
 import cz.uhk.zlesak.threejslearningapp.application.models.records.SubChapterForSelectRecord;
 import elemental.json.Json;
 import elemental.json.JsonArray;
@@ -351,6 +351,7 @@ public class ChapterController implements IController {
         }
         try {
             List<SubChapterForSelectRecord> subChaptersNames =  getSubChaptersNames(chapterId);
+            subChaptersNames.addFirst(new SubChapterForSelectRecord("main", null, null));
             Map<String, QuickModelEntity> modelsMap = new HashMap<>();
             for (SubChapterForSelectRecord subChapter : subChaptersNames) {
                 for (QuickModelEntity model : chapterEntity.getModels()) {
@@ -375,14 +376,25 @@ public class ChapterController implements IController {
      * If there is an error during the retrieval, it throws an Exception with details about the error.
      * @return a list of ChapterEntity objects representing all chapters
      * @throws RuntimeException if there is an error during the retrieval of chapters
-     * @see IChapterApiClient#getChapters(int, int)
      */
-    public PageResult<ChapterEntity> getChapters(int page, int limit) throws RuntimeException {
+    public PageResult<ChapterEntity> getChapters(int page, int limit, String orderBy, SortDirectionEnum sortDirection) throws RuntimeException {
         try {
-            return chapterApiClient.getChapters(page, limit);
+            return chapterApiClient.getChapters(page, limit, orderBy, sortDirection);
         } catch (Exception e) {
             log.error("Chyba při získávání stránkování kapitol pro page {}, limit {}, error message: {}", page, limit, e.getMessage(),  e);
-            throw new RuntimeException("Chyba při získávání modelu: " + e.getMessage(), e);
+            throw new RuntimeException("Chyba při získávání kapitol: " + e.getMessage(), e);
+        }
+    }
+
+    public List<ChapterEntity> getChapters(String text) throws ApplicationContextException {
+        if(text == null || text.isBlank()) {
+            throw new ApplicationContextException("Text pro filtrování kapitol nesmí být prázdný.");
+        }
+        try {
+            return chapterApiClient.getChaptersFiltered(text);
+        } catch (Exception e) {
+            log.error("Chyba při získávání kapitol filtrovaných pro text {}, error message: {}", text, e.getMessage(),  e);
+            throw new ApplicationContextException("Chyba při získávání kapitol: " + e.getMessage(), e);
         }
     }
 }

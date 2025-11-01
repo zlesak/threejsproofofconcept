@@ -13,7 +13,6 @@ import cz.uhk.zlesak.threejslearningapp.application.models.entities.quickEntitie
 import cz.uhk.zlesak.threejslearningapp.application.models.entities.quickEntities.QuickModelEntity;
 import cz.uhk.zlesak.threejslearningapp.application.models.records.PageResult;
 import cz.uhk.zlesak.threejslearningapp.application.utils.SpringContextUtils;
-import cz.uhk.zlesak.threejslearningapp.application.utils.ViewUtils;
 import cz.uhk.zlesak.threejslearningapp.application.views.scaffolds.ListingScaffold;
 import jakarta.annotation.security.PermitAll;
 import lombok.Setter;
@@ -68,8 +67,8 @@ public class ModelListView extends ListingScaffold {
      */
     @Override
     public void afterNavigation(AfterNavigationEvent event) {
-        int[] pageLimit = ViewUtils.extractPageAndLimit(event.getLocation());
-        listModels(pageLimit[0], pageLimit[1], true);
+        afterNavigationAction(event);
+        listModels(this.page, this.pageSize, true);
     }
 
     /**
@@ -121,10 +120,9 @@ public class ModelListView extends ListingScaffold {
             itemListLayout.add(itemComponent);
         }
         PaginationComponent paginationComponent;
-        if(listView) {
-             paginationComponent = new PaginationComponent(page, limit, quickFilePageResult.total(), p -> UI.getCurrent().navigate("models?page=" + p + "&limit=" + limit));
-        }
-        else{
+        if (listView) {
+            paginationComponent = new PaginationComponent(page, limit, quickFilePageResult.total(), p -> UI.getCurrent().navigate("models?page=" + p + "&limit=" + limit));
+        } else {
             paginationComponent = new PaginationComponent(page, limit, quickFilePageResult.total(), p -> listModels(p, limit, false));
         }
         paginationLayout.add(paginationComponent);

@@ -22,15 +22,25 @@ const parsers: BlockParser[] = [
   genericFallbackParser
 ];
 
-export async function convertEditorJsToMarkdown(data: OutputData): Promise<string> {
+(window as any).convertEditorJsToMarkdown = convertEditorJsToMarkdown;
+
+export async function convertEditorJsToMarkdown(data: string | OutputData): Promise<string> {
+  const wasString = typeof data === 'string';
+  let lengthCount = 0;
+  const parsed: OutputData = typeof data === 'string' ? JSON.parse(data) : data;
   const out: string[] = [];
-  for (const block of data.blocks || []) {
+  for (const block of parsed.blocks || []) {
     const parser = parsers.find(p => p.type === block.type);
     const md = (parser ? parser.toMarkdown(block) : genericFallbackParser.toMarkdown(block)) || '';
     out.push(md.trim());
+    lengthCount += md.length;
+    if (wasString && lengthCount > 150) {
+      return out.filter(Boolean).join('\n\n') + '...\n';
+    }
   }
   return out.filter(Boolean).join('\n\n') + '\n';
 }
+
 
 export async function convertMarkdownToEditorJs(md: string): Promise<OutputData> {
   const lines = md.replace(/\r\n?/g, '\n').split('\n');

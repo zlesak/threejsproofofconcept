@@ -1,18 +1,18 @@
 package cz.uhk.zlesak.threejslearningapp.application.views.listing;
 
-import com.vaadin.flow.component.Tag;
-import com.vaadin.flow.component.UI;
+import com.vaadin.flow.component.*;
 import com.vaadin.flow.router.AfterNavigationEvent;
 import com.vaadin.flow.router.BeforeEnterEvent;
 import com.vaadin.flow.router.BeforeLeaveEvent;
 import com.vaadin.flow.router.Route;
+import com.vaadin.flow.shared.Registration;
 import cz.uhk.zlesak.threejslearningapp.application.components.ChapterListItemComponent;
 import cz.uhk.zlesak.threejslearningapp.application.components.PaginationComponent;
 import cz.uhk.zlesak.threejslearningapp.application.controllers.ChapterController;
-import cz.uhk.zlesak.threejslearningapp.application.i18n.CustomI18NProvider;
+import cz.uhk.zlesak.threejslearningapp.application.events.SearchEvent;
 import cz.uhk.zlesak.threejslearningapp.application.models.entities.ChapterEntity;
 import cz.uhk.zlesak.threejslearningapp.application.models.records.PageResult;
-import cz.uhk.zlesak.threejslearningapp.application.utils.ViewUtils;
+import cz.uhk.zlesak.threejslearningapp.application.models.records.SortDirectionEnum;
 import cz.uhk.zlesak.threejslearningapp.application.views.scaffolds.ListingScaffold;
 import jakarta.annotation.security.PermitAll;
 import lombok.extern.slf4j.Slf4j;
@@ -32,19 +32,19 @@ import java.util.List;
 @PermitAll
 public class ChapterListView extends ListingScaffold {
     private final ChapterController chapterController;
-    private final CustomI18NProvider customI18NProvider;
+
+    private Registration chapterListingViewEventRegistration;
+
 
     /**
      * Constructor for ChapterListView.
      * It initializes the view with the necessary controllers and internationalization provider.
      *
      * @param chapterController controller for handling chapter-related operations
-     * @param customI18NProvider provider for internationalization and localization
      */
     @Autowired
-    public ChapterListView(ChapterController chapterController, CustomI18NProvider customI18NProvider) {
+    public ChapterListView(ChapterController chapterController) {
         this.chapterController = chapterController;
-        this.customI18NProvider = customI18NProvider;
     }
 
     /**
@@ -56,7 +56,7 @@ public class ChapterListView extends ListingScaffold {
     @Override
     public String getPageTitle() {
         try {
-            return customI18NProvider.getTranslation("page.title.chapterListView", UI.getCurrent().getLocale());
+            return text("page.title.chapterListView");
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -71,8 +71,14 @@ public class ChapterListView extends ListingScaffold {
      */
     @Override
     public void afterNavigation(AfterNavigationEvent event) {
-        int[] pageLimit = ViewUtils.extractPageAndLimit(event.getLocation());
-        listChapters(pageLimit[0], pageLimit[1]);
+        afterNavigationAction(event);
+        if(this.searchText != null && !this.searchText.isBlank()) {
+            filterComponent.setSearchFieldValue(this.searchText);
+            queryFilteredChapters(this.searchText);
+            this.searchText = null;
+        }else {
+            listChapters(this.page, this.pageSize, this.orderBy, this.sortDirection);
+        }
     }
 
     /**
@@ -100,12 +106,16 @@ public class ChapterListView extends ListingScaffold {
     /**
      * Fetches the list of chapters from the ChapterController and populates the vertical layout with ChapterListItemComponents.
      * It also adds a PaginationComponent at the end of the list for navigating through pages of chapters.
-     * @param page current page number
+     *
+     * @param page  current page number
      * @param limit number of chapters to display per page
      */
-    public void listChapters(int page, int limit) {
+    public void listChapters(int page, int limit, String orderBy, SortDirectionEnum sortDirection) {
         clearList();
-        PageResult<ChapterEntity> chapterEntityPageResult = chapterController.getChapters(page-1, limit);
+
+        UI.getCurrent().getPage().getHistory().replaceState(null, "chapters?page=" + page + "&limit=" + limit + "&orderBy=" + orderBy + "&sortDirection=" + sortDirection);
+
+        PageResult<ChapterEntity> chapterEntityPageResult = chapterController.getChapters(page - 1, limit, orderBy, sortDirection);
 
         List<ChapterEntity> chapterEntities = chapterEntityPageResult.elements().stream().toList();
 
@@ -124,5 +134,44 @@ public class ChapterListView extends ListingScaffold {
     private void clearList() {
         itemListLayout.removeAll();
         paginationLayout.removeAll();
+    }
+
+    private void showFilteredChapters(SearchEvent event) {
+        if (event.getValue() == null || event.getValue().isBlank()) {
+            listChapters(this.page, this.pageSize, event.getOrderBy(), event.getSortDirection());
+            return;
+        }
+        queryFilteredChapters(event.getValue());
+    }
+
+    private void queryFilteredChapters(String keyword) {
+
+        UI.getCurrent().getPage().getHistory().replaceState(null, "chapters?searchedText=" + keyword);
+
+        List<ChapterEntity> filteredChapters = chapterController.getChapters(keyword);
+
+        clearList();
+
+        for (ChapterEntity chapter : filteredChapters) {
+            ChapterListItemComponent itemComponent = new ChapterListItemComponent(chapter);
+            itemListLayout.add(itemComponent);
+        }
+        PaginationComponent paginationComponent = new PaginationComponent(1, filteredChapters.size(), filteredChapters.size(), null);
+        paginationLayout.add(paginationComponent);
+    }
+
+    @Override
+    protected void onAttach(AttachEvent attachEvent) {
+        super.onAttach(attachEvent);
+        chapterListingViewEventRegistration = ComponentUtil.addListener(attachEvent.getUI(), SearchEvent.class, this::showFilteredChapters);
+    }
+
+    @Override
+    protected void onDetach(DetachEvent detachEvent) {
+        super.onDetach(detachEvent);
+        if (chapterListingViewEventRegistration != null) {
+            chapterListingViewEventRegistration.remove();
+            chapterListingViewEventRegistration = null;
+        }
     }
 }
