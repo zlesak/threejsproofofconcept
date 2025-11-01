@@ -14,6 +14,7 @@ import cz.uhk.zlesak.threejslearningapp.application.models.entities.Entity;
 import cz.uhk.zlesak.threejslearningapp.application.models.records.SortDirectionEnum;
 
 import java.lang.reflect.Field;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -102,7 +103,7 @@ public class FilterComponent extends HorizontalLayout implements I18nAware {
             select.setValue(fieldNames.getFirst());
         }
         select.setHelperText(text("filter.orderBy.label"));
-        select.setItemLabelGenerator(name -> name);
+        select.setItemLabelGenerator(name -> text("filter." + name.toLowerCase() + ".label"));
         select.addValueChangeListener(event ->
                 ComponentUtil.fireEvent(UI.getCurrent(), new SearchEvent(searchField.getValue(), searchDirectionSelect.getValue(), orderBySelect.getValue(), UI.getCurrent())));
         return select;
@@ -140,10 +141,10 @@ public class FilterComponent extends HorizontalLayout implements I18nAware {
         while (clazz != null && clazz != Object.class) {
             for (Field field : clazz.getDeclaredFields()) {
                 String name = field.getName();
-                if (field.isSynthetic() || !visited.add(name) || name.equalsIgnoreCase("id")) {
+                if (field.isSynthetic() || !visited.add(name) || name.toLowerCase().contains("id")) {
                     continue;
                 }
-                boolean allowed = allowedTypedCheck(field, name);
+                boolean allowed = allowedTypedCheck(field);
                 if (allowed) {
                     names.add(name);
                 }
@@ -157,10 +158,9 @@ public class FilterComponent extends HorizontalLayout implements I18nAware {
      * Checks if the field type is allowed for filtering.
      *
      * @param field the field to check
-     * @param name  the name of the field
      * @return true if the field type is allowed, false otherwise
      */
-    private static boolean allowedTypedCheck(Field field, String name) {
+    private static boolean allowedTypedCheck(Field field) {
         Class<?> type = field.getType();
 
         return type == String.class ||
@@ -169,7 +169,7 @@ public class FilterComponent extends HorizontalLayout implements I18nAware {
                 type == Double.class || type == double.class ||
                 type == Float.class || type == float.class ||
                 type == Boolean.class || type == boolean.class ||
-                name.toLowerCase().contains("date");
+                type == Instant.class;
     }
 
     /**
