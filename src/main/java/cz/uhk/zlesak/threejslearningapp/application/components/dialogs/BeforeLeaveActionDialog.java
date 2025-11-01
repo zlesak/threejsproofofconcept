@@ -1,4 +1,4 @@
-package cz.uhk.zlesak.threejslearningapp.application.components;
+package cz.uhk.zlesak.threejslearningapp.application.components.dialogs;
 
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;

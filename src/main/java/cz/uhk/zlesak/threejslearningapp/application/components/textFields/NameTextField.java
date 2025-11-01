@@ -1,4 +1,4 @@
-package cz.uhk.zlesak.threejslearningapp.application.components;
+package cz.uhk.zlesak.threejslearningapp.application.components.textFields;
 
 import com.vaadin.flow.component.textfield.TextField;
 

@@ -14,6 +14,8 @@ import cz.uhk.zlesak.threejslearningapp.application.components.editors.EditorJsC
 import cz.uhk.zlesak.threejslearningapp.application.components.editors.MarkdownEditorComponent;
 import cz.uhk.zlesak.threejslearningapp.application.components.scrollers.ChapterContentScroller;
 import cz.uhk.zlesak.threejslearningapp.application.components.selects.ChapterSelect;
+import cz.uhk.zlesak.threejslearningapp.application.components.textFields.NameTextField;
+import cz.uhk.zlesak.threejslearningapp.application.components.textFields.SearchTextField;
 import cz.uhk.zlesak.threejslearningapp.application.models.entities.quickEntities.QuickModelEntity;
 import cz.uhk.zlesak.threejslearningapp.application.views.IView;
 import lombok.extern.slf4j.Slf4j;

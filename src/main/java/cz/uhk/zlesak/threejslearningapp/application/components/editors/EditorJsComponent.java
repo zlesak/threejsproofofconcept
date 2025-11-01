@@ -7,7 +7,7 @@ import com.vaadin.flow.component.*;
 import com.vaadin.flow.component.dependency.JsModule;
 import com.vaadin.flow.component.dependency.NpmPackage;
 import com.vaadin.flow.shared.Registration;
-import cz.uhk.zlesak.threejslearningapp.application.components.SearchTextField;
+import cz.uhk.zlesak.threejslearningapp.application.components.textFields.SearchTextField;
 import cz.uhk.zlesak.threejslearningapp.application.events.MarkdownModeToggleEvent;
 import cz.uhk.zlesak.threejslearningapp.application.events.MarkdownValueChangedEvent;
 import cz.uhk.zlesak.threejslearningapp.application.models.entities.quickEntities.QuickModelEntity;

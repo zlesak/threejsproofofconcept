@@ -6,7 +6,7 @@ import com.vaadin.flow.router.BeforeEnterEvent;
 import com.vaadin.flow.router.BeforeLeaveEvent;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.shared.Registration;
-import cz.uhk.zlesak.threejslearningapp.application.components.BeforeLeaveActionDialog;
+import cz.uhk.zlesak.threejslearningapp.application.components.dialogs.BeforeLeaveActionDialog;
 import cz.uhk.zlesak.threejslearningapp.application.components.compositions.CreateChapterToolBarComposition;
 import cz.uhk.zlesak.threejslearningapp.application.components.notifications.ErrorNotification;
 import cz.uhk.zlesak.threejslearningapp.application.controllers.ChapterController;

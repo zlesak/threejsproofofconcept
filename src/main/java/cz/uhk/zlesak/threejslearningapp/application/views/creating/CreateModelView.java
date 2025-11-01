@@ -8,7 +8,7 @@ import com.vaadin.flow.router.BeforeEnterEvent;
 import com.vaadin.flow.router.BeforeLeaveEvent;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.VaadinSession;
-import cz.uhk.zlesak.threejslearningapp.application.components.BeforeLeaveActionDialog;
+import cz.uhk.zlesak.threejslearningapp.application.components.dialogs.BeforeLeaveActionDialog;
 import cz.uhk.zlesak.threejslearningapp.application.controllers.ModelController;
 import cz.uhk.zlesak.threejslearningapp.application.views.scaffolds.ModelScaffold;
 import jakarta.annotation.security.RolesAllowed;

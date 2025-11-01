@@ -6,6 +6,7 @@ import com.vaadin.flow.component.tabs.Tab;
 import com.vaadin.flow.component.tabs.TabSheet;
 import cz.uhk.zlesak.threejslearningapp.application.components.editors.EditorJsComponent;
 import cz.uhk.zlesak.threejslearningapp.application.components.scrollers.ChapterContentScroller;
+import cz.uhk.zlesak.threejslearningapp.application.components.textFields.NameTextField;
 import cz.uhk.zlesak.threejslearningapp.application.i18n.I18nAware;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;

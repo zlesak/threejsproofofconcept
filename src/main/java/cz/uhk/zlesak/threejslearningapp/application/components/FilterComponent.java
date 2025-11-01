@@ -8,6 +8,7 @@ import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.select.Select;
+import cz.uhk.zlesak.threejslearningapp.application.components.textFields.SearchTextField;
 import cz.uhk.zlesak.threejslearningapp.application.events.SearchEvent;
 import cz.uhk.zlesak.threejslearningapp.application.i18n.I18nAware;
 import cz.uhk.zlesak.threejslearningapp.application.models.entities.Entity;

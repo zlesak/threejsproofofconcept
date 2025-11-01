@@ -46,9 +46,6 @@ public class ChapterView extends ChapterScaffold {
         this.chapterController = chapterController;
         this.modelController = modelController;
         this.textureController = textureController;
-
-        nameTextField.setReadOnly(true);
-        editorjs.toggleReadOnlyMode(true);
     }
 
     /**
@@ -108,6 +105,10 @@ public class ChapterView extends ChapterScaffold {
      */
     @Override
     public void afterNavigation(AfterNavigationEvent event) {
+
+        nameTextField.setReadOnly(true);
+        editorjs.toggleReadOnlyMode(true);
+
         try {
             nameTextField.setValue(chapterController.getChapterName(chapterId));
             editorjs.setChapterContentData(chapterController.getChapterContent(chapterId));

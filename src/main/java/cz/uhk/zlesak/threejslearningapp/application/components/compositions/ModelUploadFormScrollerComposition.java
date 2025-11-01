@@ -10,7 +10,7 @@ import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.server.StreamRegistration;
 import com.vaadin.flow.server.StreamResource;
 import com.vaadin.flow.server.VaadinSession;
-import cz.uhk.zlesak.threejslearningapp.application.components.NameTextField;
+import cz.uhk.zlesak.threejslearningapp.application.components.textFields.NameTextField;
 import cz.uhk.zlesak.threejslearningapp.application.components.UploadComponent;
 import cz.uhk.zlesak.threejslearningapp.application.components.divs.UploadLabelDiv;
 import cz.uhk.zlesak.threejslearningapp.application.events.*;
