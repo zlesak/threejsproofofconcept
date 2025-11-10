@@ -63,7 +63,7 @@ public class CreateChapterView extends ChapterScaffold {
 
         chapterSelect.setVisible(false);
         searchTextField.setVisible(false);
-        chapterNavigation.setVisible(false);
+        navigationContentLayout.setVisible(false);
         editorjs.toggleReadOnlyMode(false);
 
         CreateChapterToolBarComposition chapterContentButtons = new CreateChapterToolBarComposition(editorjs, mdEditor);

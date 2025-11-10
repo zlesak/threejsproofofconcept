@@ -37,11 +37,11 @@ import java.util.Map;
 public abstract class ChapterScaffold extends Composite<VerticalLayout> implements IView {
     protected final SearchTextField searchTextField = new SearchTextField("Hledat v kapitole");
     protected final ChapterSelect chapterSelect = new ChapterSelect();
-    protected final NavigationContentComponent navigationContentLayout = new NavigationContentComponent();
+    protected final NavigationContentComponent navigationContentLayout = new NavigationContentComponent(chapterSelect, searchTextField);
     protected final MarkdownEditorComponent mdEditor = new MarkdownEditorComponent();
     protected final EditorJsComponent editorjs = new EditorJsComponent();
     protected final NameTextField nameTextField = new NameTextField("Název kapitoly");
-    protected final VerticalLayout chapterNavigation, chapterContent, chapterModel;
+    protected final VerticalLayout chapterContent, chapterModel;
     protected final ModelDiv modelDiv = new ModelDiv();
     protected ChapterTabSheetSecondaryNavigationComponent secondaryNavigation = null;
 
@@ -54,32 +54,20 @@ public abstract class ChapterScaffold extends Composite<VerticalLayout> implemen
 
         //Main page layout
         HorizontalLayout chapterPageLayout = new HorizontalLayout();
-        chapterNavigation = new VerticalLayout();
         chapterContent = new VerticalLayout();
         chapterModel = new VerticalLayout();
 
         SplitLayout splitLayout = new SplitLayout(chapterContent, chapterModel);
 
-        chapterPageLayout.add(chapterNavigation, splitLayout);
+        chapterPageLayout.add(navigationContentLayout, splitLayout);
         chapterPageLayout.setSizeFull();
         chapterPageLayout.setClassName("chapterPageLayout");
         chapterPageLayout.addClassName(Gap.MEDIUM);
-        chapterPageLayout.setFlexGrow(0, chapterNavigation);
+        chapterPageLayout.setFlexGrow(0, navigationContentLayout);
         chapterPageLayout.setFlexGrow(1, splitLayout);
         chapterPageLayout.getStyle().set("min-width", "0");
         chapterPageLayout.getStyle().set("min-height", "0");
 
-        //Navigation layout
-        Scroller chapterNavigationScroller = new Scroller(navigationContentLayout, Scroller.ScrollDirection.VERTICAL);
-        navigationContentLayout.setPadding(false);
-        navigationContentLayout.setSpacing(false);
-        navigationContentLayout.getThemeList().add("spacing-s");
-        chapterNavigationScroller.setSizeFull();
-        chapterNavigation.add(chapterSelect, chapterNavigationScroller, searchTextField);
-        chapterNavigation.addClassName(Gap.MEDIUM);
-        chapterNavigation.setMinWidth("12vw");
-        chapterNavigation.setWidth("min-content");
-        chapterNavigation.setPadding(false);
 
         //Content layout
 
