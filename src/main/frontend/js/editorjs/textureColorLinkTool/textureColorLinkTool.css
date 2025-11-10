@@ -1,0 +1,190 @@
+/* Texture Color Link Tool Styles */
+
+.texture-color-link-tool-container {
+    display: flex !important;
+    flex-direction: column;
+    gap: 12px;
+    padding: 16px;
+    background-color: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    border: 1px solid #e0e0e0;
+
+    position: fixed !important;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    z-index: 999999 !important;
+    min-width: 380px !important;
+    max-width: 480px !important;
+    width: auto !important;
+    max-height: 90vh;
+    overflow-y: auto;
+
+    animation: fadeInScale 0.2s ease-out;
+}
+
+@keyframes fadeInScale {
+    from {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1);
+    }
+}
+
+.texture-color-link-tool-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.texture-color-link-tool-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--color-text-secondary, #555);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 2px;
+}
+
+.texture-color-link-tool-input,
+.texture-color-link-tool-select {
+    padding: 10px 14px;
+    border: 1.5px solid var(--color-border, #ddd);
+    border-radius: 6px;
+    font-size: 15px;
+    background-color: white;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    width: 100%;
+    box-sizing: border-box;
+    min-height: 42px;
+}
+
+.texture-color-link-tool-input:focus,
+.texture-color-link-tool-select:focus {
+    outline: none;
+    border-color: var(--color-primary, #388ae5);
+    box-shadow: 0 0 0 3px rgba(56, 138, 229, 0.15);
+}
+
+.texture-color-link-tool-select {
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 12 12'%3E%3Cpath fill='%23555' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    padding-right: 40px;
+    font-weight: 500;
+}
+
+.texture-color-link-tool-select option {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    padding: 10px 12px;
+    line-height: 1.5;
+    min-height: 40px;
+    font-size: 14px;
+}
+
+.texture-color-link-tool-button {
+    padding: 12px 20px;
+    background-color: var(--color-primary, #388ae5);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s ease, transform 0.1s ease, box-shadow 0.2s ease;
+    margin-top: 8px;
+    min-height: 44px;
+    box-shadow: 0 2px 4px rgba(56, 138, 229, 0.3);
+}
+
+.texture-color-link-tool-button:hover {
+    background-color: var(--color-primary-hover, #2c7cd1);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(56, 138, 229, 0.4);
+}
+
+.texture-color-link-tool-button:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(56, 138, 229, 0.3);
+}
+
+.texture-color-link-tool-color-option {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.texture-color-link-tool-color-preview {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border-radius: 3px;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    vertical-align: middle;
+}
+
+a[data-model-id][data-texture-id][data-hex-color] {
+    color: var(--color-primary, #388ae5);
+    text-decoration: underline;
+    text-decoration-style: dotted;
+    cursor: pointer;
+    transition: color 0.2s ease;
+}
+
+a[data-model-id][data-texture-id][data-hex-color]:hover {
+    color: var(--color-primary-hover, #2c7cd1);
+    text-decoration-style: solid;
+}
+
+@media (max-width: 768px) {
+    .texture-color-link-tool-container {
+        min-width: 320px !important;
+        max-width: 95vw !important;
+        width: 95vw !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .texture-color-link-tool-container {
+        min-width: 300px !important;
+        max-width: 98vw !important;
+        width: 98vw !important;
+        padding: 12px;
+    }
+}
+
+.texture-color-link-tool-select:disabled,
+.texture-color-link-tool-input:disabled {
+    background-color: #f5f5f5;
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.texture-color-link-tool-backdrop {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    background-color: rgba(0, 0, 0, 0.4) !important;
+    z-index: 999998 !important;
+    animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
