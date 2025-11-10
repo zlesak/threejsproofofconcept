@@ -18,15 +18,24 @@ public abstract class TextureMapHelper {
 
     /**
      * Creates a list of TextureAreaForSelectRecord from the provided map of QuickModelEntity objects.
+     * Removes duplicate texture areas - if the same model is used for multiple sub-chapters, its areas appear only once.
      *
      * @param quickModelEntityMap the map of QuickModelEntity objects
-     * @return a list of TextureAreaForSelectRecord objects
+     * @return a list of TextureAreaForSelectRecord objects (without duplicates)
      * @throws IllegalArgumentException if the CSV content format is invalid
      */
     public static List<TextureAreaForSelectRecord> createTextureAreaForSelectRecordList(Map<String, QuickModelEntity> quickModelEntityMap) {
         List<TextureAreaForSelectRecord> records = new ArrayList<>();
-        for (QuickModelEntity modelEntity : quickModelEntityMap.values()) {
-            if (modelEntity != null && modelEntity.getOtherTextures() != null) {
+
+        Map<String, QuickModelEntity> uniqueModels = new java.util.LinkedHashMap<>();
+        quickModelEntityMap.values().forEach(model -> {
+            if (model != null) {
+                uniqueModels.putIfAbsent(model.getModel().getId(), model);
+            }
+        });
+
+        for (QuickModelEntity modelEntity : uniqueModels.values()) {
+            if (modelEntity.getOtherTextures() != null) {
                 for (QuickTextureEntity textureEntity : modelEntity.getAllTextures()) {
                     if (textureEntity != null) {
                         String textureId = textureEntity.getTextureFileId();

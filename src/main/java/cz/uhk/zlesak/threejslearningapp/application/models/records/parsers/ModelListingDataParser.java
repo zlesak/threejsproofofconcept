@@ -6,43 +6,45 @@ import cz.uhk.zlesak.threejslearningapp.application.models.records.ModelForSelec
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 public abstract class ModelListingDataParser {
 
     /**
      * Parses model data for selection lists, prioritizing the 'main' model if present.
+     * Removes duplicate models - if the same model is used for multiple sub-chapters, it appears only once.
      *
      * @param models Map of model keys to QuickModelEntity objects
-     * @return List of ModelForSelectRecord objects for selection
+     * @return List of ModelForSelectRecord objects for selection (without duplicates)
      */
     public static List<ModelForSelectRecord> modelForSelectDataParser(Map<String, QuickModelEntity> models) {
         if (models == null || models.isEmpty()) {
             return List.of();
         }
 
+        Map<String, ModelForSelectRecord> uniqueModels = new java.util.LinkedHashMap<>();
+
         if (models.containsKey("main")) {
-            ModelForSelectRecord mainModelRecord = new ModelForSelectRecord(
-                    models.get("main").getModel().getId(),
+            QuickModelEntity mainEntity = models.get("main");
+            uniqueModels.put(mainEntity.getModel().getId(), new ModelForSelectRecord(
+                    mainEntity.getModel().getId(),
                     "main",
-                    models.get("main").getModel().getName()
-            );
-            List<ModelForSelectRecord> otherModels = models.entrySet().stream()
-                    .filter(entry -> !entry.getKey().equals("main"))
-                    .map(entry -> new ModelForSelectRecord(
-                            entry.getValue().getModel().getId(),
-                            entry.getKey(),
-                            entry.getValue().getModel().getName()))
-                    .collect(Collectors.toCollection(LinkedList::new));
-            otherModels.addFirst(mainModelRecord);
-            return otherModels;
-        } else {
-            return models.entrySet().stream()
-                    .map(entry -> new ModelForSelectRecord(
-                            entry.getValue().getModel().getId(),
-                            entry.getKey(),
-                            entry.getValue().getModel().getName()))
-                    .toList();
+                    mainEntity.getModel().getName()
+            ));
         }
+
+        models.entrySet().stream()
+                .filter(entry -> !entry.getKey().equals("main"))
+                .forEach(entry -> {
+                    String modelId = entry.getValue().getModel().getId();
+                    if (!uniqueModels.containsKey(modelId)) {
+                        uniqueModels.put(modelId, new ModelForSelectRecord(
+                                modelId,
+                                entry.getKey(),
+                                entry.getValue().getModel().getName()
+                        ));
+                    }
+                });
+
+        return new LinkedList<>(uniqueModels.values());
     }
 }
