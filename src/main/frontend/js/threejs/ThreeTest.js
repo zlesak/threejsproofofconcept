@@ -1,10 +1,11 @@
+import * as THREE from 'three';
+
 import {
   createCamera,
   createScene,
   createRenderer,
   createAmbientLight,
-  createControls,
-  centerCameraOnModel
+  createControls
 } from './scene-setup.js';
 
 import {
@@ -18,7 +19,8 @@ import {
   removeOtherTexture,
   switchOtherTexture,
   switchToMainTexture,
-  applyMaskToMainTexture
+  applyMaskToMainTexture,
+  getSurfaceNormal
 } from './texture-manager.js';
 
 import {
@@ -64,6 +66,14 @@ class ThreeTest {
     this._resizeObserver = null;
     this.gui = null;
     this.DEBUG_IMAGE = false;
+
+    this.cameraAnimationActive = false;
+    this.cameraAnimationStart = null;
+    this.cameraAnimationDuration = 1500;
+    this.cameraStartPos = null;
+    this.cameraTargetPos = null;
+    this.controlsStartTarget = null;
+    this.controlsTargetTarget = null;
   }
 
   init = (element) => {
@@ -115,6 +125,23 @@ class ThreeTest {
   animate = () => {
     if (!this.isAnimating) return;
 
+    if (this.cameraAnimationActive && this.camera && this.controls) {
+      const elapsed = Date.now() - this.cameraAnimationStart;
+      const progress = Math.min(elapsed / this.cameraAnimationDuration, 1);
+
+      // Ease-in-out cubic
+      const t = progress < 0.5
+        ? 4 * progress * progress * progress
+        : 1 - Math.pow(-2 * progress + 2, 3) / 2;
+
+      this.camera.position.lerpVectors(this.cameraStartPos, this.cameraTargetPos, t);
+      this.controls.target.lerpVectors(this.controlsStartTarget, this.controlsTargetTarget, t);
+
+      if (progress >= 1) {
+        this.cameraAnimationActive = false;
+      }
+    }
+
     if (this.controls) {
       this.controls.update();
     }
@@ -127,6 +154,35 @@ class ThreeTest {
     if (this.isAnimating) return;
     this.isAnimating = true;
     this.animate();
+  };
+
+  animateCameraToMask = (maskCenter) => {
+    if (!this.camera || !this.controls || !maskCenter) return;
+
+    const currentDistance = this.camera.position.distanceTo(this.controls.target);
+    const surfaceNormal = this.model ? getSurfaceNormal(this.model, maskCenter) : null;
+
+    let newCameraPos;
+    if (surfaceNormal) {
+      newCameraPos = maskCenter.clone().add(
+        surfaceNormal.multiplyScalar(currentDistance * 0.8)
+      );
+    } else {
+      const modelCenter = this.controls.target.clone();
+      const direction = new THREE.Vector3()
+        .subVectors(maskCenter, modelCenter)
+        .normalize();
+      newCameraPos = maskCenter.clone().add(
+        direction.multiplyScalar(currentDistance * 0.5)
+      );
+    }
+
+    this.cameraStartPos = this.camera.position.clone();
+    this.cameraTargetPos = newCameraPos;
+    this.controlsStartTarget = this.controls.target.clone();
+    this.controlsTargetTarget = maskCenter;
+    this.cameraAnimationStart = Date.now();
+    this.cameraAnimationActive = true;
   };
 
   stopAnimation = () => {
@@ -228,6 +284,11 @@ class ThreeTest {
     );
     this.model = result.model;
     this.lastSelectedTextureId = result.lastSelectedTextureId;
+
+    if (result.maskCenter) {
+      this.animateCameraToMask(result.maskCenter);
+    }
+
     this.finishedActions();
   };
 
