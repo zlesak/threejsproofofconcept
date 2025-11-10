@@ -68,7 +68,7 @@ public class ModelListView extends ListingScaffold {
     @Override
     public void afterNavigation(AfterNavigationEvent event) {
         afterNavigationAction(event);
-        listModels(this.page, this.pageSize, true, null);
+        listModels(this.page, this.pageSize, true);
     }
 
     /**
@@ -102,7 +102,7 @@ public class ModelListView extends ListingScaffold {
      * @param limit    the number of models to retrieve per page
      * @param listView boolean indicating whether to display the models in a list view format
      */
-    public void listModels(int page, int limit, boolean listView, List<String> alreadySelectedIds) {
+    public void listModels(int page, int limit, boolean listView) {
         clearList();
         PageResult<QuickFile> quickFilePageResult = modelController.getModels(page - 1, limit);
 
@@ -111,9 +111,6 @@ public class ModelListView extends ListingScaffold {
                 .map(f -> (QuickModelEntity) f)
                 .toList();
         for (QuickModelEntity model : quickModelEntities) {
-            if(alreadySelectedIds != null && alreadySelectedIds.contains(model.getModel().getId())) {
-                continue;
-            }
             ModelListItemComponent itemComponent = new ModelListItemComponent(model, listView);
             itemComponent.setSelectButtonClickListener(e -> {
                 if (modelSelectedListener != null) {
@@ -126,7 +123,7 @@ public class ModelListView extends ListingScaffold {
         if (listView) {
             paginationComponent = new PaginationComponent(page, limit, quickFilePageResult.total(), p -> UI.getCurrent().navigate("models?page=" + p + "&limit=" + limit));
         } else {
-            paginationComponent = new PaginationComponent(page, limit, quickFilePageResult.total(), p -> listModels(p, limit, false, null));
+            paginationComponent = new PaginationComponent(page, limit, quickFilePageResult.total(), p -> listModels(p, limit, false));
         }
         paginationLayout.add(paginationComponent);
     }

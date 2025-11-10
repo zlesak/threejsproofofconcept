@@ -74,12 +74,12 @@ public class ChapterController implements IController {
             ObjectNode bodyJson = (ObjectNode) objectMapper.readTree(content);
             ArrayNode blocks = (ArrayNode) bodyJson.get("blocks");
 
-            if(blocks.isEmpty()){
+            if (blocks.isEmpty()) {
                 throw new ApplicationContextException("Obsah kapitoly nesmí být prázdný.");
             }
 
             blocks.forEach(blockNode -> {
-                if (blockNode.has("id") &&  allModels.containsKey(blockNode.get("id").asText())) {
+                if (blockNode.has("id") && allModels.containsKey(blockNode.get("id").asText())) {
                     String blockId = blockNode.get("id").asText();
                     QuickModelEntity model = allModels.get(blockId);
                     ObjectNode dataNode = (ObjectNode) blockNode.get("data");
@@ -97,18 +97,18 @@ public class ChapterController implements IController {
         List<QuickModelEntity> modelsList = new ArrayList<>();
         Set<String> addedModelIds = new HashSet<>();
 
-        if (allModels.containsKey("main")) {
-            QuickModelEntity mainModel = allModels.get("main");
-            modelsList.add(mainModel);
-            addedModelIds.add(mainModel.getModel().getId());
-        }
-
         allModels.forEach((key, model) -> {
             if (!key.equals("main") && !addedModelIds.contains(model.getModel().getId())) {
                 modelsList.add(model);
                 addedModelIds.add(model.getModel().getId());
             }
         });
+
+        if (allModels.containsKey("main")) {
+            QuickModelEntity mainModel = allModels.get("main");
+            modelsList.addFirst(mainModel);
+            addedModelIds.add(mainModel.getModel().getId());
+        }
 
         uploadedModels.addAll(modelsList);
 
@@ -347,6 +347,7 @@ public class ChapterController implements IController {
      * Retrieves a map of sub-chapter IDs to their corresponding QuickModelEntity objects for the specified chapter.
      * If the chapterEntity is not set or does not match the provided chapterId, it fetches the chapter details using the getChapter method.
      * It then iterates through the sub-chapters and maps their IDs to the corresponding QuickModelEntity objects.
+     *
      * @param chapterId the ID of the chapter whose sub-chapter models are to be retrieved
      * @return a map where the keys are sub-chapter IDs and the values are QuickModelEntity objects
      * @throws Exception if there is an error retrieving the chapter or sub-chapter models
@@ -356,20 +357,20 @@ public class ChapterController implements IController {
             getChapter(chapterId);
         }
         try {
-            List<SubChapterForSelectRecord> subChaptersNames =  getSubChaptersNames(chapterId);
+            List<SubChapterForSelectRecord> subChaptersNames = getSubChaptersNames(chapterId);
             subChaptersNames.addFirst(new SubChapterForSelectRecord("main", null, null));
             Map<String, QuickModelEntity> modelsMap = new HashMap<>();
+            List<QuickModelEntity> modelsList = new ArrayList<>(chapterEntity.getModels());
+            modelsMap.put("main", modelsList.getFirst());
+
             for (SubChapterForSelectRecord subChapter : subChaptersNames) {
-                for (QuickModelEntity model : chapterEntity.getModels()) {
+                for (QuickModelEntity model : modelsList) {
                     if (Objects.equals(model.getModel().getId(), subChapter.modelId())) {
                         modelsMap.put(subChapter.id(), model);
                     }
-                    else {
-                        modelsMap.put("main", model);
-                    }
                 }
             }
-            return  modelsMap;
+            return modelsMap;
         } catch (Exception e) {
             log.error("Chyba při čtení dat modelu kapitoly pro mapped verzi: {}", e.getMessage(), e);
             throw new Exception("Chyba při čtení dat modelu kapitoly pro mapped verzi: " + e.getMessage());
@@ -380,6 +381,7 @@ public class ChapterController implements IController {
      * Retrieves a list of all chapters from the backend service.
      * This method uses the ChapterApiClient to fetch the list of chapters.
      * If there is an error during the retrieval, it throws an Exception with details about the error.
+     *
      * @return a list of ChapterEntity objects representing all chapters
      * @throws RuntimeException if there is an error during the retrieval of chapters
      */
@@ -387,19 +389,19 @@ public class ChapterController implements IController {
         try {
             return chapterApiClient.getChapters(page, limit, orderBy, sortDirection);
         } catch (Exception e) {
-            log.error("Chyba při získávání stránkování kapitol pro page {}, limit {}, error message: {}", page, limit, e.getMessage(),  e);
+            log.error("Chyba při získávání stránkování kapitol pro page {}, limit {}, error message: {}", page, limit, e.getMessage(), e);
             throw new RuntimeException("Chyba při získávání kapitol: " + e.getMessage(), e);
         }
     }
 
     public List<ChapterEntity> getChapters(String text) throws ApplicationContextException {
-        if(text == null || text.isBlank()) {
+        if (text == null || text.isBlank()) {
             throw new ApplicationContextException("Text pro filtrování kapitol nesmí být prázdný.");
         }
         try {
             return chapterApiClient.getChaptersFiltered(text);
         } catch (Exception e) {
-            log.error("Chyba při získávání kapitol filtrovaných pro text {}, error message: {}", text, e.getMessage(),  e);
+            log.error("Chyba při získávání kapitol filtrovaných pro text {}, error message: {}", text, e.getMessage(), e);
             throw new ApplicationContextException("Chyba při získávání kapitol: " + e.getMessage(), e);
         }
     }

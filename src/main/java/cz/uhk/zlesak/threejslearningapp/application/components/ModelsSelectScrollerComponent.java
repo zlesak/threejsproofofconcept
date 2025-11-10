@@ -2,18 +2,16 @@ package cz.uhk.zlesak.threejslearningapp.application.components;
 
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.component.orderedlayout.Scroller;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.select.Select;
-import com.vaadin.flow.component.orderedlayout.Scroller;
 import cz.uhk.zlesak.threejslearningapp.application.components.dialogs.ModelListDialog;
 import cz.uhk.zlesak.threejslearningapp.application.i18n.I18nAware;
 import cz.uhk.zlesak.threejslearningapp.application.models.entities.quickEntities.QuickModelEntity;
 import cz.uhk.zlesak.threejslearningapp.application.views.listing.ModelListView;
 import org.springframework.context.ApplicationContextException;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
@@ -37,6 +35,7 @@ public class ModelsSelectScrollerComponent extends Scroller implements I18nAware
 
     /**
      * Get model select component.
+     *
      * @param label Label for the select component.
      * @return Select component for QuickModelEntity in deactivated state as the model is selected via dialog.
      */
@@ -52,6 +51,7 @@ public class ModelsSelectScrollerComponent extends Scroller implements I18nAware
 
     /**
      * Set consumer to be called when a model is selected on any of the selects.
+     *
      * @param onSelect Consumer to be called with the selected QuickModelEntity.
      */
     public void setModelSelectedConsumer(Consumer<Map<String, QuickModelEntity>> onSelect) {
@@ -60,11 +60,12 @@ public class ModelsSelectScrollerComponent extends Scroller implements I18nAware
 
     /**
      * Initialize selects for main model and other models for sub-chapters.
+     *
      * @param subChapterForSelectRecords Map of sub-chapter IDs to their names for which model selects should be created.
      *                                   Records are returned from backend to ensure only existing sub-chapters have selects.
      */
     public void initSelects(Map<String, String> subChapterForSelectRecords) {
-        if(this.mainModelSelect == null) {
+        if (this.mainModelSelect == null) {
             modelSelectHorizontalLayout(text("modelSelect.main.caption"), "", true);
         }
 
@@ -77,7 +78,7 @@ public class ModelsSelectScrollerComponent extends Scroller implements I18nAware
         });
 
         subChapterForSelectRecords.forEach((id, text) -> {
-            if(!otherModelsHorizontalLayouts.containsKey(id)) {
+            if (!otherModelsHorizontalLayouts.containsKey(id)) {
                 modelSelectHorizontalLayout(text("modelSelect.other.caption") + text, id, false);
             }
         });
@@ -85,9 +86,10 @@ public class ModelsSelectScrollerComponent extends Scroller implements I18nAware
 
     /**
      * Create horizontal layout with model select and button to choose already created model.
+     *
      * @param label label for select component.
-     * @param id chapter header block ID for which the model is selected.
-     * @param main whether this is the main model select or sub-chapter model select.
+     * @param id    chapter header block ID for which the model is selected.
+     * @param main  whether this is the main model select or sub-chapter model select.
      */
     private void modelSelectHorizontalLayout(String label, String id, boolean main) {
         HorizontalLayout horizontalLayout = new HorizontalLayout();
@@ -97,7 +99,7 @@ public class ModelsSelectScrollerComponent extends Scroller implements I18nAware
         Button alreadyCreatedModelButton = getChooseAlreadyCreatedModelButton(select);
         horizontalLayout.add(select, alreadyCreatedModelButton);
 
-        if(main) {
+        if (main) {
             this.mainModelSelect = select;
         } else {
             horizontalLayout.setId("select-models-tab-piece-" + id);
@@ -109,6 +111,7 @@ public class ModelsSelectScrollerComponent extends Scroller implements I18nAware
     /**
      * Get button to choose already created model.
      * Using ModelListDialog to select model via paged model selector.
+     *
      * @param modelSelect Select component to set the selected model to.
      * @return Button to open ModelListDialog.
      */
@@ -116,14 +119,14 @@ public class ModelsSelectScrollerComponent extends Scroller implements I18nAware
         Button chooseAlreadyCreatedModelButton = new Button(text("modelSelectButton.label"));
 
         ModelListDialog modelListDialog = new ModelListDialog(new ModelListView());
-        modelListDialog.setModelSelectedListener( entity -> {
+        modelListDialog.setModelSelectedListener(entity -> {
             modelSelect.setItems(entity);
             modelSelect.setValue(entity);
             if (modelSelect.getValue() != null) {
                 modelSelectConsumer.accept(getAllModelsMappedToChapterHeaderBlockId());
             }
         });
-        chooseAlreadyCreatedModelButton.addClickListener(e -> modelListDialog.open(getAlreadySelectedModelIds()));
+        chooseAlreadyCreatedModelButton.addClickListener(e -> modelListDialog.open());
 
         return chooseAlreadyCreatedModelButton;
     }
@@ -131,6 +134,7 @@ public class ModelsSelectScrollerComponent extends Scroller implements I18nAware
     /**
      * Get all selected models mapped to their chapter header block IDs.
      * main model is mapped to "main" key, not to any chapter header block ID.
+     *
      * @return Map of chapter header block IDs to selected QuickModelEntity instances.
      * @throws ApplicationContextException if the main model is not selected or the main model select has not been initialized yet.
      */
@@ -142,7 +146,7 @@ public class ModelsSelectScrollerComponent extends Scroller implements I18nAware
 
         Map<String, QuickModelEntity> models = new HashMap<>();
         for (HorizontalLayout layout : otherModelsHorizontalLayouts.values()) {
-            @SuppressWarnings("unchecked") Select<QuickModelEntity> select = ((Select<QuickModelEntity>)layout.getComponentAt(0));
+            @SuppressWarnings("unchecked") Select<QuickModelEntity> select = ((Select<QuickModelEntity>) layout.getComponentAt(0));
             QuickModelEntity selected = select.getValue();
             if (selected != null) {
                 models.put(select.getElement().getAttribute("block-id"), selected);
@@ -151,26 +155,5 @@ public class ModelsSelectScrollerComponent extends Scroller implements I18nAware
 
         models.put("main", mainModelSelect.getValue());
         return models;
-    }
-
-    /**
-     * Get list of already selected model IDs to prevent duplicate selection in the model list dialog.
-     * Prevents selecting the same model for multiple selects.
-     * @return List of already selected model IDs.
-     */
-    private List<String> getAlreadySelectedModelIds() {
-        List<String> alreadySelectedModelIds = new ArrayList<>();
-        for (HorizontalLayout layout : otherModelsHorizontalLayouts.values()) {
-            @SuppressWarnings("unchecked") Select<QuickModelEntity> select = ((Select<QuickModelEntity>)layout.getComponentAt(0));
-            QuickModelEntity selected = select.getValue();
-            if (selected != null) {
-                alreadySelectedModelIds.add(selected.getModel().getId());
-            }
-        }
-
-        if (mainModelSelect != null && mainModelSelect.getValue() != null) {
-            alreadySelectedModelIds.add(mainModelSelect.getValue().getModel().getId());
-        }
-        return alreadySelectedModelIds;
     }
 }

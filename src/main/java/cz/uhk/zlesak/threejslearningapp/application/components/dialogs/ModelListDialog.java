@@ -5,7 +5,6 @@ import cz.uhk.zlesak.threejslearningapp.application.models.entities.quickEntitie
 import cz.uhk.zlesak.threejslearningapp.application.views.listing.ModelListView;
 import lombok.Setter;
 
-import java.util.List;
 import java.util.function.Consumer;
 
 @Setter
@@ -27,9 +26,9 @@ public class ModelListDialog extends Dialog {
         close();
     }
 
-    public void open(List<String> alreadySelectedModelIds) {
+    public void open() {
         this.setOpened(true);
-        modelListView.listModels(1, 6, false, alreadySelectedModelIds);
+        modelListView.listModels(1, 6, false);
         modelListView.setModelSelectedListener(this::onModelSelected);
     }
 }
