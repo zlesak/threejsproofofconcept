@@ -95,12 +95,18 @@ public class ChapterController implements IController {
         }
 
         List<QuickModelEntity> modelsList = new ArrayList<>();
+        Set<String> addedModelIds = new HashSet<>();
+
+        if (allModels.containsKey("main")) {
+            QuickModelEntity mainModel = allModels.get("main");
+            modelsList.add(mainModel);
+            addedModelIds.add(mainModel.getModel().getId());
+        }
 
         allModels.forEach((key, model) -> {
-            if (!key.equals("main")) {
-                modelsList.addLast(model);
-            } else {
-                modelsList.addFirst(model);
+            if (!key.equals("main") && !addedModelIds.contains(model.getModel().getId())) {
+                modelsList.add(model);
+                addedModelIds.add(model.getModel().getId());
             }
         });
 

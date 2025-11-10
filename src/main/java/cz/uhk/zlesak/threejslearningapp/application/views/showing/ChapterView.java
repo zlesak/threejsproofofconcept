@@ -118,9 +118,20 @@ public class ChapterView extends ChapterScaffold {
                 try {
                     if (event2.getNewValue() == null) {
                         editorjs.showWholeChapterData();
+                        Map<String, QuickModelEntity> modelsMap = chapterController.getChaptersModels(chapterId);
+                        if (modelsMap.containsKey("main")) {
+                            modelDiv.modelTextureAreaSelectComponent.getModelListingSelect().setSelectedModelById(modelsMap.get("main").getModel().getId());
+                        }
                         return;
                     }
                     editorjs.setSelectedSubchapterData(chapterController.getSelectedSubChapterContent(event2.getNewValue().id()));
+
+                    Map<String, QuickModelEntity> modelsMap = chapterController.getChaptersModels(chapterId);
+                    String subChapterId = event2.getNewValue().id();
+                    QuickModelEntity modelToShow = modelsMap.getOrDefault(subChapterId, modelsMap.get("main"));
+                    if (modelToShow != null) {
+                        modelDiv.modelTextureAreaSelectComponent.getModelListingSelect().setSelectedModelById(modelToShow.getModel().getId());
+                    }
                 } catch (Exception e) {
                     throw new RuntimeException(e);
                 }
