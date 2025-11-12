@@ -1,15 +1,16 @@
 package cz.uhk.zlesak.threejslearningapp.components.selects;
 
-import com.vaadin.flow.component.ComponentEventListener;
-import cz.uhk.zlesak.threejslearningapp.events.chapter.SubChapterChangeEvent;
+import com.vaadin.flow.component.ComponentUtil;
+import com.vaadin.flow.component.UI;
 import cz.uhk.zlesak.threejslearningapp.domain.chapter.SubChapterForSelect;
+import cz.uhk.zlesak.threejslearningapp.events.chapter.SubChapterChangeEvent;
 import org.springframework.context.annotation.Scope;
 
 import java.util.List;
 
 /**
  * ChapterSelect is a select box for selecting sub-chapters.
- * It extends GenericSelect to provide functionality for handling sub-chapter selection changes.
+ * Fires UI-level SubChapterChangeEvent when selection changes.
  */
 @Scope("prototype")
 public class ChapterSelect extends GenericSelect<SubChapterForSelect, SubChapterChangeEvent> {
@@ -21,20 +22,17 @@ public class ChapterSelect extends GenericSelect<SubChapterForSelect, SubChapter
     public ChapterSelect() {
         super("", SubChapterForSelect::text,
                 SubChapterChangeEvent.class,
-                (select, event) -> new SubChapterChangeEvent((ChapterSelect) select, event.isFromClient(), event.getOldValue(), event.getValue()));
+                (select, event) -> new SubChapterChangeEvent(UI.getCurrent(), event.getOldValue(), event.getValue()));
         setEmptySelectionAllowed(true);
         setEmptySelectionCaption(text("chapterSelect.caption"));
         setWidthFull();
-    }
 
-    /**
-     * Adds a listener for sub-chapter change events.
-     * Calls the addGenericChangeListener method from the parent class to register the listener.
-     *
-     * @param listener the listener to be added
-     */
-    public void addSubChapterChangeListener(ComponentEventListener<SubChapterChangeEvent> listener) {
-        addGenericChangeListener(listener);
+        addValueChangeListener(event ->
+                ComponentUtil.fireEvent(
+                        UI.getCurrent(),
+                        new SubChapterChangeEvent(UI.getCurrent(), event.getOldValue(), event.getValue())
+                )
+        );
     }
 
     /**
@@ -44,6 +42,6 @@ public class ChapterSelect extends GenericSelect<SubChapterForSelect, SubChapter
      * @param subChapters the list of sub-chapter records to be displayed in the select
      */
     public void initializeChapterSelectionSelect(List<SubChapterForSelect> subChapters) {
-        initialize(subChapters,false);
+        initialize(subChapters, false);
     }
 }

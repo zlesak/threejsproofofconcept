@@ -1,5 +1,8 @@
 package cz.uhk.zlesak.threejslearningapp.components.containers;
 
+import com.vaadin.flow.component.AttachEvent;
+import com.vaadin.flow.component.ComponentUtil;
+import com.vaadin.flow.component.DetachEvent;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
@@ -8,15 +11,20 @@ import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.Scroller;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.dom.DomEventListener;
+import com.vaadin.flow.shared.Registration;
 import com.vaadin.flow.theme.lumo.LumoUtility;
 import cz.uhk.zlesak.threejslearningapp.components.common.LocatorAnchor;
 import cz.uhk.zlesak.threejslearningapp.components.selects.ChapterSelect;
 import cz.uhk.zlesak.threejslearningapp.components.inputs.textFields.SearchTextField;
+import cz.uhk.zlesak.threejslearningapp.events.chapter.SubChapterChangeEvent;
 import elemental.json.JsonArray;
 import elemental.json.JsonObject;
 import elemental.json.JsonValue;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Scope;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Component for displaying navigation content based on sub-chapters.
@@ -32,6 +40,7 @@ public class ChapterNavigationContainer extends VerticalLayout {
     private final VerticalLayout contentContainer;
     private final VerticalLayout searchContainer;
     private boolean isExpanded = true;
+    private final List<Registration> registrations = new ArrayList<>();
 
     /**
      * Constructor for NavigationContentComponent.
@@ -190,5 +199,32 @@ public class ChapterNavigationContainer extends VerticalLayout {
                 "const el = document.getElementById($0); if (el) { el.style.display = 'block'; }",
                 subchapterId
         );
+    }
+
+    @Override
+    protected void onAttach(AttachEvent attachEvent) {
+        super.onAttach(attachEvent);
+
+        registrations.add(ComponentUtil.addListener(
+                attachEvent.getUI(),
+                SubChapterChangeEvent.class,
+                event -> {
+                    var oldValue = event.getOldValue();
+                    var newValue = event.getNewValue();
+                    if (oldValue != null) {
+                        hideSubchapterNavigationContent(oldValue.id());
+                    }
+                    if (newValue != null) {
+                        showSubchapterNavigationContent(newValue.id());
+                    }
+                }
+        ));
+    }
+
+    @Override
+    protected void onDetach(DetachEvent detachEvent) {
+        super.onDetach(detachEvent);
+        registrations.forEach(Registration::remove);
+        registrations.clear();
     }
 }

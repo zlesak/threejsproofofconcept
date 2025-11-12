@@ -68,6 +68,11 @@ public abstract class ModelLayout extends Composite<VerticalLayout> implements I
         getContent().setHeightFull();
     }
 
+    /**
+     * Called when the component is attached to the UI.
+     * Registers event listeners for various model and texture events.
+     * @param attachEvent the attach event
+     */
     @Override
     protected void onAttach(AttachEvent attachEvent) {
         super.onAttach(attachEvent);
@@ -124,6 +129,11 @@ public abstract class ModelLayout extends Composite<VerticalLayout> implements I
         ));
     }
 
+    /**
+     * Called when the component is detached from the UI.
+     * Removes all registered event listeners to prevent memory leaks.
+     * @param detachEvent the detach event
+     */
     @Override
     protected void onDetach(DetachEvent detachEvent) {
         super.onDetach(detachEvent);

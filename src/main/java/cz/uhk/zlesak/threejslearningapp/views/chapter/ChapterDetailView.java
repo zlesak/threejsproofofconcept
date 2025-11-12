@@ -1,9 +1,9 @@
 package cz.uhk.zlesak.threejslearningapp.views.chapter;
 
-import com.vaadin.flow.component.Tag;
-import com.vaadin.flow.component.UI;
+import com.vaadin.flow.component.*;
 import com.vaadin.flow.component.dependency.JavaScript;
 import com.vaadin.flow.router.*;
+import com.vaadin.flow.shared.Registration;
 import cz.uhk.zlesak.threejslearningapp.common.TextureMapHelper;
 import cz.uhk.zlesak.threejslearningapp.components.notifications.ErrorNotification;
 import cz.uhk.zlesak.threejslearningapp.domain.chapter.SubChapterForSelect;
@@ -18,6 +18,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -34,8 +36,10 @@ public class ChapterDetailView extends ChapterLayout {
     private final ModelService modelService;
     private final TextureService textureService;
     private final ChapterService chapterService;
+    private final List<Registration> registrations = new ArrayList<>();
 
     private String chapterId;
+    private Map<String, QuickModelEntity> modelsMap;
 
     /**
      * ChapterView constructor - creates instance of chapter view instance that then accomplishes the goal of getting
@@ -110,7 +114,7 @@ public class ChapterDetailView extends ChapterLayout {
 
         try {
             loadChapterData();
-            setupSubChapterNavigation();
+            setupSubChapterModelMap();
             loadAndDisplay3DModels();
         } catch (Exception e) {
             handleChapterLoadError(e);
@@ -139,20 +143,12 @@ public class ChapterDetailView extends ChapterLayout {
     }
 
     /**
-     * Sets up sub-chapter navigation listener.
-     * When a sub-chapter is selected, updates the content and displays the appropriate 3D model.
+     * Sets up sub-chapter model map for quick access during sub-chapter changes.
+     *
+     * @throws Exception if models cannot be retrieved
      */
-    private void setupSubChapterNavigation() throws Exception {
-        Map<String, QuickModelEntity> modelsMap = chapterService.getChaptersModels(chapterId);
-
-        chapterSelect.addSubChapterChangeListener(event -> {
-            try {
-                handleSubChapterChange(event, modelsMap);
-            } catch (Exception e) {
-                log.error("Error changing sub-chapter: {}", e.getMessage(), e);
-                new ErrorNotification(text("error.subChapterLoadFailed") + ": " + e.getMessage(), 5000);
-            }
-        });
+    private void setupSubChapterModelMap() throws Exception {
+        modelsMap = chapterService.getChaptersModels(chapterId);
     }
 
     /**
@@ -160,17 +156,13 @@ public class ChapterDetailView extends ChapterLayout {
      * Updates the displayed content and 3D model based on the selected sub-chapter.
      *
      * @param event     the sub-chapter change event
-     * @param modelsMap map of models associated with the chapter
      */
-    private void handleSubChapterChange(
-            SubChapterChangeEvent event,
-            Map<String, QuickModelEntity> modelsMap
-    ) {
+    private void handleSubChapterChange(SubChapterChangeEvent event) {
         try {
             SubChapterForSelect newValue = event.getNewValue();
 
             if (newValue == null) {
-                showWholeChapter(modelsMap);
+                showWholeChapter();
                 return;
             }
 
@@ -190,10 +182,8 @@ public class ChapterDetailView extends ChapterLayout {
 
     /**
      * Shows the whole chapter content and selects the main model.
-     *
-     * @param modelsMap map of models associated with the chapter
      */
-    private void showWholeChapter(Map<String, QuickModelEntity> modelsMap) {
+    private void showWholeChapter() {
         editorjs.showWholeChapterData();
         if (modelsMap.containsKey("main")) {
             modelDiv.modelTextureAreaSelectContainer.getModelListingSelect()
@@ -260,5 +250,39 @@ public class ChapterDetailView extends ChapterLayout {
         log.error("Error loading chapter: {}", e.getMessage(), e);
         new ErrorNotification(text("error.chapterLoadFailed") + ": " + e.getMessage(), 5000);
         UI.getCurrent().navigate(ChapterListView.class);
+    }
+
+    /**
+     * On attach function to register event listeners when the view is attached.
+     * Registers a listener for SubChapterChangeEvent to handle sub-chapter changes.
+     * @param attachEvent the attach event
+     */
+    @Override
+    protected void onAttach(AttachEvent attachEvent) {
+        super.onAttach(attachEvent);
+
+        registrations.add(ComponentUtil.addListener(
+                attachEvent.getUI(),
+                SubChapterChangeEvent.class,
+                event -> {
+                    try {
+                        handleSubChapterChange(event);
+                    } catch (Exception e) {
+                        log.error("Error changing sub-chapter: {}", e.getMessage(), e);
+                        new ErrorNotification(text("error.subChapterLoadFailed") + ": " + e.getMessage(), 5000);
+                    }
+                }
+        ));
+    }
+
+    /**
+     * Overridden onDetach function to clean up event registrations when the view is detached.
+     * @param detachEvent the detach event
+     */
+    @Override
+    protected void onDetach(DetachEvent detachEvent) {
+        super.onDetach(detachEvent);
+        registrations.forEach(Registration::remove);
+        registrations.clear();
     }
 }

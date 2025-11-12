@@ -128,7 +128,7 @@ public class ModelDetailView extends ModelLayout {
             }
         } catch (Exception e) {
             log.error(e.getMessage());
-            new ErrorNotification("Nepovedlo se načíst model: " + e.getMessage(), 5000);
+            new ErrorNotification(text("notification.modelLoadFailed") + e.getMessage(), 5000);
             throw e;
         } finally {
             VaadinSession.getCurrent().setAttribute("quickModelEntity", null);

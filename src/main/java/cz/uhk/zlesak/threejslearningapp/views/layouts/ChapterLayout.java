@@ -52,9 +52,7 @@ public abstract class ChapterLayout extends Composite<VerticalLayout> implements
      * Initializes the layout and components based on the specified view type.
      *
      */
-    public ChapterLayout(boolean areWeInCreateOrEditChapterView) {
-
-        //Main page layout
+    public ChapterLayout(boolean createChapterMode) {
         HorizontalLayout chapterPageLayout = new HorizontalLayout();
         chapterContent = new VerticalLayout();
         chapterModel = new VerticalLayout();
@@ -70,13 +68,10 @@ public abstract class ChapterLayout extends Composite<VerticalLayout> implements
         chapterPageLayout.getStyle().set("min-width", "0");
         chapterPageLayout.getStyle().set("min-height", "0");
 
-
-        //Content layout
-
         ChapterContentScroller chapterContentScroller = new ChapterContentScroller(editorjs, mdEditor);
         ModelsSelectScroller modelsScroller = new ModelsSelectScroller();
 
-        if (areWeInCreateOrEditChapterView) {
+        if (createChapterMode) {
             secondaryNavigation = new ChapterTabSheetContainer(nameTextField, chapterContentScroller, modelsScroller);
             Scroller tabsScroller = new Scroller(secondaryNavigation, Scroller.ScrollDirection.VERTICAL);
             tabsScroller.setSizeFull();
@@ -100,16 +95,6 @@ public abstract class ChapterLayout extends Composite<VerticalLayout> implements
         getContent().add(chapterPageLayout);
         getContent().setSizeFull();
 
-        chapterSelect.addValueChangeListener(event -> {
-            var oldSelectedSubchapter = event.getOldValue();
-            var newSelectedSubchapter = event.getValue();
-            if (oldSelectedSubchapter != null) {
-                navigationContentLayout.hideSubchapterNavigationContent(oldSelectedSubchapter.id());
-            }
-            if (newSelectedSubchapter != null) {
-                navigationContentLayout.showSubchapterNavigationContent(newSelectedSubchapter.id());
-            }
-        });
         searchTextField.addValueChangeListener(
                 event -> editorjs.search(event.getValue())
         );
