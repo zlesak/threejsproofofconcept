@@ -5,27 +5,26 @@ import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.applayout.AppLayout;
 import com.vaadin.flow.component.avatar.Avatar;
 import com.vaadin.flow.component.button.Button;
-import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.html.*;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
-import com.vaadin.flow.dom.ThemeList;
 import com.vaadin.flow.router.Layout;
 import com.vaadin.flow.router.RouterLink;
 import com.vaadin.flow.server.VaadinService;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
 import com.vaadin.flow.spring.security.AuthenticationContext;
-import com.vaadin.flow.theme.lumo.Lumo;
 import com.vaadin.flow.theme.lumo.LumoUtility.*;
+import cz.uhk.zlesak.threejslearningapp.components.buttons.LoginButton;
+import cz.uhk.zlesak.threejslearningapp.components.buttons.LogoutButton;
+import cz.uhk.zlesak.threejslearningapp.components.buttons.ThemeModeToggleButton;
 import cz.uhk.zlesak.threejslearningapp.components.lists.AvatarItem;
+import cz.uhk.zlesak.threejslearningapp.views.MainPageView;
+import cz.uhk.zlesak.threejslearningapp.views.chapter.ChapterListView;
 import cz.uhk.zlesak.threejslearningapp.views.chapter.CreateChapterView;
 import cz.uhk.zlesak.threejslearningapp.views.model.CreateModelView;
 import cz.uhk.zlesak.threejslearningapp.views.model.ModelListView;
-import cz.uhk.zlesak.threejslearningapp.views.auth.LoginView;
-import cz.uhk.zlesak.threejslearningapp.views.MainPageView;
-import cz.uhk.zlesak.threejslearningapp.views.chapter.ChapterListView;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationContextException;
 import org.springframework.context.annotation.Scope;
@@ -72,24 +71,9 @@ public class MainLayout extends AppLayout {
         }
 
         /// Light or dark mode toggle switch with default of light mode
-        Button buttonPrimary = new Button();
-        buttonPrimary.addClassNames(Display.FLEX, Gap.MEDIUM, Margin.MEDIUM, Padding.MEDIUM);
-        buttonPrimary.setWidth("20px");
-        buttonPrimary.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        ThemeModeToggleButton buttonPrimary = new ThemeModeToggleButton();
         layout.add(buttonPrimary);
 
-        UI.getCurrent().getPage().executeJs(
-                "const match = document.cookie.match('(^|;) ?themeMode=([^;]*)(;|$)'); return match ? match[2] : null;"
-        ).then(String.class, value -> {
-            if ("dark".equals(value)) {
-                getElement().getThemeList().add(Lumo.DARK);
-                buttonPrimary.setText("☀️");
-            } else {
-                buttonPrimary.setText("🌑");
-            }
-        });
-
-        buttonPrimary.addClickListener(e -> changeMode(buttonPrimary));
 
         UI.getCurrent().getPage().executeJs(
                 "const match = document.cookie.match('(^|;) ?cookieConsent=([^;]*)(;|$)'); return match ? match[2] : null;"
@@ -104,14 +88,10 @@ public class MainLayout extends AppLayout {
             String username = authentication.getName();
             AvatarItem avatarItem = new AvatarItem(username, getUserRoleName(authentication), new Avatar(username));
             layout.add(avatarItem);
-            Button logoutButton = new Button("Odhlásit se", VaadinIcon.SIGN_OUT.create());
-            logoutButton.addThemeVariants(ButtonVariant.LUMO_CONTRAST);
-            logoutButton.addClickListener(e -> authenticationContext.logout());
+            LogoutButton logoutButton = new LogoutButton(authenticationContext);
             layout.add(logoutButton);
         } else {
-            Button loginButton = new Button("Přihlásit se", VaadinIcon.SIGN_IN.create());
-            loginButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
-            loginButton.addClickListener(e -> UI.getCurrent().navigate(LoginView.class));
+            LoginButton loginButton = new LoginButton();
             layout.add(loginButton);
         }
         header.add(layout);
@@ -154,23 +134,6 @@ public class MainLayout extends AppLayout {
         throw new ApplicationContextException("Neplatné role uživatele, authentication není nastavena!");
     }
 
-    /// Dark theme or light theme change function
-    private void changeMode(Button button) {
-        ThemeList themeList = getElement().getThemeList();
-        String mode;
-        if (themeList.contains(Lumo.DARK)) {
-            themeList.remove(Lumo.DARK);
-            button.setText("🌑");
-            mode = "light";
-        } else {
-            themeList.add(Lumo.DARK);
-            button.setText("☀️");
-            mode = "dark";
-        }
-
-        UI.getCurrent().getPage().executeJs(
-                "document.cookie = 'themeMode=' + $0 + '; path=/; max-age=31536000';", mode);
-    }
 
     private void showCookieNotification() {
         Span message = new Span("Tato stránka používá cookies pro uložení zvoleného režimu zobrazení.");

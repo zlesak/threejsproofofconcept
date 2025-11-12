@@ -21,9 +21,7 @@ import com.vaadin.flow.server.auth.AnonymousAllowed;
 @Tag("main-page-view")
 @AnonymousAllowed
 public class MainPageView extends Composite<VerticalLayout> implements IView {
-
     public MainPageView() {
-/// content
         Paragraph textSmall = new Paragraph();
         Icon icon = new Icon();
         H1 h1 = new H1();
@@ -35,7 +33,6 @@ public class MainPageView extends Composite<VerticalLayout> implements IView {
         textSmall.setWidth("max-content");
         textSmall.getStyle().set("font-size", "var(--lumo-font-size-xs)");
 
-/// layout setup
         HorizontalLayout layoutRow = new HorizontalLayout();
         VerticalLayout layoutColumn = new VerticalLayout();
         Hr hr = new Hr();
@@ -54,10 +51,6 @@ public class MainPageView extends Composite<VerticalLayout> implements IView {
 
     @Override
     public String getPageTitle() {
-        try {
-            return text("page.title.mainPageView");
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+        return text("page.title.mainPageView");
     }
 }

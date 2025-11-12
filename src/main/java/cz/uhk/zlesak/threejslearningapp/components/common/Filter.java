@@ -9,7 +9,7 @@ import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.select.Select;
 import cz.uhk.zlesak.threejslearningapp.components.inputs.textFields.SearchTextField;
-import cz.uhk.zlesak.threejslearningapp.events.threejs.ThreeJsSearchEvent;
+import cz.uhk.zlesak.threejslearningapp.events.threejs.SearchEvent;
 import cz.uhk.zlesak.threejslearningapp.i18n.I18nAware;
 import cz.uhk.zlesak.threejslearningapp.domain.common.Entity;
 import cz.uhk.zlesak.threejslearningapp.domain.common.SortDirectionEnum;
@@ -70,7 +70,7 @@ public class Filter extends HorizontalLayout implements I18nAware {
                 orderBySelect.setEnabled(true);
                 searchDirectionSelect.setEnabled(true);
                 createButton.setEnabled(false);
-                ComponentUtil.fireEvent(UI.getCurrent(), new ThreeJsSearchEvent(searchField.getValue(), searchDirectionSelect.getValue(), orderBySelect.getValue(), UI.getCurrent()));
+                ComponentUtil.fireEvent(UI.getCurrent(), new SearchEvent(searchField.getValue(), searchDirectionSelect.getValue(), orderBySelect.getValue(), UI.getCurrent()));
             }
         });
         return searchField;
@@ -84,7 +84,7 @@ public class Filter extends HorizontalLayout implements I18nAware {
     private Button getSearchButton() {
         Button searchButton = new Button(text("button.search"));
         searchButton.addClickListener(e ->
-                ComponentUtil.fireEvent(UI.getCurrent(), new ThreeJsSearchEvent(searchField.getValue(), searchDirectionSelect.getValue(), orderBySelect.getValue(), UI.getCurrent())));
+                ComponentUtil.fireEvent(UI.getCurrent(), new SearchEvent(searchField.getValue(), searchDirectionSelect.getValue(), orderBySelect.getValue(), UI.getCurrent())));
         searchButton.setEnabled(false);
         searchButton.setIcon(VaadinIcon.SEARCH.create());
         searchButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
@@ -106,7 +106,7 @@ public class Filter extends HorizontalLayout implements I18nAware {
         select.setHelperText(text("filter.orderBy.label"));
         select.setItemLabelGenerator(name -> text("filter." + name.toLowerCase() + ".label"));
         select.addValueChangeListener(event ->
-                ComponentUtil.fireEvent(UI.getCurrent(), new ThreeJsSearchEvent(searchField.getValue(), searchDirectionSelect.getValue(), orderBySelect.getValue(), UI.getCurrent())));
+                ComponentUtil.fireEvent(UI.getCurrent(), new SearchEvent(searchField.getValue(), searchDirectionSelect.getValue(), orderBySelect.getValue(), UI.getCurrent())));
         return select;
     }
 
@@ -125,7 +125,7 @@ public class Filter extends HorizontalLayout implements I18nAware {
             case DESC -> text("filter.sort.direction.desc");
         });
         sortDirectionSelect.addValueChangeListener(event ->
-                ComponentUtil.fireEvent(UI.getCurrent(), new ThreeJsSearchEvent(searchField.getValue(), searchDirectionSelect.getValue(), orderBySelect.getValue(), UI.getCurrent())));
+                ComponentUtil.fireEvent(UI.getCurrent(), new SearchEvent(searchField.getValue(), searchDirectionSelect.getValue(), orderBySelect.getValue(), UI.getCurrent())));
         return sortDirectionSelect;
     }
 

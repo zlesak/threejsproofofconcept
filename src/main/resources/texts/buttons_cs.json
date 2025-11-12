@@ -5,5 +5,7 @@
   "modelSelectButton.label": "Vybrat model",
   "button.open": "Otevřit",
   "button.select": "Vybrat",
-  "button.search": "Hledat"
+  "button.search": "Hledat",
+  "loginButton.label": "Přihlásit se",
+  "logoutButton.label": "Odhlásit se"
 }

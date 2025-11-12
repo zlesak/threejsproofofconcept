@@ -12,7 +12,7 @@ import cz.uhk.zlesak.threejslearningapp.views.IView;
 @Route("login")
 @AnonymousAllowed
 public class LoginView extends Composite<VerticalLayout> implements IView {
-    private final com.vaadin.flow.component.login.LoginForm loginForm;
+    private final LoginForm loginForm;
 
     public LoginView() {
         loginForm = new LoginForm();
@@ -24,11 +24,7 @@ public class LoginView extends Composite<VerticalLayout> implements IView {
 
     @Override
     public String getPageTitle() {
-        try {
-            return text("page.title.loginView");
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+        return text("page.title.loginView");
     }
 
     @Override
