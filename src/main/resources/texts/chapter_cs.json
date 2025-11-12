@@ -6,5 +6,7 @@
   "chapter.content": "Obsah kapitoly",
   "chapter.models": "Modely kapitoly",
   "chapter.content.loadError": "Nepodařilo se načíst obsah kapitoly.",
-  "chapter.content.loading": "Načítám..."
+  "chapter.content.loading": "Načítám...",
+  "error.subChapterLoadFailed" : "Nepodařilo se načíst podkapitolu: ",
+  "error.chapterLoadFailed" : "Nepodařilo se načíst kapitolu: "
 }

@@ -1,5 +1,6 @@
 import { IconLink } from '@codexteam/icons';
 import { attachTextureColorListeners } from 'Frontend/js/editorjs/texture-utils.js';
+import './textureColorLinkTool.css';
 
 /**
  * TextureColorLinkTool for Editor.js
@@ -50,6 +51,7 @@ export default class TextureColorLinkTool {
     this.nodes = {
       button: null,
       div: null,
+      backdrop: null,
 
       inputLabel: null,
       input: null,
@@ -88,17 +90,32 @@ export default class TextureColorLinkTool {
     this.nodes.button.type = 'button';
     this.nodes.button.classList.add(this.iconClasses.base);
     this.nodes.button.innerHTML = IconLink;
+
+    this.nodes.button.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      this.openDialog();
+    });
+
     return this.nodes.button;
   }
 
   /**
    * Renders actions to be displayed in the inline toolbar when the tool button is clicked.
-   * Initializes the selects for textures and colors. Saves the selected ragne to apply the a element later.
+   * Returns empty element because we handle dialog opening via button click.
    * Called by Editor.js API.
    *
-   * @returns {null}
+   * @returns {HTMLElement}
    */
   renderActions() {
+    return document.createElement('div');
+  }
+
+  /**
+   * Opens the dialog for selecting model, texture and color.
+   * Called when user clicks the inline tool button.
+   */
+  openDialog() {
     const selection = window.getSelection();
     if (selection && selection.rangeCount > 0) {
       this._selectedRange = selection.getRangeAt(0).cloneRange();
@@ -121,9 +138,26 @@ export default class TextureColorLinkTool {
       }
     }
 
+    // Create backdrop
+    this.nodes.backdrop = document.createElement('div');
+    this.nodes.backdrop.className = 'texture-color-link-tool-backdrop';
+
+    // Create main container
     this.nodes.div = document.createElement('div');
+    this.nodes.div.className = 'texture-color-link-tool-container';
+
+
+    // Text input field
+    const inputField = document.createElement('div');
+    inputField.className = 'texture-color-link-tool-field';
+
     this.nodes.inputLabel = document.createElement('label');
+    this.nodes.inputLabel.className = 'texture-color-link-tool-label';
+    this.nodes.inputLabel.textContent = this.i18n.t('Text odkazu');
+
     this.nodes.input = document.createElement('input');
+    this.nodes.input.className = 'texture-color-link-tool-input';
+    this.nodes.input.placeholder = this.i18n.t('Zadejte text');
 
     if (this._selectedRange) {
       this.nodes.input.value = this._selectedRange.toString();
@@ -131,25 +165,66 @@ export default class TextureColorLinkTool {
       this.nodes.input.value = '';
     }
 
-    // Model select
+    inputField.appendChild(this.nodes.inputLabel);
+    inputField.appendChild(this.nodes.input);
+
+    // Model select field
+    const modelField = document.createElement('div');
+    modelField.className = 'texture-color-link-tool-field';
+
     this.nodes.selectModelLabel = document.createElement('label');
+    this.nodes.selectModelLabel.className = 'texture-color-link-tool-label';
+    this.nodes.selectModelLabel.textContent = this.i18n.t('Model');
+
     this.nodes.selectModel = document.createElement('select');
+    this.nodes.selectModel.className = 'texture-color-link-tool-select';
     this.addOption(this.nodes.selectModel, this.i18n.t('Vyberte model'), '');
+
+    // Remove duplicate models - use Set to track unique model IDs
     if (this.models) {
+      const uniqueModels = new Map();
       this.models.forEach((model) => {
+        if (!uniqueModels.has(model.id)) {
+          uniqueModels.set(model.id, model);
+        }
+      });
+      uniqueModels.forEach((model) => {
         this.addOption(this.nodes.selectModel, model.modelName, model.id);
       });
     }
 
-    // Texture select
+    modelField.appendChild(this.nodes.selectModelLabel);
+    modelField.appendChild(this.nodes.selectModel);
+
+    // Texture select field
+    const textureField = document.createElement('div');
+    textureField.className = 'texture-color-link-tool-field';
+
     this.nodes.selectTextureLabel = document.createElement('label');
+    this.nodes.selectTextureLabel.className = 'texture-color-link-tool-label';
+    this.nodes.selectTextureLabel.textContent = this.i18n.t('Textura');
+
     this.nodes.selectTexture = document.createElement('select');
+    this.nodes.selectTexture.className = 'texture-color-link-tool-select';
     this.addOption(this.nodes.selectTexture, this.i18n.t('Vyberte texturu'), '');
 
-    // Color select
+    textureField.appendChild(this.nodes.selectTextureLabel);
+    textureField.appendChild(this.nodes.selectTexture);
+
+    // Color select field
+    const colorField = document.createElement('div');
+    colorField.className = 'texture-color-link-tool-field';
+
     this.nodes.selectColorLabel = document.createElement('label');
+    this.nodes.selectColorLabel.className = 'texture-color-link-tool-label';
+    this.nodes.selectColorLabel.textContent = this.i18n.t('Barva');
+
     this.nodes.selectColor = document.createElement('select');
+    this.nodes.selectColor.className = 'texture-color-link-tool-select';
     this.addOption(this.nodes.selectColor, this.i18n.t('Vyberte barvu'), '');
+
+    colorField.appendChild(this.nodes.selectColorLabel);
+    colorField.appendChild(this.nodes.selectColor);
 
     // Model change, populate textures filtered by model
     this.nodes.selectModel.addEventListener('change', () => {
@@ -161,11 +236,19 @@ export default class TextureColorLinkTool {
       this.addOption(this.nodes.selectColor, this.i18n.t('Vyberte barvu'), '');
 
       if (this.textures && selectedModelId && this.textures.length !== 0) {
+        // Remove duplicates
+        const uniqueTextures = new Map();
         this.textures
           .filter((texture) => String(texture.modelId) === String(selectedModelId) || String(texture.model) === String(selectedModelId))
           .forEach((texture) => {
-            this.addOption(this.nodes.selectTexture, texture.textureName, texture.id);
+            if (!uniqueTextures.has(texture.id)) {
+              uniqueTextures.set(texture.id, texture);
+            }
           });
+
+        uniqueTextures.forEach((texture) => {
+          this.addOption(this.nodes.selectTexture, texture.textureName, texture.id);
+        });
       }
     });
 
@@ -175,11 +258,18 @@ export default class TextureColorLinkTool {
       this.addOption(this.nodes.selectColor, this.i18n.t('Vyberte barvu'), '');
       const selectedTextureId = this.nodes.selectTexture.value;
       if (this.colors && selectedTextureId && this.colors.length !== 0) {
+        const uniqueColors = new Map();
         this.colors
           .filter((color) => String(color.textureId) === String(selectedTextureId))
           .forEach((color) => {
-            this.addOption(this.nodes.selectColor, color.areaName, color.hexColor);
+            if (!uniqueColors.has(color.hexColor)) {
+              uniqueColors.set(color.hexColor, color);
+            }
           });
+
+        uniqueColors.forEach((color) => {
+          this.addOption(this.nodes.selectColor, color.areaName, color.hexColor);
+        });
       }
     });
 
@@ -202,17 +292,36 @@ export default class TextureColorLinkTool {
 
     this.nodes.buttonSave = document.createElement('button');
     this.nodes.buttonSave.type = 'button';
+    this.nodes.buttonSave.className = 'texture-color-link-tool-button';
     this.nodes.buttonSave.innerHTML = this.i18n.t('Potvrdit');
     this.nodes.buttonSave.addEventListener('click', (event) => {
       this.save(event);
     });
 
-    this.nodes.div.appendChild(this.nodes.input);
-    this.nodes.div.appendChild(this.nodes.selectModel);
-    this.nodes.div.appendChild(this.nodes.selectTexture);
-    this.nodes.div.appendChild(this.nodes.selectColor);
+    this.nodes.div.appendChild(inputField);
+    this.nodes.div.appendChild(modelField);
+    this.nodes.div.appendChild(textureField);
+    this.nodes.div.appendChild(colorField);
     this.nodes.div.appendChild(this.nodes.buttonSave);
-    return this.nodes.div;
+
+    // Close on backdrop click
+    this.nodes.backdrop.addEventListener('click', () => {
+      this.clear();
+      this.inlineToolbar.close();
+    });
+
+    // Prevent closing when clicking inside the dialog
+    this.nodes.div.addEventListener('click', (e) => {
+      e.stopPropagation();
+    });
+
+    // Appends to body, prevents flickering
+    setTimeout(() => {
+      if (this.nodes.backdrop && this.nodes.div) {
+        document.body.appendChild(this.nodes.backdrop);
+        document.body.appendChild(this.nodes.div);
+      }
+    }, 0);
   }
 
   /**
@@ -325,6 +434,11 @@ export default class TextureColorLinkTool {
     this.models = [];
     this.textures = [];
     this.colors = [];
+
+    if (this.nodes.backdrop) {
+      this.nodes.backdrop.remove();
+      this.nodes.backdrop = null;
+    }
 
     if (this.nodes.div) {
       this.nodes.div.remove();

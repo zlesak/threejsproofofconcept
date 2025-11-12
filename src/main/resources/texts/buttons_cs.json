@@ -3,7 +3,10 @@
   "markdownUploadButton.label": "Importovat MD",
   "openModelInNewTabButton.label": "Prohlédnout v novém okně",
   "modelSelectButton.label": "Vybrat model",
-  "button.open": "Otevřit",
+  "button.open": "Otevřít",
   "button.select": "Vybrat",
-  "button.search": "Hledat"
+  "button.search": "Hledat",
+  "button.createModel": "Vytvořit model",
+  "loginButton.label": "Přihlásit se",
+  "logoutButton.label": "Odhlásit se"
 }

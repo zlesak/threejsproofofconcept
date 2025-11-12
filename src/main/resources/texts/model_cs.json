@@ -4,6 +4,6 @@
   "model.lastModified": "Naposledy upraveno",
   "model.title": "Název modelu",
   "model.mainTexture": "Hlavní textura",
-  "model.otherTextures": "Další textury"
-
+  "model.otherTextures": "Další textury",
+  "notification.modelLoadFailed" : "Nepodařilo se načíst model: "
 }

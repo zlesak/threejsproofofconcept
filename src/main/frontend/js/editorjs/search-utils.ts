@@ -4,26 +4,28 @@ export async function searchInEditor(editor: any, searchText: string, editorRead
   if (!editor || !editor.blocks) { console.error('search: editor not ready'); return; }
   clearSearchHighlights(editor);
   if (!searchText || searchText.trim() === '') return;
-  const searchTextLower = searchText.toLowerCase();
-
   for (let i = 0; i < editor.blocks.getBlocksCount(); i++) {
     const blockElement = editor.blocks.getBlockByIndex(i)!.holder;
-    const walker = document.createTreeWalker(blockElement, NodeFilter.SHOW_TEXT, null);
-    let node: Node | null;
-    while ((node = walker.nextNode())) {
-      if (node.nodeType !== Node.TEXT_NODE) break;
-      const textContent = node.textContent || '';
-      const textContentLower = textContent.toLowerCase();
-      if (!textContentLower.includes(searchTextLower)) break;
-      const parent = node.parentNode;
-      if (!parent) break;
+    highlightTextRecursive(blockElement, searchText);
+  }
+}
+
+function highlightTextRecursive(node: Node, searchText: string) {
+  if (node.nodeType === Node.TEXT_NODE) {
+    const textContent = node.textContent || '';
+    const regex = new RegExp(`(${searchText})`, 'gi');
+    if (regex.test(textContent)) {
       const tempDiv = document.createElement('div');
-      tempDiv.innerHTML = textContent.replace(new RegExp(`(${searchText})`, 'gi'), `<span class="editor-search-highlight" match="true">$1</span>`);
-      const fragment = document.createDocumentFragment();
+      tempDiv.innerHTML = textContent.replace(regex, `<span class="editor-search-highlight" match="true">$1</span>`);
       while (tempDiv.firstChild) {
-        fragment.appendChild(tempDiv.firstChild);
+        node.parentNode?.insertBefore(tempDiv.firstChild, node);
       }
-      parent.replaceChild(fragment, node);
+      node.parentNode?.removeChild(node);
+    }
+  } else if (node.nodeType === Node.ELEMENT_NODE) {
+    const children = Array.from(node.childNodes);
+    for (const child of children) {
+      highlightTextRecursive(child, searchText);
     }
   }
 }
@@ -38,6 +40,7 @@ function clearSearchHighlights(editor: any) {
       const parent = element.parentNode;
       if (parent) {
         parent.replaceChild(document.createTextNode(element.textContent || ''), element);
+        parent.normalize();
       }
     });
   }

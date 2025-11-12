@@ -23,6 +23,7 @@ const parsers: BlockParser[] = [
 ];
 
 (window as any).convertEditorJsToMarkdown = convertEditorJsToMarkdown;
+(window as any).convertMarkdownToEditorJs = convertMarkdownToEditorJs;
 
 export async function convertEditorJsToMarkdown(data: string | OutputData): Promise<string> {
   const wasString = typeof data === 'string';
