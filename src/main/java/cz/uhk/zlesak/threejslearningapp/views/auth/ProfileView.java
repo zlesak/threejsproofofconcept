@@ -28,10 +28,6 @@ public class ProfileView extends Composite<VerticalLayout> implements IView {
 
     @Override
     public String getPageTitle() {
-        try {
-            return text("page.title.profileView");
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+        return text("page.title.profileView");
     }
 }

@@ -1,18 +1,28 @@
 package cz.uhk.zlesak.threejslearningapp.views.layouts;
 
+import com.vaadin.flow.component.AttachEvent;
+import com.vaadin.flow.component.ComponentUtil;
 import com.vaadin.flow.component.Composite;
+import com.vaadin.flow.component.DetachEvent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.shared.Registration;
 import com.vaadin.flow.theme.lumo.LumoUtility;
 import cz.uhk.zlesak.threejslearningapp.components.containers.ModelContainer;
 import cz.uhk.zlesak.threejslearningapp.components.forms.ModelUploadForm;
 import cz.uhk.zlesak.threejslearningapp.domain.common.QuickFileEntity;
 import cz.uhk.zlesak.threejslearningapp.domain.model.QuickModelEntity;
 import cz.uhk.zlesak.threejslearningapp.domain.texture.QuickTextureEntity;
+import cz.uhk.zlesak.threejslearningapp.events.model.ModelClearEvent;
+import cz.uhk.zlesak.threejslearningapp.events.model.ModelTextureChangeEvent;
+import cz.uhk.zlesak.threejslearningapp.events.model.ModelUploadEvent;
+import cz.uhk.zlesak.threejslearningapp.events.texture.OtherTextureLoadedEvent;
+import cz.uhk.zlesak.threejslearningapp.events.texture.OtherTextureRemovedEvent;
 import cz.uhk.zlesak.threejslearningapp.views.IView;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Scope;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -22,39 +32,12 @@ public abstract class ModelLayout extends Composite<VerticalLayout> implements I
     protected final ModelContainer modelDiv = new ModelContainer();
     protected final ModelUploadForm modelUploadForm;
     private Map<String, QuickModelEntity> quickModelEntity;
+    private final List<Registration> registrations = new ArrayList<>();
 
     public ModelLayout() {
         HorizontalLayout modelPageLayout = new HorizontalLayout();
 
         modelUploadForm = new ModelUploadForm();
-
-        modelUploadForm.addModelLoadEventListener(
-                event -> {
-                    quickModelEntity = Map.of(event.getModelId(), QuickModelEntity.builder()
-                            .model(QuickFileEntity.builder().id(event.getModelId()).name(event.getModelName()).build())
-                            .mainTexture(QuickTextureEntity.builder().textureFileId(event.getTextureName()).name(event.getTextureName()).build())
-                            .build());
-                    modelDiv.renderer.loadModel(event.getModel(), event.getTexture(), event.getModelId());
-                }
-        ).addModelClearEventListener(
-                event -> modelDiv.renderer.clear()
-        ).addOtherTextureLoadedEventListener(
-                event -> modelDiv.renderer.addOtherTextures(event.getBase64Textures(), "modelId")
-        ).addOtherTextureRemovedEventListener(
-                event -> modelDiv.renderer.removeOtherTexture("modelId", event.getName())
-        ).addTextureChangeEventListener(
-        event -> {
-            QuickModelEntity model = quickModelEntity.get("modelId");
-            model.setMainTexture(event.getQuickTextureEntity().get("main"));
-
-            List<QuickTextureEntity> textures = event.getQuickTextureEntity().entrySet().stream()
-                    .filter(e -> !e.getKey().equals("main")).map(Map.Entry::getValue)
-                    .toList();
-
-            model.setOtherTextures(textures);
-            modelDiv.modelTextureAreaSelectContainer.initializeData(quickModelEntity);
-        }
-        );
 
         modelDiv.setId("modelDiv");
         modelDiv.setSizeFull();
@@ -83,6 +66,68 @@ public abstract class ModelLayout extends Composite<VerticalLayout> implements I
         getContent().add(modelPageLayout);
         getContent().setWidth("100%");
         getContent().setHeightFull();
-        getContent().setMinHeight("0");
+    }
+
+    @Override
+    protected void onAttach(AttachEvent attachEvent) {
+        super.onAttach(attachEvent);
+
+        // ModelUploadEvent listener
+        registrations.add(ComponentUtil.addListener(
+                attachEvent.getUI(),
+                ModelUploadEvent.class,
+                event -> {
+                    quickModelEntity = Map.of(event.getModelId(), QuickModelEntity.builder()
+                            .model(QuickFileEntity.builder().id(event.getModelId()).name(event.getModelName()).build())
+                            .mainTexture(QuickTextureEntity.builder().textureFileId(event.getTextureName()).name(event.getTextureName()).build())
+                            .build());
+                    modelDiv.renderer.loadModel(event.getModel(), event.getTexture(), event.getModelId());
+                }
+        ));
+
+        // ModelClearEvent listener
+        registrations.add(ComponentUtil.addListener(
+                attachEvent.getUI(),
+                ModelClearEvent.class,
+                event -> modelDiv.renderer.clear()
+        ));
+
+        // OtherTextureLoadedEvent listener
+        registrations.add(ComponentUtil.addListener(
+                attachEvent.getUI(),
+                OtherTextureLoadedEvent.class,
+                event -> modelDiv.renderer.addOtherTextures(event.getBase64Textures(), "modelId")
+        ));
+
+        // OtherTextureRemovedEvent listener
+        registrations.add(ComponentUtil.addListener(
+                attachEvent.getUI(),
+                OtherTextureRemovedEvent.class,
+                event -> modelDiv.renderer.removeOtherTexture("modelId", event.getName())
+        ));
+
+        // ModelTextureChangeEvent listener
+        registrations.add(ComponentUtil.addListener(
+                attachEvent.getUI(),
+                ModelTextureChangeEvent.class,
+                event -> {
+                    QuickModelEntity model = quickModelEntity.get("modelId");
+                    model.setMainTexture(event.getQuickTextureEntity().get("main"));
+
+                    List<QuickTextureEntity> textures = event.getQuickTextureEntity().entrySet().stream()
+                            .filter(e -> !e.getKey().equals("main")).map(Map.Entry::getValue)
+                            .toList();
+
+                    model.setOtherTextures(textures);
+                    modelDiv.modelTextureAreaSelectContainer.initializeData(quickModelEntity);
+                }
+        ));
+    }
+
+    @Override
+    protected void onDetach(DetachEvent detachEvent) {
+        super.onDetach(detachEvent);
+        registrations.forEach(Registration::remove);
+        registrations.clear();
     }
 }

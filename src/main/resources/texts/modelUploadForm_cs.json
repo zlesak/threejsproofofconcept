@@ -1,0 +1,9 @@
+{
+  "modelUploadForm.modelName.placeholder": "Zadejte název modelu",
+  "modelUploadForm.isAdvanced.label": "Pokročilé nahrání modelu",
+  "modelUploadForm.isAdvanced.tooltip": "Pokročilé nahrání modelu umožňuje nahrát model ve formátu OBJ s jednou hlavní a dalšími texturami pro pokročilé modely.",
+  "modelUploadForm.uploadModel.label": "Nahrát model",
+  "modelUploadForm.mainTexture.label": "Hlavní textura",
+  "modelUploadForm.otherTextures.label": "Další textury",
+  "modelUploadForm.csvTextures.label": "CSV soubor s popisem textur"
+}

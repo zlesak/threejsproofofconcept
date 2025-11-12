@@ -1,9 +1,9 @@
 package cz.uhk.zlesak.threejslearningapp.common;
 
-import cz.uhk.zlesak.threejslearningapp.services.TextureService;
 import cz.uhk.zlesak.threejslearningapp.domain.model.QuickModelEntity;
 import cz.uhk.zlesak.threejslearningapp.domain.texture.QuickTextureEntity;
 import cz.uhk.zlesak.threejslearningapp.domain.texture.TextureAreaForSelect;
+import cz.uhk.zlesak.threejslearningapp.services.TextureService;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -35,24 +35,21 @@ public abstract class TextureMapHelper {
         });
 
         for (QuickModelEntity modelEntity : uniqueModels.values()) {
-            if (modelEntity.getOtherTextures() != null) {
-                for (QuickTextureEntity textureEntity : modelEntity.getAllTextures()) {
-                    if (textureEntity != null) {
-                        String textureId = textureEntity.getTextureFileId();
-                        if (textureEntity.getCsvContent() != null && !textureEntity.getCsvContent().isEmpty()) {
-                            String[] rows = textureEntity.getCsvContent().split("\\r?\\n|\\r");
-                            for (String row : rows) {
-                                row = row.trim();
-                                if (row.isEmpty()) continue;
-                                String[] parts = row.split(";");
-                                if (parts.length == 2) {
-                                    records.add(new TextureAreaForSelect(textureId, parts[0].trim(), parts[1].trim(), modelEntity.getModel().getId()));
-                                } else {
-                                    throw new IllegalArgumentException("Invalid CSV format for TextureAreaForComboBoxRecord: " + row);
-                                }
-                            }
-                        }
+            if (modelEntity.getOtherTextures() == null) continue;
+            for (QuickTextureEntity textureEntity : modelEntity.getAllTextures()) {
+                if (textureEntity == null) continue;
+                String textureId = textureEntity.getTextureFileId();
+                String csvContent = textureEntity.getCsvContent();
+                if (csvContent == null || csvContent.isEmpty()) continue;
+                String[] rows = csvContent.split("\\r?\\n|\\r");
+                for (String row : rows) {
+                    row = row.trim();
+                    if (row.isEmpty()) continue;
+                    String[] parts = row.split(";");
+                    if (parts.length != 2) {
+                        throw new IllegalArgumentException("Invalid CSV format for TextureAreaForComboBoxRecord: " + row);
                     }
+                    records.add(new TextureAreaForSelect(textureId, parts[0].trim(), parts[1].trim(), modelEntity.getModel().getId()));
                 }
             }
         }
