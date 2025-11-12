@@ -1,0 +1,5 @@
+{
+  "model.upload.error.emptyName": "Jméno modelu není vyplněno.",
+  "model.upload.error.emptyModelFile": "Není nahrán žádný model.",
+  "model.upload.error.emptyModelMainTexture": "Není nahrána hlavní textura modelu."
+}

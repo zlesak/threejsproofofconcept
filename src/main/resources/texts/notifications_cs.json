@@ -1,0 +1,4 @@
+{
+  "notification.uploadSuccess" : "Nahrávání bylo úspěšné: ",
+  "notification.uploadError": "Nastala chyba při nahrávání: "
+}
