@@ -1,6 +1,5 @@
 package cz.uhk.zlesak.threejslearningapp.views.layouts;
 
-import com.vaadin.flow.component.Composite;
 import com.vaadin.flow.component.Tag;
 import com.vaadin.flow.component.dependency.JavaScript;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
@@ -8,18 +7,17 @@ import com.vaadin.flow.component.orderedlayout.Scroller;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.splitlayout.SplitLayout;
 import com.vaadin.flow.theme.lumo.LumoUtility.Gap;
-import cz.uhk.zlesak.threejslearningapp.components.containers.ChapterTabSheetContainer;
-import cz.uhk.zlesak.threejslearningapp.components.scrollers.ModelsSelectScroller;
 import cz.uhk.zlesak.threejslearningapp.components.containers.ChapterNavigationContainer;
+import cz.uhk.zlesak.threejslearningapp.components.containers.ChapterTabSheetContainer;
 import cz.uhk.zlesak.threejslearningapp.components.containers.ModelContainer;
 import cz.uhk.zlesak.threejslearningapp.components.editors.EditorJs;
 import cz.uhk.zlesak.threejslearningapp.components.editors.MarkdownEditor;
-import cz.uhk.zlesak.threejslearningapp.components.scrollers.ChapterContentScroller;
-import cz.uhk.zlesak.threejslearningapp.components.selects.ChapterSelect;
 import cz.uhk.zlesak.threejslearningapp.components.inputs.textFields.NameTextField;
 import cz.uhk.zlesak.threejslearningapp.components.inputs.textFields.SearchTextField;
+import cz.uhk.zlesak.threejslearningapp.components.scrollers.ChapterContentScroller;
+import cz.uhk.zlesak.threejslearningapp.components.scrollers.ModelsSelectScroller;
+import cz.uhk.zlesak.threejslearningapp.components.selects.ChapterSelect;
 import cz.uhk.zlesak.threejslearningapp.domain.model.QuickModelEntity;
-import cz.uhk.zlesak.threejslearningapp.views.IView;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Scope;
 
@@ -36,7 +34,7 @@ import java.util.Map;
 @Tag("chapter-scaffold")
 @JavaScript("./js/scroll-to-element-data-id.js")
 @Scope("prototype")
-public abstract class ChapterLayout extends Composite<VerticalLayout> implements IView {
+public abstract class ChapterLayout extends BaseLayout {
     protected final SearchTextField searchTextField = new SearchTextField("Hledat v kapitole");
     protected final ChapterSelect chapterSelect = new ChapterSelect();
     protected final ChapterNavigationContainer navigationContentLayout = new ChapterNavigationContainer(chapterSelect, searchTextField);
@@ -102,6 +100,7 @@ public abstract class ChapterLayout extends Composite<VerticalLayout> implements
 
     /**
      * Sets up the model div with event listeners and initializes texture selects.
+     *
      * @param quickModelEntityMap a map of model IDs to QuickModelEntity objects used for initialization
      */
     protected void setupModelDiv(Map<String, QuickModelEntity> quickModelEntityMap) {

@@ -1,9 +1,11 @@
 package cz.uhk.zlesak.threejslearningapp.views.chapter;
 
-import com.vaadin.flow.component.*;
+import com.vaadin.flow.component.AttachEvent;
+import com.vaadin.flow.component.ComponentUtil;
+import com.vaadin.flow.component.Tag;
+import com.vaadin.flow.component.UI;
 import com.vaadin.flow.router.BeforeLeaveEvent;
 import com.vaadin.flow.router.Route;
-import com.vaadin.flow.shared.Registration;
 import cz.uhk.zlesak.threejslearningapp.common.TextureMapHelper;
 import cz.uhk.zlesak.threejslearningapp.components.dialogs.BeforeLeaveActionDialog;
 import cz.uhk.zlesak.threejslearningapp.components.forms.CreateChapterForm;
@@ -41,7 +43,6 @@ public class CreateChapterView extends ChapterLayout {
     private final ModelService modelService;
     private final ChapterService chapterService;
     private boolean skipBeforeLeaveDialog = false;
-    private Registration createChapterEventRegistration;
 
     /**
      * Constructor for CreateChapterView.
@@ -342,23 +343,20 @@ public class CreateChapterView extends ChapterLayout {
         new ErrorNotification(text("error.unexpectedChapterCreationError") + ": " + ex.getMessage(), 5000);
     }
 
+    /**
+     * Handles component attachment to the UI.
+     * Registers a listener for CreateChapterEvent.
+     *
+     * @param attachEvent the attach event
+     */
     @Override
     protected void onAttach(AttachEvent attachEvent) {
         super.onAttach(attachEvent);
-        createChapterEventRegistration = ComponentUtil.addListener(
+        registrations.add(ComponentUtil.addListener(
                 attachEvent.getUI(),
                 CreateChapterEvent.class,
                 this::createChapterConsumer
-        );
-    }
-
-    @Override
-    protected void onDetach(DetachEvent detachEvent) {
-        super.onDetach(detachEvent);
-        if (createChapterEventRegistration != null) {
-            createChapterEventRegistration.remove();
-            createChapterEventRegistration = null;
-        }
+        ));
     }
 }
 

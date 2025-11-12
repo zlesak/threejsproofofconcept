@@ -17,10 +17,19 @@ import org.springframework.web.client.RestTemplate;
 @Theme(value = "threejslearningapp")
 public class Application implements AppShellConfigurator {
 
+    /**
+     * Main method to run the Spring Boot application.
+     * @param args command line arguments
+     */
     public static void main(String[] args) {
         SpringApplication.run(Application.class, args);
     }
 
+    /**
+     * Provides a RestTemplate bean for making RESTful web service calls.
+     *
+     * @return a new instance of RestTemplate
+     */
     @Bean
     public RestTemplate restTemplate() {
         return new RestTemplate();

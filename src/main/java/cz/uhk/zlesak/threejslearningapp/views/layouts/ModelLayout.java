@@ -2,7 +2,6 @@ package cz.uhk.zlesak.threejslearningapp.views.layouts;
 
 import com.vaadin.flow.component.AttachEvent;
 import com.vaadin.flow.component.ComponentUtil;
-import com.vaadin.flow.component.Composite;
 import com.vaadin.flow.component.DetachEvent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
@@ -18,21 +17,18 @@ import cz.uhk.zlesak.threejslearningapp.events.model.ModelTextureChangeEvent;
 import cz.uhk.zlesak.threejslearningapp.events.model.ModelUploadEvent;
 import cz.uhk.zlesak.threejslearningapp.events.texture.OtherTextureLoadedEvent;
 import cz.uhk.zlesak.threejslearningapp.events.texture.OtherTextureRemovedEvent;
-import cz.uhk.zlesak.threejslearningapp.views.IView;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Scope;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 @Slf4j
 @Scope("prototype")
-public abstract class ModelLayout extends Composite<VerticalLayout> implements IView {
+public abstract class ModelLayout extends BaseLayout {
     protected final ModelContainer modelDiv = new ModelContainer();
     protected final ModelUploadForm modelUploadForm;
     private Map<String, QuickModelEntity> quickModelEntity;
-    private final List<Registration> registrations = new ArrayList<>();
 
     public ModelLayout() {
         HorizontalLayout modelPageLayout = new HorizontalLayout();
@@ -71,6 +67,7 @@ public abstract class ModelLayout extends Composite<VerticalLayout> implements I
     /**
      * Called when the component is attached to the UI.
      * Registers event listeners for various model and texture events.
+     *
      * @param attachEvent the attach event
      */
     @Override
@@ -132,6 +129,7 @@ public abstract class ModelLayout extends Composite<VerticalLayout> implements I
     /**
      * Called when the component is detached from the UI.
      * Removes all registered event listeners to prevent memory leaks.
+     *
      * @param detachEvent the detach event
      */
     @Override

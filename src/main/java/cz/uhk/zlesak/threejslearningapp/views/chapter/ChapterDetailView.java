@@ -1,9 +1,11 @@
 package cz.uhk.zlesak.threejslearningapp.views.chapter;
 
-import com.vaadin.flow.component.*;
+import com.vaadin.flow.component.AttachEvent;
+import com.vaadin.flow.component.ComponentUtil;
+import com.vaadin.flow.component.Tag;
+import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.dependency.JavaScript;
 import com.vaadin.flow.router.*;
-import com.vaadin.flow.shared.Registration;
 import cz.uhk.zlesak.threejslearningapp.common.TextureMapHelper;
 import cz.uhk.zlesak.threejslearningapp.components.notifications.ErrorNotification;
 import cz.uhk.zlesak.threejslearningapp.domain.chapter.SubChapterForSelect;
@@ -18,8 +20,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -36,7 +36,6 @@ public class ChapterDetailView extends ChapterLayout {
     private final ModelService modelService;
     private final TextureService textureService;
     private final ChapterService chapterService;
-    private final List<Registration> registrations = new ArrayList<>();
 
     private String chapterId;
     private Map<String, QuickModelEntity> modelsMap;
@@ -155,7 +154,7 @@ public class ChapterDetailView extends ChapterLayout {
      * Handles sub-chapter selection change.
      * Updates the displayed content and 3D model based on the selected sub-chapter.
      *
-     * @param event     the sub-chapter change event
+     * @param event the sub-chapter change event
      */
     private void handleSubChapterChange(SubChapterChangeEvent event) {
         try {
@@ -255,6 +254,7 @@ public class ChapterDetailView extends ChapterLayout {
     /**
      * On attach function to register event listeners when the view is attached.
      * Registers a listener for SubChapterChangeEvent to handle sub-chapter changes.
+     *
      * @param attachEvent the attach event
      */
     @Override
@@ -273,16 +273,5 @@ public class ChapterDetailView extends ChapterLayout {
                     }
                 }
         ));
-    }
-
-    /**
-     * Overridden onDetach function to clean up event registrations when the view is detached.
-     * @param detachEvent the detach event
-     */
-    @Override
-    protected void onDetach(DetachEvent detachEvent) {
-        super.onDetach(detachEvent);
-        registrations.forEach(Registration::remove);
-        registrations.clear();
     }
 }

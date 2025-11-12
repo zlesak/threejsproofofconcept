@@ -1,17 +1,13 @@
 package cz.uhk.zlesak.threejslearningapp.views.layouts;
 
-import com.vaadin.flow.component.Composite;
-import com.vaadin.flow.component.DetachEvent;
 import com.vaadin.flow.component.Tag;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.Scroller;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.AfterNavigationEvent;
-import com.vaadin.flow.shared.Registration;
 import cz.uhk.zlesak.threejslearningapp.components.common.Filter;
 import cz.uhk.zlesak.threejslearningapp.domain.common.FilterParameters;
 import cz.uhk.zlesak.threejslearningapp.domain.common.SortDirectionEnum;
-import cz.uhk.zlesak.threejslearningapp.views.IView;
 import org.springframework.context.annotation.Scope;
 
 /**
@@ -21,12 +17,11 @@ import org.springframework.context.annotation.Scope;
  */
 @Scope("prototype")
 @Tag("listing-scaffold")
-public abstract class ListingLayout extends Composite<VerticalLayout> implements IView {
+public abstract class ListingLayout extends BaseLayout {
     protected final VerticalLayout listingLayout, itemListLayout, paginationLayout, secondaryFilterLayout;
     protected final Filter filter = new Filter();
 
     protected FilterParameters filterParameters;
-    protected Registration listingEventRegistrations;
 
     /**
      * Constructor for ListingScaffold.
@@ -81,20 +76,6 @@ public abstract class ListingLayout extends Composite<VerticalLayout> implements
         }
         if (params.containsKey("searchText")) {
             filterParameters.setSearchText(String.valueOf(params.get("searchText").getFirst()));
-        }
-    }
-
-    /**
-     * Handles actions to be performed when the view is detached from the UI.
-     * Cleans up event registrations to prevent memory leaks.
-     * @param detachEvent the DetachEvent containing detachment details
-     */
-    @Override
-    protected void onDetach(DetachEvent detachEvent) {
-        super.onDetach(detachEvent);
-        if (listingEventRegistrations != null) {
-            listingEventRegistrations.remove();
-            listingEventRegistrations = null;
         }
     }
 }

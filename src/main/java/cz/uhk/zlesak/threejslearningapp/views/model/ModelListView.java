@@ -148,6 +148,7 @@ public class ModelListView extends ListingLayout {
     @Override
     protected void onAttach(AttachEvent attachEvent) {
         super.onAttach(attachEvent);
-        listingEventRegistrations = ComponentUtil.addListener(attachEvent.getUI(), SearchEvent.class, this::showFilteredModels);
+
+        registrations.add(ComponentUtil.addListener(attachEvent.getUI(), SearchEvent.class, this::showFilteredModels));
     }
 }

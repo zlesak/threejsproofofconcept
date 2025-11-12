@@ -1,12 +1,6 @@
 package cz.uhk.zlesak.threejslearningapp.views;
 
-import com.vaadin.flow.router.AfterNavigationEvent;
-import com.vaadin.flow.router.AfterNavigationObserver;
-import com.vaadin.flow.router.BeforeEnterEvent;
-import com.vaadin.flow.router.BeforeEnterObserver;
-import com.vaadin.flow.router.BeforeLeaveEvent;
-import com.vaadin.flow.router.BeforeLeaveObserver;
-import com.vaadin.flow.router.HasDynamicTitle;
+import com.vaadin.flow.router.*;
 import cz.uhk.zlesak.threejslearningapp.i18n.I18nAware;
 
 /**
