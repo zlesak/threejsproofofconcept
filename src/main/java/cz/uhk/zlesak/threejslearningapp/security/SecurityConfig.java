@@ -2,7 +2,7 @@ package cz.uhk.zlesak.threejslearningapp.security;
 
 import com.vaadin.flow.spring.security.VaadinAwareSecurityContextHolderStrategyConfiguration;
 import com.vaadin.flow.spring.security.VaadinSecurityConfigurer;
-import cz.uhk.zlesak.threejslearningapp.application.views.showing.LoginView;
+import cz.uhk.zlesak.threejslearningapp.views.auth.LoginView;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
