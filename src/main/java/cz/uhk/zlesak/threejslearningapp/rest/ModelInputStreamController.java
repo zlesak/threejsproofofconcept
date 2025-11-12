@@ -14,15 +14,15 @@ import org.springframework.web.bind.annotation.RestController;
 
 /**
  * ModelInputStreamController provides frontend endpoint for streaming 3D model and texture files.
- * It uses ModelController and TextureController to fetch the files and serves them with appropriate headers.
+ * It uses ModelService and TextureService to fetch the files and serves them with appropriate headers.
  */
 @RestController
 public class ModelInputStreamController {
 
     @Autowired
-    private ModelService modelController;
+    private ModelService modelService;
     @Autowired
-    private TextureService textureController;
+    private TextureService textureService;
 
     /**
      * Streams the 3D model file based on the provided ID.
@@ -34,8 +34,8 @@ public class ModelInputStreamController {
     @GetMapping("/api/model/{id}/stream")
     public ResponseEntity<Resource> streamModel(@PathVariable String id, @RequestParam(required = false, defaultValue = "false") boolean advanced) {
         try {
-            Resource resource = modelController.getInputStream(id);
-            String modelName = modelController.getModelName(id);
+            Resource resource = modelService.getInputStream(id);
+            String modelName = modelService.getModelName(id);
             String headerValue = advanced ? "attachment; filename=\"" + modelName + ".obj\"" : "attachment; filename=\"" + modelName + ".glb\"";
             MediaType contentType = advanced ? MediaType.TEXT_PLAIN : MediaType.parseMediaType("model/gltf-binary");
             return ResponseEntity.ok()
@@ -55,8 +55,8 @@ public class ModelInputStreamController {
     @GetMapping("/api/texture/{id}/stream")
     public ResponseEntity<Resource> streamTexture(@PathVariable String id) {
         try {
-            Resource resource = textureController.getInputStream(id);
-            String textureName = textureController.getTextureName(id);
+            Resource resource = textureService.getInputStream(id);
+            String textureName = textureService.getTextureName(id);
             return ResponseEntity.ok()
                     .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + textureName + ".jpg\"")
                     .contentType(MediaType.APPLICATION_OCTET_STREAM)

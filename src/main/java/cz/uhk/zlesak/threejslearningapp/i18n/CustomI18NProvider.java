@@ -23,12 +23,21 @@ public class CustomI18NProvider implements I18NProvider {
     private final Map<String, String> csTranslations = new HashMap<>();
     private final ObjectMapper mapper;
 
+    /**
+     * Constructor that initializes the I18NProvider and loads translations from the properties file.
+     * @param mapper the ObjectMapper used for reading JSON files
+     */
     @Autowired
     public CustomI18NProvider(ObjectMapper mapper) {
         this.mapper = mapper;
         loadAllCsJson();
     }
 
+    /**
+     * Loads all Czech translation JSON files from the classpath "texts" directory.
+     * It looks for files matching the pattern "*_cs.json" and merges their contents into the csTranslations map.
+     * In case of duplicate keys, the last loaded value will overwrite the previous one, and a debug message will be logged.
+     */
     private void loadAllCsJson() {
         ResourcePatternResolver resolver = new PathMatchingResourcePatternResolver(getClass().getClassLoader());
 

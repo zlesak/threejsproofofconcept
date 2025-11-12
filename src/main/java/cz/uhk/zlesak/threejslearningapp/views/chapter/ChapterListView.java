@@ -57,7 +57,7 @@ public class ChapterListView extends ListingLayout {
 
     /**
      * Called after navigation to this view.
-     * It fetches the list of chapters from the ChapterController and adds them to the vertical layout.
+     * It fetches the list of chapters from the ChapterService and adds them to the vertical layout.
      * If an error occurs during fetching, it logs the error and shows an error notification
      *
      * @param event after navigation event with event details
@@ -70,7 +70,7 @@ public class ChapterListView extends ListingLayout {
     }
 
     /**
-     * Fetches the list of chapters from the ChapterController and populates the vertical layout with ChapterListItemComponents.
+     * Fetches the list of chapters from the ChapterService and populates the vertical layout with ChapterListItemComponents.
      * It also adds a PaginationComponent at the end of the list for navigating through pages of chapters.
      */
     public void listChapters() {
@@ -103,7 +103,7 @@ public class ChapterListView extends ListingLayout {
 
     /**
      * Fetches and displays chapters based on the current filter parameters.
-     * It retrieves the filtered list of chapters from the ChapterController and populates the item list layout with ChapterListItem components.
+     * It retrieves the filtered list of chapters from the ChapterService and populates the item list layout with ChapterListItem components.
      * A Pagination component is added to the pagination layout, although paging of filtered results is not yet supported. TODO
      */
     private void queryFilteredChapters() {
@@ -128,7 +128,6 @@ public class ChapterListView extends ListingLayout {
         filterParameters.setSearchText(event.getValue());
         listChapters();
     }
-
     /**
      * Handles actions to be performed when the view is attached to the UI.
      * It registers a listener for SearchEvent to update the displayed chapters based on search criteria.
@@ -138,6 +137,7 @@ public class ChapterListView extends ListingLayout {
     @Override
     protected void onAttach(AttachEvent attachEvent) {
         super.onAttach(attachEvent);
-        listingEventRegistrations = ComponentUtil.addListener(attachEvent.getUI(), SearchEvent.class, this::showFilteredChapters);
+
+        registrations.add(ComponentUtil.addListener(attachEvent.getUI(), SearchEvent.class, this::showFilteredChapters));
     }
 }

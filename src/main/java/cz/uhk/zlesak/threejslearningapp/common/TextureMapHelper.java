@@ -58,17 +58,17 @@ public abstract class TextureMapHelper {
 
     /**
      * Creates a map of texture file IDs to their corresponding texture stream endpoint URLs.
-     * Uses the provided TextureController to generate the URLs.
+     * Uses the provided textureService to generate the URLs.
      *
      * @param quickTextureEntityList the list of QuickTextureEntity objects
-     * @param textureController      the TextureController used to get the texture stream endpoint URLs
+     * @param textureService      the textureService used to get the texture stream endpoint URLs
      * @return a map where the key is the texture file ID and the value is the texture stream endpoint URL
      * @throws IOException if an I/O error occurs while retrieving the texture stream endpoint URL
      */
-    public static Map<String, String> otherTexturesMap(List<QuickTextureEntity> quickTextureEntityList, TextureService textureController) throws IOException {
+    public static Map<String, String> otherTexturesMap(List<QuickTextureEntity> quickTextureEntityList, TextureService textureService) throws IOException {
         Map<String, String> otherTextures = new HashMap<>();
         for (QuickTextureEntity texture : quickTextureEntityList) {
-            String textureUrl = textureController.getTextureStreamEndpointUrl(texture.getTextureFileId());
+            String textureUrl = textureService.getTextureStreamEndpointUrl(texture.getTextureFileId());
             otherTextures.put(texture.getTextureFileId(), textureUrl);
         }
         return otherTextures;

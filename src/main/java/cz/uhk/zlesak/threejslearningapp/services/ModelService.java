@@ -22,7 +22,7 @@ import java.util.List;
  * Controller for managing 3D models, including uploading and retrieving model files and textures.
  * This class handles the interaction with the model API client to upload models and textures,
  * and provides methods to retrieve model files, names, and base64 representations.
- * It also integrates with the TextureController to manage textures associated with the models as the textures are an integral part of the model data.
+ * It also integrates with the textureService to manage textures associated with the models as the textures are an integral part of the model data.
  *
  * @see TextureService
  */
@@ -30,20 +30,20 @@ import java.util.List;
 @Service
 @Scope("prototype")
 public class ModelService implements IService {
-    private final TextureService textureController;
+    private final TextureService textureService;
     private final ModelApiClient modelApiClient;
     private ModelEntity modelEntity = null;
 
     /**
-     * Constructor for ModelController.
+     * Constructor for ModelService.
      * Initializes controller with dependencies for texture management, model API client, and JSON processing.
      *
-     * @param textureController the controller for managing textures associated with models.
+     * @param textureService the controller for managing textures associated with models.
      * @param modelApiClient    the API client for interacting with model-related endpoints.
      */
     @Autowired
-    public ModelService(TextureService textureController, ModelApiClient modelApiClient) {
-        this.textureController = textureController;
+    public ModelService(TextureService textureService, ModelApiClient modelApiClient) {
+        this.textureService = textureService;
         this.modelApiClient = modelApiClient;
     }
 
@@ -79,7 +79,7 @@ public class ModelService implements IService {
     /**
      * Uploads a 3D model along with its textures and CSV files.
      * This method handles the upload of the model file, main texture, other textures, and CSV files.
-     * It validates the inputs and uses the TextureController to manage texture uploads.
+     * It validates the inputs and uses the textureService to manage texture uploads.
      * If any of the required inputs are empty, it throws an ApplicationContextException.
      *
      * @param modelName                    the name of the model to be uploaded.
@@ -105,7 +105,7 @@ public class ModelService implements IService {
         QuickModelEntity uploadedModel = uploadModel(modelName, modelInputStream);
 
         try {
-            QuickTextureEntity mainTextureQuickFileEntity = textureController.uploadTexture(mainTextureInputStream, true, uploadedModel.getModel().getId(), null);
+            QuickTextureEntity mainTextureQuickFileEntity = textureService.uploadTexture(mainTextureInputStream, true, uploadedModel.getModel().getId(), null);
             uploadedModel.setMainTexture(mainTextureQuickFileEntity);
         } catch (Exception e) {
             log.error("Chyba při nahrávání hlavní textury: {}", e.getMessage(), e);
@@ -113,7 +113,7 @@ public class ModelService implements IService {
         }
 
         try {
-            List<QuickTextureEntity> otherTexturesUploadedList = textureController.uploadOtherTextures(otherTexturesInputStreamList, uploadedModel.getModel().getId(), csvInputStreamList);
+            List<QuickTextureEntity> otherTexturesUploadedList = textureService.uploadOtherTextures(otherTexturesInputStreamList, uploadedModel.getModel().getId(), csvInputStreamList);
             uploadedModel.setOtherTextures(otherTexturesUploadedList);
         } catch (Exception e) {
             log.error("Chyba při nahrávání vedlejších textur: {}", e.getMessage(), e);

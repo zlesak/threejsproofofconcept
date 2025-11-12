@@ -36,7 +36,7 @@ public class ChapterService implements IService {
     private final List<QuickModelEntity> uploadedModels = new ArrayList<>();
 
     /**
-     * Constructor for ChapterController that initializes the ChapterApiClient.
+     * Constructor for ChapterService that initializes the ChapterApiClient.
      *
      * @param chapterApiClient The API client used to interact with chapter-related operations.
      */

@@ -23,7 +23,7 @@ import java.util.Map;
 /**
  * ModelView for displaying a 3D model without the need for the sub-chapter to be present.
  * It is accessible at the route "/model/:modelId?".
- * The model is loaded from the backend using the ModelController.
+ * The model is loaded from the backend using the ModelService.
  */
 @Slf4j
 @Route("model/:modelId?")
@@ -31,22 +31,22 @@ import java.util.Map;
 @Scope("prototype")
 @PermitAll
 public class ModelDetailView extends ModelLayout {
-    private final ModelService modelController;
-    private final TextureService textureController;
+    private final ModelService modelService;
+    private final TextureService textureService;
     private QuickModelEntity quickModelEntity;
 
     /**
      * Constructor for ModelView.
      * Initializes the view with necessary controllers and providers.
      *
-     * @param modelController   controller for handling model-related operations
-     * @param textureController controller for handling texture-related operations
+     * @param modelService   controller for handling model-related operations
+     * @param textureService controller for handling texture-related operations
      */
     @Autowired
-    public ModelDetailView(ModelService modelController, TextureService textureController) {
+    public ModelDetailView(ModelService modelService, TextureService textureService) {
         super();
-        this.modelController = modelController;
-        this.textureController = textureController;
+        this.modelService = modelService;
+        this.textureService = textureService;
     }
 
     /**
@@ -109,17 +109,17 @@ public class ModelDetailView extends ModelLayout {
     @Override
     public void afterNavigation(AfterNavigationEvent event) {
         try {
-            String modelUrl = modelController.getModelFileBeEndpointUrl(quickModelEntity.getModel().getId());
+            String modelUrl = modelService.getModelFileBeEndpointUrl(quickModelEntity.getModel().getId());
             String textureUrl = null;
             if (quickModelEntity.getMainTexture() != null) {
                 modelUploadForm.getIsAdvanced().setValue(true);
-                textureUrl = textureController.getTextureFileBeEndpointUrl(quickModelEntity.getMainTexture().getTextureFileId());
+                textureUrl = textureService.getTextureFileBeEndpointUrl(quickModelEntity.getMainTexture().getTextureFileId());
             }
             modelUploadForm.getModelName().setValue(quickModelEntity.getModel().getName());
             modelDiv.renderer.loadModel(modelUrl, textureUrl, quickModelEntity.getModel().getId());
 
             try {
-                Map<String, String> otherTexturesMap = TextureMapHelper.otherTexturesMap(quickModelEntity.getOtherTextures(), textureController);
+                Map<String, String> otherTexturesMap = TextureMapHelper.otherTexturesMap(quickModelEntity.getOtherTextures(), textureService);
                 modelDiv.renderer.addOtherTextures(otherTexturesMap, quickModelEntity.getModel().getId());
                 modelDiv.modelTextureAreaSelectContainer.initializeData(Map.of(quickModelEntity.getModel().getId(), quickModelEntity));
             } catch (IOException e) {

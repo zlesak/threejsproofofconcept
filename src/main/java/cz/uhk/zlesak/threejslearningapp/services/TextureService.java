@@ -19,7 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * TextureController is responsible for handling texture-related operations such as uploading textures,
+ * TextureService is responsible for handling texture-related operations such as uploading textures,
  * retrieving texture images, and managing texture data.
  * It interacts with the TextureApiClient to perform these operations.
  */
@@ -32,7 +32,7 @@ public class TextureService implements IService {
     private TextureEntity textureEntity = null;
 
     /**
-     * Constructor for TextureController.
+     * Constructor for TextureService.
      * Initializes the controller with the provided TextureApiClient and ObjectMapper.
      *
      * @param textureApiClient client for interacting with the texture API

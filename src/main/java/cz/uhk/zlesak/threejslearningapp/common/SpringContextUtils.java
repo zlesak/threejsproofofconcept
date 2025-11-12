@@ -14,11 +14,22 @@ import org.springframework.stereotype.Component;
 public class SpringContextUtils implements ApplicationContextAware {
     private static ApplicationContext context;
 
+
+    /**
+     * Sets the ApplicationContext. This method is called by Spring during application startup.
+      * @param applicationContext the ApplicationContext to be set
+     */
     @Override
     public void setApplicationContext(@NotNull ApplicationContext applicationContext) {
         context = applicationContext;
     }
 
+    /**
+     * Retrieves a bean from the Spring ApplicationContext by its class type.
+     * @param beanClass the class type of the bean to be retrieved
+     * @return the bean instance of the specified class type
+     * @param <T> the type of the bean
+     */
     public static <T> T getBean(Class<T> beanClass) {
         return context.getBean(beanClass);
     }

@@ -53,47 +53,85 @@ public class InputStreamMultipartFile implements MultipartFile {
         return fileName;
     }
 
+    /**
+     * Display name getter
+     * @return display name
+     */
     @NotNull
     public String getDisplayName() {
         return displayName;
     }
 
+    /**
+     * Display name setter
+     * @param displayName new display name
+     */
+
     public void setDisplayName(String displayName) {
         this.displayName = displayName != null ? displayName : fileName;
     }
 
+    /**
+     * Original filename getter
+     * @return original filename
+     */
     @Override
     public String getOriginalFilename() {
         return fileName;
     }
 
+    /**
+     * Content type getter
+     * @return content type
+     */
     @Override
     public String getContentType() {
         return "application/octet-stream";
     }
 
+    /**
+     * Checks if the file is empty
+     * @return true if empty, false otherwise
+     */
     @Override
     public boolean isEmpty() {
         return content == null || content.length == 0;
     }
 
+    /**
+     * Size getter
+     * @return size of the file
+     */
     @Override
     public long getSize() {
         return content.length;
     }
 
+    /**
+     * Gets the bytes of the file
+     * @return byte array of the file content
+     */
     @NotNull
     @Override
     public byte[] getBytes() {
         return content.clone();
     }
 
+    /**
+     * Gets the InputStream of the file
+     * @return InputStream of the file content
+     */
     @NotNull
     @Override
     public InputStream getInputStream() {
         return new ByteArrayInputStream(content);
     }
 
+    /**
+     * Transfers the file to the given destination file
+     * @param dest the destination file
+     * @throws IllegalStateException if the transfer fails
+     */
     @Override
     public void transferTo(@NotNull File dest) throws IllegalStateException {
         throw new UnsupportedOperationException("Not supported.");

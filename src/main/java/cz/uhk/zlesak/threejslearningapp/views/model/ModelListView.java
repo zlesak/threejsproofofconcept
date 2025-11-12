@@ -35,7 +35,7 @@ import java.util.function.Consumer;
 @Tag("models-listing")
 @PermitAll
 public class ModelListView extends ListingLayout {
-    private final ModelService modelController;
+    private final ModelService modelService;
     @Setter
     private Consumer<QuickModelEntity> modelSelectedListener;
 
@@ -48,7 +48,7 @@ public class ModelListView extends ListingLayout {
      */
     public ModelListView() {
         filterParameters = new FilterParameters(1, 6, "Name", SortDirectionEnum.ASC, "");
-        this.modelController = SpringContextUtils.getBean(ModelService.class);
+        this.modelService = SpringContextUtils.getBean(ModelService.class);
         filter.getSearchField().setEnabled(false);
     }
 
@@ -77,7 +77,7 @@ public class ModelListView extends ListingLayout {
 
     /**
      * Lists the model components in the view.
-     * It retrieves the list of models from the ModelController and creates a ModelListItemComponent for each model.
+     * It retrieves the list of models from the ModelService and creates a ModelListItemComponent for each model.
      * Based on listView parameter, it displays the item based on the specified view format.
      *
      * @param listView boolean indicating whether to display the models in a list view format
@@ -85,7 +85,7 @@ public class ModelListView extends ListingLayout {
     public void listModels(boolean listView) {
         itemListLayout.removeAll();
         paginationLayout.removeAll();
-        PageResult<QuickFile> quickFilePageResult = modelController.getModels(filterParameters);
+        PageResult<QuickFile> quickFilePageResult = modelService.getModels(filterParameters);
 
         List<QuickModelEntity> quickModelEntities = quickFilePageResult.elements().stream()
                 .filter(f -> f instanceof QuickModelEntity)
