@@ -6,10 +6,10 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import cz.uhk.zlesak.threejslearningapp.api.clients.ChapterApiClient;
 import cz.uhk.zlesak.threejslearningapp.components.notifications.ErrorNotification;
 import cz.uhk.zlesak.threejslearningapp.domain.chapter.ChapterEntity;
-import cz.uhk.zlesak.threejslearningapp.domain.model.QuickModelEntity;
-import cz.uhk.zlesak.threejslearningapp.domain.common.PageResult;
-import cz.uhk.zlesak.threejslearningapp.domain.common.SortDirectionEnum;
 import cz.uhk.zlesak.threejslearningapp.domain.chapter.SubChapterForSelect;
+import cz.uhk.zlesak.threejslearningapp.domain.common.FilterParameters;
+import cz.uhk.zlesak.threejslearningapp.domain.common.PageResult;
+import cz.uhk.zlesak.threejslearningapp.domain.model.QuickModelEntity;
 import elemental.json.Json;
 import elemental.json.JsonArray;
 import elemental.json.JsonObject;
@@ -381,15 +381,17 @@ public class ChapterService implements IService {
      * Retrieves a list of all chapters from the backend service.
      * This method uses the ChapterApiClient to fetch the list of chapters.
      * If there is an error during the retrieval, it throws an Exception with details about the error.
+     * @param filterParameters the filtering parameters including page number, page size, order by, and sort direction
      *
      * @return a list of ChapterEntity objects representing all chapters
      * @throws RuntimeException if there is an error during the retrieval of chapters
      */
-    public PageResult<ChapterEntity> getChapters(int page, int limit, String orderBy, SortDirectionEnum sortDirection) throws RuntimeException {
+    public PageResult<ChapterEntity> getChapters(FilterParameters filterParameters) throws RuntimeException {
+
         try {
-            return chapterApiClient.getChapters(page, limit, orderBy, sortDirection);
+            return chapterApiClient.getChapters(filterParameters.getPageNumber() - 1, filterParameters.getPageSize(), filterParameters.getOrderBy(), filterParameters.getSortDirection());
         } catch (Exception e) {
-            log.error("Chyba při získávání stránkování kapitol pro page {}, limit {}, error message: {}", page, limit, e.getMessage(), e);
+            log.error("Chyba při získávání stránkování kapitol pro page {}, limit {}, error message: {}", filterParameters.getPageNumber(), filterParameters.getPageSize(), e.getMessage(), e);
             throw new RuntimeException("Chyba při získávání kapitol: " + e.getMessage(), e);
         }
     }

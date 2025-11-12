@@ -139,6 +139,9 @@ public class ChapterApiClient implements IChapterApiClient {
      *
      * @param limit Number of chapters to retrieve per page
      * @param page  Page number to retrieve
+     * @param orderBy Field to order the chapters by
+     * @param sortDirection Direction of sorting (ASC or DESC)
+     *
      * @return Returns an empty list of ChapterEntity
      * @throws Exception Throws an exception if there is an error during the API call
      */

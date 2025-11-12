@@ -1,18 +1,17 @@
 package cz.uhk.zlesak.threejslearningapp.views.chapter;
 
-import com.vaadin.flow.component.*;
+import com.vaadin.flow.component.AttachEvent;
+import com.vaadin.flow.component.ComponentUtil;
+import com.vaadin.flow.component.Tag;
+import com.vaadin.flow.component.UI;
 import com.vaadin.flow.router.AfterNavigationEvent;
-import com.vaadin.flow.router.BeforeEnterEvent;
-import com.vaadin.flow.router.BeforeLeaveEvent;
 import com.vaadin.flow.router.Route;
-import com.vaadin.flow.shared.Registration;
-import cz.uhk.zlesak.threejslearningapp.components.lists.ChapterListItem;
 import cz.uhk.zlesak.threejslearningapp.components.common.Pagination;
-import cz.uhk.zlesak.threejslearningapp.services.ChapterService;
-import cz.uhk.zlesak.threejslearningapp.events.threejs.ThreeJsSearchEvent;
+import cz.uhk.zlesak.threejslearningapp.components.lists.ChapterListItem;
 import cz.uhk.zlesak.threejslearningapp.domain.chapter.ChapterEntity;
 import cz.uhk.zlesak.threejslearningapp.domain.common.PageResult;
-import cz.uhk.zlesak.threejslearningapp.domain.common.SortDirectionEnum;
+import cz.uhk.zlesak.threejslearningapp.events.threejs.SearchEvent;
+import cz.uhk.zlesak.threejslearningapp.services.ChapterService;
 import cz.uhk.zlesak.threejslearningapp.views.layouts.ListingLayout;
 import jakarta.annotation.security.PermitAll;
 import lombok.extern.slf4j.Slf4j;
@@ -31,20 +30,18 @@ import java.util.List;
 @Tag("chapters-listing")
 @PermitAll
 public class ChapterListView extends ListingLayout {
-    private final ChapterService chapterController;
-
-    private Registration chapterListingViewEventRegistration;
+    private final ChapterService chapterService;
 
 
     /**
      * Constructor for ChapterListView.
      * It initializes the view with the necessary controllers and internationalization provider.
      *
-     * @param chapterController controller for handling chapter-related operations
+     * @param chapterService controller for handling chapter-related operations
      */
     @Autowired
-    public ChapterListView(ChapterService chapterController) {
-        this.chapterController = chapterController;
+    public ChapterListView(ChapterService chapterService) {
+        this.chapterService = chapterService;
     }
 
     /**
@@ -55,11 +52,7 @@ public class ChapterListView extends ListingLayout {
      */
     @Override
     public String getPageTitle() {
-        try {
-            return text("page.title.chapterListView");
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+        return text("page.title.chapterListView");
     }
 
     /**
@@ -72,106 +65,79 @@ public class ChapterListView extends ListingLayout {
     @Override
     public void afterNavigation(AfterNavigationEvent event) {
         afterNavigationAction(event);
-        if(this.searchText != null && !this.searchText.isBlank()) {
-            filter.setSearchFieldValue(this.searchText);
-            queryFilteredChapters(this.searchText);
-            this.searchText = null;
-        }else {
-            listChapters(this.page, this.pageSize, this.orderBy, this.sortDirection);
-        }
-    }
-
-    /**
-     * Called before leaving this view.
-     * Currently, it does not perform any specific actions but can be extended in the future if needed.
-     *
-     * @param event before navigation event with event details
-     */
-    @Override
-    public void beforeEnter(BeforeEnterEvent event) {
-
-    }
-
-    /**
-     * Called before leaving this view.
-     * Currently, it does not perform any specific actions but can be extended in the future if needed.
-     *
-     * @param event before navigation event with event details
-     */
-    @Override
-    public void beforeLeave(BeforeLeaveEvent event) {
-
+        filter.setSearchFieldValue(filterParameters.getSearchText());
+        listChapters();
     }
 
     /**
      * Fetches the list of chapters from the ChapterController and populates the vertical layout with ChapterListItemComponents.
      * It also adds a PaginationComponent at the end of the list for navigating through pages of chapters.
-     *
-     * @param page  current page number
-     * @param limit number of chapters to display per page
      */
-    public void listChapters(int page, int limit, String orderBy, SortDirectionEnum sortDirection) {
-        clearList();
+    public void listChapters() {
+        itemListLayout.removeAll();
+        paginationLayout.removeAll();
 
-        UI.getCurrent().getPage().getHistory().replaceState(null, "chapters?page=" + page + "&limit=" + limit + "&orderBy=" + orderBy + "&sortDirection=" + sortDirection);
+        UI.getCurrent().getPage().getHistory().replaceState(null, filterParameters.getLocationQueryParams("chapters"));
 
-        PageResult<ChapterEntity> chapterEntityPageResult = chapterController.getChapters(page - 1, limit, orderBy, sortDirection);
+        if (filterParameters.getSearchText() != null && !filterParameters.getSearchText().isBlank()) {
+            queryFilteredChapters();
+        } else {
 
-        List<ChapterEntity> chapterEntities = chapterEntityPageResult.elements().stream().toList();
+            PageResult<ChapterEntity> chapterEntityPageResult = chapterService.getChapters(filterParameters);
 
-        for (ChapterEntity chapter : chapterEntities) {
-            ChapterListItem itemComponent = new ChapterListItem(chapter);
-            itemListLayout.add(itemComponent);
+            List<ChapterEntity> chapterEntities = chapterEntityPageResult.elements().stream().toList();
+
+            for (ChapterEntity chapter : chapterEntities) {
+                ChapterListItem itemComponent = new ChapterListItem(chapter);
+                itemListLayout.add(itemComponent);
+            }
+            Pagination pagination = new Pagination(filterParameters.getPageNumber(), filterParameters.getPageSize(), chapterEntityPageResult.total(),
+                    p -> {
+                        filterParameters.setPageNumber(p);
+                        UI.getCurrent().navigate(filterParameters.getLocationQueryParams("chapters"));
+                    }
+            );
+            paginationLayout.add(pagination);
         }
-        Pagination pagination = new Pagination(page, limit, chapterEntityPageResult.total(), p -> UI.getCurrent().navigate("chapters?page=" + p + "&limit=" + limit));
-        paginationLayout.add(pagination);
     }
 
     /**
-     * Clears all components from the vertical layout.
-     * This method is used to reset the list before populating it with new components.
+     * Fetches and displays chapters based on the current filter parameters.
+     * It retrieves the filtered list of chapters from the ChapterController and populates the item list layout with ChapterListItem components.
+     * A Pagination component is added to the pagination layout, although paging of filtered results is not yet supported. TODO
      */
-    private void clearList() {
-        itemListLayout.removeAll();
-        paginationLayout.removeAll();
-    }
-
-    private void showFilteredChapters(ThreeJsSearchEvent event) {
-        if (event.getValue() == null || event.getValue().isBlank()) {
-            listChapters(this.page, this.pageSize, event.getOrderBy(), event.getSortDirection());
-            return;
-        }
-        queryFilteredChapters(event.getValue());
-    }
-
-    private void queryFilteredChapters(String keyword) {
-
-        UI.getCurrent().getPage().getHistory().replaceState(null, "chapters?searchedText=" + keyword);
-
-        List<ChapterEntity> filteredChapters = chapterController.getChapters(keyword);
-
-        clearList();
+    private void queryFilteredChapters() {
+        List<ChapterEntity> filteredChapters = chapterService.getChapters(filterParameters.getSearchText());
 
         for (ChapterEntity chapter : filteredChapters) {
             ChapterListItem itemComponent = new ChapterListItem(chapter);
             itemListLayout.add(itemComponent);
         }
-        Pagination pagination = new Pagination(1, filteredChapters.size(), filteredChapters.size(), null);
+        Pagination pagination = new Pagination(1, filteredChapters.size(), filteredChapters.size(), null); //TODO BE needs to support paging of filtered results, otherwise pagination is pointless here
         paginationLayout.add(pagination);
     }
 
+    /**
+     * Displays chapters filtered based on the search event parameters.
+     *
+     * @param event the SearchEvent containing filter parameters
+     */
+    private void showFilteredChapters(SearchEvent event) {
+        filterParameters.setOrderBy(event.getOrderBy());
+        filterParameters.setSortDirection(event.getSortDirection());
+        filterParameters.setSearchText(event.getValue());
+        listChapters();
+    }
+
+    /**
+     * Handles actions to be performed when the view is attached to the UI.
+     * It registers a listener for SearchEvent to update the displayed chapters based on search criteria.
+     *
+     * @param attachEvent the AttachEvent containing attachment details
+     */
     @Override
     protected void onAttach(AttachEvent attachEvent) {
         super.onAttach(attachEvent);
-        chapterListingViewEventRegistration = ComponentUtil.addListener(attachEvent.getUI(), ThreeJsSearchEvent.class, this::showFilteredChapters);
-    }
-
-    @Override
-    protected void onDetach(DetachEvent detachEvent) {
-        super.onDetach(detachEvent);
-        if (chapterListingViewEventRegistration != null) {
-            chapterListingViewEventRegistration.remove();
-            chapterListingViewEventRegistration = null;
-        }
+        listingEventRegistrations = ComponentUtil.addListener(attachEvent.getUI(), SearchEvent.class, this::showFilteredChapters);
     }
 }

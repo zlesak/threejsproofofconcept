@@ -4,13 +4,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import cz.uhk.zlesak.threejslearningapp.api.contracts.IApiClient;
 import cz.uhk.zlesak.threejslearningapp.api.contracts.IFileApiClient;
 import cz.uhk.zlesak.threejslearningapp.common.InputStreamMultipartFile;
+import cz.uhk.zlesak.threejslearningapp.domain.common.*;
 import cz.uhk.zlesak.threejslearningapp.exceptions.ApiCallException;
-import cz.uhk.zlesak.threejslearningapp.domain.common.Entity;
-import cz.uhk.zlesak.threejslearningapp.domain.common.IEntity;
 import cz.uhk.zlesak.threejslearningapp.domain.texture.TextureEntity;
-import cz.uhk.zlesak.threejslearningapp.domain.common.QuickFile;
 import cz.uhk.zlesak.threejslearningapp.domain.texture.QuickTextureEntity;
-import cz.uhk.zlesak.threejslearningapp.domain.common.PageResult;
 import org.apache.commons.lang3.NotImplementedException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
@@ -103,10 +100,13 @@ public class TextureApiClient implements IFileApiClient {
      *
      * @param page  page number.
      * @param limit number of items per page.
+     * @param orderBy field to order by.
+     * @param sortDirection direction of sorting.
+     *
      * @return an empty list as this method is not implemented for textures.
      */
     @Override
-    public PageResult<QuickFile> getFileEntities(int page, int limit) {
+    public PageResult<QuickFile> getFileEntities(int page, int limit, String orderBy, SortDirectionEnum sortDirection) {
         throw new NotImplementedException();
     }
 

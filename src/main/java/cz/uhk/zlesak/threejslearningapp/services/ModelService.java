@@ -3,6 +3,7 @@ package cz.uhk.zlesak.threejslearningapp.services;
 import cz.uhk.zlesak.threejslearningapp.api.clients.ModelApiClient;
 import cz.uhk.zlesak.threejslearningapp.common.InputStreamMultipartFile;
 import cz.uhk.zlesak.threejslearningapp.domain.common.Entity;
+import cz.uhk.zlesak.threejslearningapp.domain.common.FilterParameters;
 import cz.uhk.zlesak.threejslearningapp.domain.model.ModelEntity;
 import cz.uhk.zlesak.threejslearningapp.domain.common.QuickFile;
 import cz.uhk.zlesak.threejslearningapp.domain.model.QuickModelEntity;
@@ -142,14 +143,15 @@ public class ModelService implements IService {
      * Retrieves models saved in the BE.
      * Currently, it retrieves only the first 10 models due to pagination.
      *
+     * @param filterParameters the filtering and pagination parameters.
      * @return List of QuickModelEntity representing the models.
      * @throws RuntimeException if there is an error during the retrieval of the models.
      */
-    public PageResult<QuickFile> getModels(int page, int limit) throws RuntimeException {
+    public PageResult<QuickFile> getModels(FilterParameters filterParameters) throws RuntimeException {
         try {
-            return modelApiClient.getFileEntities(page, limit);
+            return modelApiClient.getFileEntities(filterParameters.getPageNumber() - 1, filterParameters.getPageSize(), filterParameters.getOrderBy(), filterParameters.getSortDirection());
         } catch (Exception e) {
-            log.error("Chyba při získávání stránkování modelů pro page {}, limit {}, error message: {}", page, limit, e.getMessage(), e);
+            log.error("Chyba při získávání stránkování modelů pro page {}, limit {}, error message: {}", filterParameters.getPageNumber(), filterParameters.getPageSize(), e.getMessage(), e);
             throw new RuntimeException("Chyba při získávání modelu: " + e.getMessage(), e);
         }
     }

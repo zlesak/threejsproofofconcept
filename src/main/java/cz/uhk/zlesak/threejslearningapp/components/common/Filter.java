@@ -13,6 +13,7 @@ import cz.uhk.zlesak.threejslearningapp.events.threejs.SearchEvent;
 import cz.uhk.zlesak.threejslearningapp.i18n.I18nAware;
 import cz.uhk.zlesak.threejslearningapp.domain.common.Entity;
 import cz.uhk.zlesak.threejslearningapp.domain.common.SortDirectionEnum;
+import lombok.Getter;
 
 import java.lang.reflect.Field;
 import java.time.Instant;
@@ -25,7 +26,7 @@ import java.util.Set;
  * FilterComponent provides filtering functionality with a search field and a search button.
  */
 public class Filter extends HorizontalLayout implements I18nAware {
-
+    @Getter
     private final SearchTextField searchField;
     private final Select<SortDirectionEnum> searchDirectionSelect;
     private final Select<String> orderBySelect;
@@ -43,7 +44,7 @@ public class Filter extends HorizontalLayout implements I18nAware {
         setPadding(false);
         setAlignItems(FlexComponent.Alignment.START);
 
-        this.searchField = getSearchField();
+        this.searchField = createSearchField();
         this.searchDirectionSelect = getSortDirectionSelect();
         this.orderBySelect = getOrderBySelect();
         this.createButton = getSearchButton();
@@ -56,7 +57,7 @@ public class Filter extends HorizontalLayout implements I18nAware {
      *
      * @return the configured search text field
      */
-    private SearchTextField getSearchField() {
+    private SearchTextField createSearchField() {
         SearchTextField searchField = new SearchTextField(text("filter.search.placeholder"));
         searchField.setWidthFull();
         searchField.setClearButtonVisible(true);

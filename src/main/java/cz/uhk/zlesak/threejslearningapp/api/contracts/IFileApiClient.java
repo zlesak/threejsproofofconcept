@@ -1,10 +1,7 @@
 package cz.uhk.zlesak.threejslearningapp.api.contracts;
 
 import cz.uhk.zlesak.threejslearningapp.common.InputStreamMultipartFile;
-import cz.uhk.zlesak.threejslearningapp.domain.common.IEntity;
-import cz.uhk.zlesak.threejslearningapp.domain.common.Entity;
-import cz.uhk.zlesak.threejslearningapp.domain.common.QuickFile;
-import cz.uhk.zlesak.threejslearningapp.domain.common.PageResult;
+import cz.uhk.zlesak.threejslearningapp.domain.common.*;
 
 import java.util.List;
 
@@ -17,7 +14,7 @@ import java.util.List;
 public interface IFileApiClient extends IApiClient {
     Entity getFileEntityById(String fileEntityId) throws Exception;
     List<Entity> getFileEntitiesByAuthor(String authorId) throws Exception;
-    PageResult<QuickFile> getFileEntities(int page, int limit) throws Exception;
+    PageResult<QuickFile> getFileEntities(int page, int limit, String orderBy, SortDirectionEnum sortDirection) throws Exception;
     QuickFile uploadFileEntity(InputStreamMultipartFile inputStream, IEntity entity) throws Exception;
     void deleteFileEntity(String modelId) throws Exception;
 }

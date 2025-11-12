@@ -4,13 +4,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import cz.uhk.zlesak.threejslearningapp.api.contracts.IApiClient;
 import cz.uhk.zlesak.threejslearningapp.api.contracts.IFileApiClient;
 import cz.uhk.zlesak.threejslearningapp.common.InputStreamMultipartFile;
+import cz.uhk.zlesak.threejslearningapp.domain.common.*;
 import cz.uhk.zlesak.threejslearningapp.exceptions.ApiCallException;
-import cz.uhk.zlesak.threejslearningapp.domain.common.Entity;
-import cz.uhk.zlesak.threejslearningapp.domain.common.IEntity;
 import cz.uhk.zlesak.threejslearningapp.domain.model.ModelEntity;
-import cz.uhk.zlesak.threejslearningapp.domain.common.QuickFile;
 import cz.uhk.zlesak.threejslearningapp.domain.model.QuickModelEntity;
-import cz.uhk.zlesak.threejslearningapp.domain.common.PageResult;
 import org.apache.commons.lang3.NotImplementedException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
@@ -109,12 +106,15 @@ public class ModelApiClient implements IFileApiClient {
      *
      * @param page  the page number to retrieve
      * @param limit the maximum number of items per page
+     * @param orderBy Field to order the chapters by
+     * @param sortDirection Direction of sorting (ASC or DESC)
+     *
      * @return a list of QuickFile objects representing the model entities
      * @throws Exception if there is an error during the retrieval process or if the response is not successful.
      */
     @Override
-    public PageResult<QuickFile> getFileEntities(int page, int limit) throws Exception {
-        String url = baseUrl + "list-by?limit=" + limit + "&page=" + page;
+    public PageResult<QuickFile> getFileEntities(int page, int limit, String orderBy, SortDirectionEnum sortDirection) throws Exception {
+        String url = baseUrl + "list-by?limit=" + limit + "&page=" + page + "&orderBy=" + orderBy + "&sortDirection=" + sortDirection.name();
         try {
             ResponseEntity<String> response = restTemplate.exchange(
                     url,
