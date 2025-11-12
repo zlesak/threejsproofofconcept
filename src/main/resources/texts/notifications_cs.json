@@ -1,4 +1,5 @@
 {
   "notification.uploadSuccess" : "Nahrávání bylo úspěšné: ",
-  "notification.uploadError": "Nastala chyba při nahrávání: "
+  "notification.uploadError": "Nastala chyba při nahrávání: ",
+  "notification.cookieConsent": "Tato stránka používá cookies pro uložení zvoleného režimu zobrazení."
 }

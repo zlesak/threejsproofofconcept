@@ -4,12 +4,8 @@ import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.applayout.AppLayout;
 import com.vaadin.flow.component.avatar.Avatar;
-import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.html.*;
 import com.vaadin.flow.component.icon.VaadinIcon;
-import com.vaadin.flow.component.notification.Notification;
-import com.vaadin.flow.component.orderedlayout.FlexComponent;
-import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.router.Layout;
 import com.vaadin.flow.router.RouterLink;
 import com.vaadin.flow.server.VaadinService;
@@ -20,6 +16,7 @@ import cz.uhk.zlesak.threejslearningapp.components.buttons.LoginButton;
 import cz.uhk.zlesak.threejslearningapp.components.buttons.LogoutButton;
 import cz.uhk.zlesak.threejslearningapp.components.buttons.ThemeModeToggleButton;
 import cz.uhk.zlesak.threejslearningapp.components.lists.AvatarItem;
+import cz.uhk.zlesak.threejslearningapp.components.notifications.CookiesNotification;
 import cz.uhk.zlesak.threejslearningapp.views.MainPageView;
 import cz.uhk.zlesak.threejslearningapp.views.chapter.ChapterListView;
 import cz.uhk.zlesak.threejslearningapp.views.chapter.CreateChapterView;
@@ -136,24 +133,7 @@ public class MainLayout extends AppLayout {
 
 
     private void showCookieNotification() {
-        Span message = new Span("Tato stránka používá cookies pro uložení zvoleného režimu zobrazení.");
-
-        Notification notification = new Notification();
-        notification.setPosition(Notification.Position.BOTTOM_CENTER);
-        notification.setDuration(0);
-
-        Button acceptButton = new Button("Rozumím", e -> {
-            UI.getCurrent().getPage().executeJs(
-                    "document.cookie = 'cookieConsent=accepted; path=/; max-age=31536000';"
-            );
-            notification.close();
-        });
-
-        HorizontalLayout layout = new HorizontalLayout(message, acceptButton);
-        layout.setAlignItems(FlexComponent.Alignment.CENTER);
-        layout.setSpacing(true);
-
-        notification.add(layout);
+        CookiesNotification notification = new CookiesNotification();
         notification.open();
     }
 

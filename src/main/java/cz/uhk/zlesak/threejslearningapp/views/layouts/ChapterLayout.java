@@ -100,6 +100,10 @@ public abstract class ChapterLayout extends Composite<VerticalLayout> implements
         );
     }
 
+    /**
+     * Sets up the model div with event listeners and initializes texture selects.
+     * @param quickModelEntityMap a map of model IDs to QuickModelEntity objects used for initialization
+     */
     protected void setupModelDiv(Map<String, QuickModelEntity> quickModelEntityMap) {
         editorjs.addModelTextureColorAreaClickListener((modelId, textureId, hexColor, text) -> {
             modelDiv.modelTextureAreaSelectContainer.getModelListingSelect().setSelectedModelById(modelId);
