@@ -1,21 +1,19 @@
 package cz.uhk.zlesak.threejslearningapp.views.chapter;
 
 import com.vaadin.flow.component.*;
-import com.vaadin.flow.router.AfterNavigationEvent;
-import com.vaadin.flow.router.BeforeEnterEvent;
 import com.vaadin.flow.router.BeforeLeaveEvent;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.shared.Registration;
+import cz.uhk.zlesak.threejslearningapp.common.TextureMapHelper;
 import cz.uhk.zlesak.threejslearningapp.components.dialogs.BeforeLeaveActionDialog;
 import cz.uhk.zlesak.threejslearningapp.components.forms.CreateChapterForm;
 import cz.uhk.zlesak.threejslearningapp.components.notifications.ErrorNotification;
+import cz.uhk.zlesak.threejslearningapp.domain.model.QuickModelEntity;
+import cz.uhk.zlesak.threejslearningapp.domain.texture.QuickTextureEntity;
+import cz.uhk.zlesak.threejslearningapp.events.chapter.CreateChapterEvent;
 import cz.uhk.zlesak.threejslearningapp.services.ChapterService;
 import cz.uhk.zlesak.threejslearningapp.services.ModelService;
 import cz.uhk.zlesak.threejslearningapp.services.TextureService;
-import cz.uhk.zlesak.threejslearningapp.events.chapter.CreateChapterEvent;
-import cz.uhk.zlesak.threejslearningapp.domain.model.QuickModelEntity;
-import cz.uhk.zlesak.threejslearningapp.domain.texture.QuickTextureEntity;
-import cz.uhk.zlesak.threejslearningapp.common.TextureMapHelper;
 import cz.uhk.zlesak.threejslearningapp.views.layouts.ChapterLayout;
 import jakarta.annotation.security.RolesAllowed;
 import lombok.extern.slf4j.Slf4j;
@@ -30,8 +28,8 @@ import java.util.Map;
 
 /**
  * CreateChapterView for creating a new chapter.
- * It is accessible at the route "/createChapter".
- * The view allows users to input chapter details and create a new chapter in the system.
+ * Accessible at the route "/createChapter".
+ * Allows admin users to create chapters with content and associated 3D models.
  */
 @Slf4j
 @Route("createChapter")
@@ -39,186 +37,319 @@ import java.util.Map;
 @Scope("prototype")
 @RolesAllowed(value = "ADMIN")
 public class CreateChapterView extends ChapterLayout {
-    private final TextureService textureController;
-    private final ModelService modelController;
-    private final ChapterService chapterController;
+    private final TextureService textureService;
+    private final ModelService modelService;
+    private final ChapterService chapterService;
     private boolean skipBeforeLeaveDialog = false;
     private Registration createChapterEventRegistration;
 
     /**
      * Constructor for CreateChapterView.
-     * Initializes the view with necessary controllers and providers.
+     * Initializes the view with necessary services for creating chapters.
      *
-     * @param chapterController controller for handling chapter-related operations
-     * @param modelController   controller for handling model-related operations
-     * @param textureController controller for handling texture-related operations
+     * @param chapterService service for handling chapter-related operations
+     * @param modelService   service for handling model-related operations
+     * @param textureService service for handling texture-related operations
      */
     @Autowired
-    public CreateChapterView(ChapterService chapterController, ModelService modelController, TextureService textureController) {
+    public CreateChapterView(ChapterService chapterService, ModelService modelService, TextureService textureService) {
         super(true);
 
-        this.modelController = modelController;
-        this.textureController = textureController;
-        this.chapterController = chapterController;
+        this.modelService = modelService;
+        this.textureService = textureService;
+        this.chapterService = chapterService;
 
+        initializeView();
+    }
+
+    /**
+     * Initializes the view components and sets up event listeners.
+     */
+    private void initializeView() {
+        configureVisibility();
+        setupChapterForm();
+        setupModelSelectionHandler();
+    }
+
+    /**
+     * Configures visibility of inherited components.
+     */
+    private void configureVisibility() {
         chapterSelect.setVisible(false);
         searchTextField.setVisible(false);
         navigationContentLayout.setVisible(false);
         editorjs.toggleReadOnlyMode(false);
+    }
 
-        CreateChapterForm chapterContentButtons = new CreateChapterForm(editorjs, mdEditor);
-
+    /**
+     * Sets up the chapter creation form.
+     */
+    private void setupChapterForm() {
+        CreateChapterForm createChapterForm = new CreateChapterForm(editorjs, mdEditor);
+        chapterContent.add(createChapterForm);
         secondaryNavigation.init(editorjs);
+    }
 
+    /**
+     * Sets up the model selection handler.
+     * When a model is selected, loads it into the renderer.
+     */
+    private void setupModelSelectionHandler() {
         secondaryNavigation.getModelsScroller().setModelSelectedConsumer(quickModelEntity -> {
             try {
-                rendererSelectsAndEditorPreparation(quickModelEntity);
+                loadModelsIntoRenderer(quickModelEntity);
             } catch (IOException e) {
-                log.error("Chyba při načítání modelu pro renderer: {}", e.getMessage(), e);
-                new ErrorNotification("Chyba při načítání modelu: " + e.getMessage(), 5000);
+                handleModelLoadError(e);
             }
         });
-
-        chapterContent.add(chapterContentButtons);
     }
 
     /**
-     * Handles actions before entering the view.
-     * Currently, no specific actions are defined.
+     * Called before leaving the view.
+     * Shows a confirmation dialog if there are unsaved changes.
+     * Disposes of the renderer to free up memory.
      *
-     * @param event before navigation event with event details
-     */
-    @Override
-    public void beforeEnter(BeforeEnterEvent event) {
-
-    }
-
-    /**
-     * Handles actions before leaving the view.
-     * If skipBeforeLeaveDialog is false, it shows a confirmation dialog to the user.
-     * If the user confirms, they can leave the view; otherwise, they stay on the current view.
-     * Handy for preventing accidental navigation away from unsaved changes.
-     *
-     * @param event before navigation event with event details
+     * @param event before leave event with event details
      */
     @Override
     public void beforeLeave(BeforeLeaveEvent event) {
         if (skipBeforeLeaveDialog) {
-            BeforeLeaveEvent.ContinueNavigationAction postponed = event.postpone();
-            var ui = event.getUI();
-            if (modelDiv.renderer != null) {
-                modelDiv.renderer.dispose(() -> ui.access(postponed::proceed));
-            } else {
-                postponed.proceed();
-            }
+            disposeRendererAndProceed(event);
             return;
         }
 
-        BeforeLeaveActionDialog.leave(event, postponed -> {
-            var ui = event.getUI();
-            if (modelDiv.renderer != null) {
-                modelDiv.renderer.dispose(() -> ui.access(postponed::proceed));
-            } else {
-                postponed.proceed();
-            }
-        });
+        BeforeLeaveActionDialog.leave(event, this::disposeRendererAndProceed);
+    }
+
+    /**
+     * Disposes of the renderer and proceeds with navigation.
+     *
+     * @param event the before leave event
+     */
+    private void disposeRendererAndProceed(BeforeLeaveEvent event) {
+        BeforeLeaveEvent.ContinueNavigationAction postponed = event.postpone();
+        disposeRendererAndProceed(postponed);
+    }
+
+    /**
+     * Disposes of the renderer and proceeds with navigation.
+     *
+     * @param postponed the postponed navigation action
+     */
+    private void disposeRendererAndProceed(BeforeLeaveEvent.ContinueNavigationAction postponed) {
+        var ui = UI.getCurrent();
+        if (modelDiv.renderer != null) {
+            modelDiv.renderer.dispose(() -> ui.access(postponed::proceed));
+        } else {
+            postponed.proceed();
+        }
     }
 
     /**
      * Provides the title for the page.
-     * The title is fetched using the i18NProvider to support localization.
      *
-     * @return the localized title of the page
+     * @return the localized page title
      */
     @Override
     public String getPageTitle() {
-        try {
-            return text("page.title.createChapterView");
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+        return text("page.title.createChapterView");
     }
 
     /**
-     * Handles actions after navigation to the view.
-     * Currently, no specific actions are defined.
+     * Loads models into the renderer and prepares editor texture area selects.
      *
-     * @param event after navigation event with event details
+     * @param quickModelEntityMap map of model entities to be loaded
+     * @throws IOException if there is an error loading model or texture streams
      */
-    @Override
-    public void afterNavigation(AfterNavigationEvent event) {
-    }
-
-    /**
-     * Load models into the renderer and prepare editor texture area selects.
-     * @param quickModelEntityMap Map of QuickModelEntity objects to be loaded into the renderer and prepared for editor texture area selects.
-     * @throws IOException if there is an error loading model or texture streams.
-     */
-    private void rendererSelectsAndEditorPreparation(Map<String, QuickModelEntity> quickModelEntityMap) throws IOException {
+    private void loadModelsIntoRenderer(Map<String, QuickModelEntity> quickModelEntityMap) throws IOException {
         for (QuickModelEntity quickModelEntity : quickModelEntityMap.values()) {
-            String modelUrl = modelController.getModelStreamEndpoint(quickModelEntity.getModel().getId(), quickModelEntity.getMainTexture() != null);
-            String textureUrl = null;
-            if (quickModelEntity.getMainTexture() != null) {
-                textureUrl = textureController.getTextureStreamEndpointUrl(quickModelEntity.getMainTexture().getTextureFileId());
-            }
-            modelDiv.renderer.loadModel(modelUrl, textureUrl, quickModelEntity.getModel().getId());
-
-            if (textureUrl != null) {
-                List<QuickTextureEntity> allTextures = new ArrayList<>(quickModelEntity.getOtherTextures());
-                modelDiv.renderer.addOtherTextures(TextureMapHelper.otherTexturesMap(allTextures, textureController), quickModelEntity.getModel().getId());
-
-            }
+            loadSingleModelWithTextures(quickModelEntity);
         }
-
         setupModelDiv(quickModelEntityMap);
     }
 
     /**
-     * Create chapter consumer that handles the CreateChapterEvent.
-     * It retrieves data from the editor and creates a new chapter using the ChapterController.
-     * Upon successful creation, it navigates to the newly created chapter view.
+     * Loads a single model with its textures into the renderer.
      *
+     * @param quickModelEntity the model entity to load
+     * @throws IOException if there is an error loading model or texture streams
+     */
+    private void loadSingleModelWithTextures(QuickModelEntity quickModelEntity) throws IOException {
+        String modelUrl = modelService.getModelStreamEndpoint(
+                quickModelEntity.getModel().getId(),
+                quickModelEntity.getMainTexture() != null
+        );
+
+        String textureUrl = getMainTextureUrl(quickModelEntity);
+        modelDiv.renderer.loadModel(modelUrl, textureUrl, quickModelEntity.getModel().getId());
+
+        if (textureUrl != null) {
+            loadOtherTextures(quickModelEntity);
+        }
+    }
+
+    /**
+     * Gets the main texture URL for a model.
+     *
+     * @param quickModelEntity the model entity
+     * @return the texture URL or null if no texture
+     */
+    private String getMainTextureUrl(QuickModelEntity quickModelEntity) {
+        if (quickModelEntity.getMainTexture() != null) {
+            return textureService.getTextureStreamEndpointUrl(
+                    quickModelEntity.getMainTexture().getTextureFileId()
+            );
+        }
+        return null;
+    }
+
+    /**
+     * Loads additional textures for a model.
+     *
+     * @param quickModelEntity the model entity
+     * @throws IOException if there is an error loading textures
+     */
+    private void loadOtherTextures(QuickModelEntity quickModelEntity) throws IOException {
+        List<QuickTextureEntity> allTextures = new ArrayList<>(quickModelEntity.getOtherTextures());
+        Map<String, String> texturesMap = TextureMapHelper.otherTexturesMap(allTextures, textureService);
+        modelDiv.renderer.addOtherTextures(texturesMap, quickModelEntity.getModel().getId());
+    }
+
+    /**
+     * Handles errors that occur during model loading.
+     *
+     * @param e the IOException that occurred
+     */
+    private void handleModelLoadError(IOException e) {
+        log.error("Error loading model for renderer: {}", e.getMessage(), e);
+        new ErrorNotification(text("error.modelLoadFailed") + ": " + e.getMessage(), 5000);
+    }
+
+    /**
+     * Handles the CreateChapterEvent.
+     * Retrieves data from the editor and creates a new chapter.
+     * Upon successful creation, navigates to the newly created chapter view.
+     *
+     * @param event the create chapter event
      */
     private void createChapterConsumer(CreateChapterEvent event) {
-
         try {
-            secondaryNavigation.setMainContentTabSelected();
-
-            Map<String, QuickModelEntity> allModels = secondaryNavigation.getModelsScroller().getAllModelsMappedToChapterHeaderBlockId();
-
-            editorjs.getData().whenComplete((bodyData, error) -> {
-                if (error != null) {
-                    log.error("Chyba při získávání dat z editoru: {}", error.getMessage(), error);
-                    throw new ApplicationContextException("Chyba při získávání dat z editoru: " + error.getMessage());
-                }
-
-                try {
-                    String chapterId = chapterController.createChapter(nameTextField.getValue().trim(), bodyData, allModels);
-                    skipBeforeLeaveDialog = true;
-                    UI.getCurrent().navigate("chapter/" + chapterId);
-                } catch (Exception e) {
-                    throw new ApplicationContextException("Chyba při vytváření kapitoly: " + e.getMessage(), e);
-                }
-            }).exceptionally(error -> {
-                if (error.getCause() instanceof ApplicationContextException) {
-                    new ErrorNotification(error.getCause().getMessage(), 5000);
-                    return null;
-                } else {
-                    throw new RuntimeException(error);
-                }
-            });
+            prepareForChapterCreation();
+            Map<String, QuickModelEntity> allModels = getAllSelectedModels();
+            retrieveEditorDataAndCreateChapter(allModels);
         } catch (ApplicationContextException ex) {
-            new ErrorNotification("Chyba při ukládání kapitoly: " + ex.getMessage(), 5000);
+            handleChapterCreationError(ex);
         } catch (Exception ex) {
-            log.error("Neočekávaná chyba při ukládání kapitoly: {}", ex.getMessage(), ex);
-            new ErrorNotification("Neočekávaná chyba při vytváření kapitoly: " + ex.getMessage(), 5000);
+            handleUnexpectedError(ex);
         }
+    }
+
+    /**
+     * Prepares the view for chapter creation.
+     */
+    private void prepareForChapterCreation() {
+        secondaryNavigation.setMainContentTabSelected();
+    }
+
+    /**
+     * Gets all models selected for the chapter.
+     *
+     * @return map of all selected models
+     */
+    private Map<String, QuickModelEntity> getAllSelectedModels() {
+        return secondaryNavigation.getModelsScroller().getAllModelsMappedToChapterHeaderBlockId();
+    }
+
+    /**
+     * Retrieves editor data and creates the chapter.
+     *
+     * @param allModels map of all selected models
+     */
+    private void retrieveEditorDataAndCreateChapter(Map<String, QuickModelEntity> allModels) {
+        editorjs.getData()
+                .whenComplete((bodyData, error) -> handleEditorDataResult(bodyData, error, allModels))
+                .exceptionally(this::handleEditorDataException);
+    }
+
+    /**
+     * Handles the result of editor data retrieval.
+     *
+     * @param bodyData  the editor body data
+     * @param error     any error that occurred
+     * @param allModels map of all selected models
+     */
+    private void handleEditorDataResult(String bodyData, Throwable error, Map<String, QuickModelEntity> allModels) {
+        if (error != null) {
+            log.error("Error retrieving editor data: {}", error.getMessage(), error);
+            throw new ApplicationContextException(text("error.editorDataRetrievalFailed") + ": " + error.getMessage());
+        }
+
+        createChapterAndNavigate(bodyData, allModels);
+    }
+
+    /**
+     * Creates the chapter and navigates to it.
+     *
+     * @param bodyData  the chapter content
+     * @param allModels map of all selected models
+     */
+    private void createChapterAndNavigate(String bodyData, Map<String, QuickModelEntity> allModels) {
+        try {
+            String chapterName = nameTextField.getValue().trim();
+            String chapterId = chapterService.createChapter(chapterName, bodyData, allModels);
+
+            skipBeforeLeaveDialog = true;
+            UI.getCurrent().navigate("chapter/" + chapterId);
+        } catch (Exception e) {
+            log.error("Error creating chapter: {}", e.getMessage(), e);
+            throw new ApplicationContextException(text("error.chapterCreationFailed") + ": " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Handles exceptions during editor data retrieval.
+     *
+     * @param error the error that occurred
+     * @return null (required by exceptionally - returns type matches CompletableFuture generic)
+     */
+    private String handleEditorDataException(Throwable error) {
+        if (error.getCause() instanceof ApplicationContextException) {
+            new ErrorNotification(error.getCause().getMessage(), 5000);
+        } else {
+            log.error("Unexpected error: {}", error.getMessage(), error);
+            new ErrorNotification(text("error.unexpectedError") + ": " + error.getMessage(), 5000);
+        }
+        return null;
+    }
+
+    /**
+     * Handles chapter creation errors.
+     *
+     * @param ex the exception
+     */
+    private void handleChapterCreationError(ApplicationContextException ex) {
+        log.error("Chapter creation error: {}", ex.getMessage(), ex);
+        new ErrorNotification(text("error.chapterSaveFailed") + ": " + ex.getMessage(), 5000);
+    }
+
+    /**
+     * Handles unexpected errors.
+     *
+     * @param ex the exception
+     */
+    private void handleUnexpectedError(Exception ex) {
+        log.error("Unexpected error during chapter creation: {}", ex.getMessage(), ex);
+        new ErrorNotification(text("error.unexpectedChapterCreationError") + ": " + ex.getMessage(), 5000);
     }
 
     @Override
     protected void onAttach(AttachEvent attachEvent) {
         super.onAttach(attachEvent);
-        createChapterEventRegistration = ComponentUtil.addListener(attachEvent.getUI(), CreateChapterEvent.class, this::createChapterConsumer);
+        createChapterEventRegistration = ComponentUtil.addListener(
+                attachEvent.getUI(),
+                CreateChapterEvent.class,
+                this::createChapterConsumer
+        );
     }
 
     @Override
@@ -230,3 +361,4 @@ public class CreateChapterView extends ChapterLayout {
         }
     }
 }
+
