@@ -16,6 +16,7 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.stereotype.Service;
 
+import java.time.Instant;
 import java.util.List;
 
 /**
@@ -69,6 +70,7 @@ public class ModelService implements IService {
         try {
             Entity entity = ModelEntity.builder()
                     .Name(modelName)
+                    .Created(Instant.now())
                     .build();
             return modelApiClient.uploadFileEntity(inputStream, entity);
         } catch (Exception e) {

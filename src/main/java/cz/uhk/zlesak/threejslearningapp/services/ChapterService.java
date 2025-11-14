@@ -19,6 +19,7 @@ import org.springframework.context.ApplicationContextException;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
+import java.time.Instant;
 import java.util.*;
 
 /**
@@ -114,6 +115,7 @@ public class ChapterService implements IService {
 
         ChapterEntity chapter = ChapterEntity.builder()
                 .Name(name)
+                .Created(Instant.now())
                 .Content(content)
                 .Models(uploadedModels)
                 .build();

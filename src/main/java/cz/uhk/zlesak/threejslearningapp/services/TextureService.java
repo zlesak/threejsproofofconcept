@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -67,6 +68,7 @@ public class TextureService implements IService {
             String csvString = csv == null ? "" : new String(csv.readAllBytes(), StandardCharsets.UTF_8);
             TextureEntity textureEntity = TextureEntity.builder()
                     .Name(inputStream.getDisplayName())
+                    .Created(Instant.now())
                     .CsvContent(csvString)
                     .build();
             TextureUploadEntity uploadedEntity = TextureUploadEntity.builder()
