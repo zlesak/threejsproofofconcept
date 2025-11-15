@@ -37,8 +37,8 @@ import java.util.Map;
 @Route("createChapter")
 @Tag("create-chapter")
 @Scope("prototype")
-@RolesAllowed(value = "ADMIN")
-public class CreateChapterView extends ChapterLayout {
+@RolesAllowed(value = "TEACHER")
+public class ChapterCreateView extends ChapterLayout {
     private final TextureService textureService;
     private final ModelService modelService;
     private final ChapterService chapterService;
@@ -53,7 +53,7 @@ public class CreateChapterView extends ChapterLayout {
      * @param textureService service for handling texture-related operations
      */
     @Autowired
-    public CreateChapterView(ChapterService chapterService, ModelService modelService, TextureService textureService) {
+    public ChapterCreateView(ChapterService chapterService, ModelService modelService, TextureService textureService) {
         super(true);
 
         this.modelService = modelService;

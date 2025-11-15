@@ -4,10 +4,12 @@ import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.applayout.AppLayout;
 import com.vaadin.flow.component.avatar.Avatar;
-import com.vaadin.flow.component.html.*;
+import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.html.Header;
+import com.vaadin.flow.component.html.Nav;
+import com.vaadin.flow.component.html.UnorderedList;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.router.Layout;
-import com.vaadin.flow.router.RouterLink;
 import com.vaadin.flow.server.VaadinService;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
 import com.vaadin.flow.spring.security.AuthenticationContext;
@@ -15,19 +17,23 @@ import com.vaadin.flow.theme.lumo.LumoUtility.*;
 import cz.uhk.zlesak.threejslearningapp.components.buttons.LoginButton;
 import cz.uhk.zlesak.threejslearningapp.components.buttons.LogoutButton;
 import cz.uhk.zlesak.threejslearningapp.components.buttons.ThemeModeToggleButton;
+import cz.uhk.zlesak.threejslearningapp.components.common.MenuItemInfo;
 import cz.uhk.zlesak.threejslearningapp.components.lists.AvatarItem;
 import cz.uhk.zlesak.threejslearningapp.components.notifications.CookiesNotification;
 import cz.uhk.zlesak.threejslearningapp.views.MainPageView;
+import cz.uhk.zlesak.threejslearningapp.views.administration.AdministrationView;
 import cz.uhk.zlesak.threejslearningapp.views.chapter.ChapterListView;
-import cz.uhk.zlesak.threejslearningapp.views.chapter.CreateChapterView;
-import cz.uhk.zlesak.threejslearningapp.views.model.CreateModelView;
 import cz.uhk.zlesak.threejslearningapp.views.model.ModelListView;
+import cz.uhk.zlesak.threejslearningapp.views.quizes.QuizListView;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationContextException;
 import org.springframework.context.annotation.Scope;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @AnonymousAllowed
 @Scope("prototype")
@@ -48,11 +54,6 @@ public class MainLayout extends AppLayout {
         /// Layout item in form of div component
         Div layout = new Div();
         layout.addClassNames(Display.FLEX, AlignItems.CENTER, Padding.Horizontal.LARGE);
-
-        /// App name heading
-        H1 appName = new H1("MISH APP");
-        appName.addClassNames(Margin.Vertical.MEDIUM, FontSize.LARGE);
-        layout.add(appName);
 
         /// Navigation item component
         Nav nav = new Nav();
@@ -96,34 +97,36 @@ public class MainLayout extends AppLayout {
     }
 
     /// Function for creating menu items to appear at the top navigation
-    private MenuItemInfo[] createMenuItems(Authentication authentication) {
+    private List<MenuItemInfo> createMenuItems(Authentication authentication) {
+        List<MenuItemInfo> menuItems = commonMenuItemsForLoggedUsers();
         if (authentication != null && authentication.getAuthorities() != null) {
-            if (authentication.getAuthorities().stream().anyMatch(auth -> "ROLE_ADMIN".equals(auth.getAuthority()))) {
-                return new MenuItemInfo[]{
-                        new MenuItemInfo("Domovská stránka", VaadinIcon.HOME.create(), MainPageView.class),
-                        new MenuItemInfo("Vytvořit kapitolu", VaadinIcon.PENCIL.create(), CreateChapterView.class),
-                        new MenuItemInfo("Nahrát model", VaadinIcon.FILE_ZIP.create(), CreateModelView.class),
-                        new MenuItemInfo("Modely", VaadinIcon.FILE_TREE.create(), ModelListView.class),
-                        new MenuItemInfo("Kapitoly", VaadinIcon.MODAL_LIST.create(), ChapterListView.class)
-                };
-            } else if (authentication.getAuthorities().stream().anyMatch(auth -> "ROLE_USER".equals(auth.getAuthority()))) {
-                return new MenuItemInfo[]{
-                        new MenuItemInfo("Domovská stránka", VaadinIcon.HOME.create(), MainPageView.class),
-                        new MenuItemInfo("Modely", VaadinIcon.FILE_TREE.create(), ModelListView.class),
-                        new MenuItemInfo("Kapitoly", VaadinIcon.MODAL_LIST.create(), ChapterListView.class)
-                };
+            if (authentication.getAuthorities().stream().anyMatch(auth ->
+                    "ROLE_ADMIN".equals(auth.getAuthority()) || "ROLE_TEACHER".equals(auth.getAuthority()))) {
+                menuItems.add(new MenuItemInfo("Administrační centrum", VaadinIcon.COG.create(), AdministrationView.class));
             }
         }
-        return new MenuItemInfo[]{new MenuItemInfo("Domovská stránka", VaadinIcon.HOME.create(), MainPageView.class)};
+        return menuItems;
+    }
+
+    private List<MenuItemInfo> commonMenuItemsForLoggedUsers() {
+        return new ArrayList<>(List.of(
+                new MenuItemInfo("MISH APP", VaadinIcon.HOME.create(), MainPageView.class),
+                new MenuItemInfo("Kapitoly", VaadinIcon.OPEN_BOOK.create(), ChapterListView.class),
+                new MenuItemInfo("Modely", VaadinIcon.CUBES.create(), ModelListView.class),
+                new MenuItemInfo("Kvízy", VaadinIcon.LIGHTBULB.create(), QuizListView.class)
+        ));
     }
 
     private String getUserRoleName(Authentication authentication) {
         if (authentication != null && authentication.getAuthorities() != null) {
             for (GrantedAuthority authority : authentication.getAuthorities()) {
-                if ("ROLE_ADMIN".equals(authority.getAuthority())) {
-                    return "Administrátor";
-                } else if ("ROLE_USER".equals(authority.getAuthority())) {
-                    return "Uživatel";
+                switch (authority.getAuthority()) {
+                    case "ROLE_ADMIN":
+                        return "Administrátor";
+                    case "ROLE_TEACHER":
+                        return "Učitel";
+                    case "ROLE_STUDENT":
+                        return "Student";
                 }
             }
             throw new ApplicationContextException("Role uživatele nejsou mezi známými rolemi systému" + authentication.getAuthorities().stream().map(GrantedAuthority::getAuthority).toList());
@@ -135,28 +138,5 @@ public class MainLayout extends AppLayout {
     private void showCookieNotification() {
         CookiesNotification notification = new CookiesNotification();
         notification.open();
-    }
-
-    public static class MenuItemInfo extends ListItem {
-
-        private final Class<? extends Component> view;
-
-        public MenuItemInfo(String menuTitle, Component icon, Class<? extends Component> view) {
-            this.view = view;
-            RouterLink link = new RouterLink();
-            link.addClassNames(Display.FLEX, Gap.XSMALL, Height.MEDIUM, AlignItems.CENTER, Padding.Horizontal.SMALL, TextColor.BODY);
-            link.setRoute(view);
-            Span text = new Span(menuTitle);
-            text.addClassNames(FontWeight.MEDIUM, FontSize.MEDIUM, Whitespace.NOWRAP);
-            if (icon != null) {
-                link.add(icon);
-            }
-            link.add(text);
-            add(link);
-        }
-
-        public Class<?> getView() {
-            return view;
-        }
     }
 }

@@ -29,8 +29,8 @@ import org.springframework.context.annotation.Scope;
 @Route("createModel")
 @Tag("create-model")
 @Scope("prototype")
-@RolesAllowed(value = "ADMIN")
-public class CreateModelView extends ModelLayout {
+@RolesAllowed(value = "TEACHER")
+public class ModelCreateView extends ModelLayout {
     private boolean skipBeforeLeaveDialog = false;
     private final ModelService modelService;
 
@@ -40,7 +40,7 @@ public class CreateModelView extends ModelLayout {
      * @param modelService the model service for handling model operations
      */
     @Autowired
-    public CreateModelView(ModelService modelService) {
+    public ModelCreateView(ModelService modelService) {
         super();
         this.modelService = modelService;
 
