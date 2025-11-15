@@ -119,9 +119,14 @@ public class ModelDetailView extends ModelLayout {
             modelDiv.renderer.loadModel(modelUrl, textureUrl, quickModelEntity.getModel().getId());
 
             try {
-                Map<String, String> otherTexturesMap = TextureMapHelper.otherTexturesMap(quickModelEntity.getOtherTextures(), textureService);
-                modelDiv.renderer.addOtherTextures(otherTexturesMap, quickModelEntity.getModel().getId());
-                modelDiv.modelTextureAreaSelectContainer.initializeData(Map.of(quickModelEntity.getModel().getId(), quickModelEntity));
+                if (quickModelEntity.getOtherTextures() != null && !quickModelEntity.getOtherTextures().isEmpty()) {
+                    Map<String, String> otherTexturesMap = TextureMapHelper.otherTexturesMap(quickModelEntity.getOtherTextures(), textureService);
+                    modelDiv.renderer.addOtherTextures(otherTexturesMap, quickModelEntity.getModel().getId());
+                    modelDiv.modelTextureAreaSelectContainer.initializeData(Map.of(quickModelEntity.getModel().getId(), quickModelEntity));
+                }
+                else {
+                    modelDiv.renderer.showModel(quickModelEntity.getModel().getId());
+                }
             } catch (IOException e) {
                 log.error(e.getMessage(), e);
                 throw new ApplicationContextException(e.getMessage());

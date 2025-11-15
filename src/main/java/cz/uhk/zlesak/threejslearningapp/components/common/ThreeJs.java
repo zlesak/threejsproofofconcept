@@ -98,7 +98,7 @@ public class ThreeJs extends Component {
         getElement().executeJs("""
                 try {
                     if (typeof window.loadModel === 'function') {
-                        window.loadModel($0, $1);
+                        window.loadModel($0, $1, $2);
                     }
                 } catch (e) {
                     console.error('[JS] Error in loadModel:', e);
@@ -228,6 +228,7 @@ public class ThreeJs extends Component {
         getElement().executeJs("""
                 try {
                     if (typeof window.showModel === 'function') {
+                        window.showModel($0, $1);
                         window.showModel($0, $1);
                     }
                 } catch (e) {

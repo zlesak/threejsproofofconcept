@@ -113,7 +113,6 @@ public class ChapterDetailView extends ChapterLayout {
 
         try {
             loadChapterData();
-            setupSubChapterModelMap();
             loadAndDisplay3DModels();
         } catch (Exception e) {
             handleChapterLoadError(e);
@@ -139,15 +138,6 @@ public class ChapterDetailView extends ChapterLayout {
         editorjs.setChapterContentData(chapterService.getChapterContent(chapterId));
         chapterSelect.initializeChapterSelectionSelect(chapterService.getSubChaptersNames(chapterId));
         navigationContentLayout.initializeSubChapterData(chapterService.getSubChaptersContent(chapterId));
-    }
-
-    /**
-     * Sets up sub-chapter model map for quick access during sub-chapter changes.
-     *
-     * @throws Exception if models cannot be retrieved
-     */
-    private void setupSubChapterModelMap() throws Exception {
-        modelsMap = chapterService.getChaptersModels(chapterId);
     }
 
     /**
@@ -198,13 +188,13 @@ public class ChapterDetailView extends ChapterLayout {
      */
     private void loadAndDisplay3DModels() throws Exception {
         try {
-            Map<String, QuickModelEntity> quickModelEntityMap = chapterService.getChaptersModels(chapterId);
+            modelsMap = chapterService.getChaptersModels(chapterId);
 
-            for (QuickModelEntity quickModelEntity : quickModelEntityMap.values()) {
+            for (QuickModelEntity quickModelEntity : modelsMap.values()) {
                 loadModelWithTextures(quickModelEntity);
             }
 
-            setupModelDiv(quickModelEntityMap);
+            setupModelDiv(modelsMap);
         } catch (Exception e) {
             log.error("Failed to load 3D models: {}", e.getMessage(), e);
             new ErrorNotification(text("error.modelLoadFailed") + ": " + e.getMessage(), 5000);

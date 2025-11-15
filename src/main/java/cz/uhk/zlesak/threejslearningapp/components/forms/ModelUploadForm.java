@@ -99,9 +99,9 @@ public class ModelUploadForm extends Scroller implements I18nAware {
                     modelFileName = fileName;
 
                     if (!isAdvanced.getValue()) {
-                        ComponentUtil.fireEvent(UI.getCurrent(), new ModelUploadEvent(UI.getCurrent(), modelUrl, null, "modelId", modelFileName, null));
+                        ComponentUtil.fireEvent(UI.getCurrent(), new ModelUploadEvent(UI.getCurrent(), modelUrl, null, "modelId", modelFileName, null, false));
                     } else if (textureUrl != null) {
-                        ComponentUtil.fireEvent(UI.getCurrent(), new ModelUploadEvent(UI.getCurrent(), modelUrl, textureUrl, "modelId", modelFileName, textureName));
+                        ComponentUtil.fireEvent(UI.getCurrent(), new ModelUploadEvent(UI.getCurrent(), modelUrl, textureUrl, "modelId", modelFileName, textureName, true));
                     }
                 }
         );
@@ -124,7 +124,7 @@ public class ModelUploadForm extends Scroller implements I18nAware {
                     textureUrl = registerStreamUrl(fileName, "image/jpeg", inputStreamMultipartFile.getInputStream());
                     textureName = fileName;
                     if (modelUrl != null) {
-                        ComponentUtil.fireEvent(UI.getCurrent(), new ModelUploadEvent(UI.getCurrent(), modelUrl, textureUrl, "modelId", modelFileName, textureName));
+                        ComponentUtil.fireEvent(UI.getCurrent(), new ModelUploadEvent(UI.getCurrent(), modelUrl, textureUrl, "modelId", modelFileName, textureName, true));
                         this.quickTextureEntityMap.put("main", new QuickTextureEntity(fileName, fileName, this.csvMap.getOrDefault(fileName, null)));
                         ComponentUtil.fireEvent(UI.getCurrent(), new ModelTextureChangeEvent(UI.getCurrent(), this.quickTextureEntityMap));
                     }

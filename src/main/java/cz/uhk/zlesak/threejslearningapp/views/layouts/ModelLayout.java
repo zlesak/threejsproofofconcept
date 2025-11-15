@@ -84,6 +84,9 @@ public abstract class ModelLayout extends BaseLayout {
                             .mainTexture(QuickTextureEntity.builder().textureFileId(event.getTextureName()).name(event.getTextureName()).build())
                             .build());
                     modelDiv.renderer.loadModel(event.getModel(), event.getTexture(), event.getModelId());
+                    if(!event.isAdvanced()) {
+                        modelDiv.renderer.showModel(event.getModelId());
+                    }
                 }
         ));
 
