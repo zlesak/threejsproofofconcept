@@ -2,13 +2,12 @@ package cz.uhk.zlesak.threejslearningapp.services;
 
 import cz.uhk.zlesak.threejslearningapp.api.clients.ModelApiClient;
 import cz.uhk.zlesak.threejslearningapp.common.InputStreamMultipartFile;
-import cz.uhk.zlesak.threejslearningapp.domain.common.Entity;
 import cz.uhk.zlesak.threejslearningapp.domain.common.FilterParameters;
+import cz.uhk.zlesak.threejslearningapp.domain.common.PageResult;
 import cz.uhk.zlesak.threejslearningapp.domain.model.ModelEntity;
-import cz.uhk.zlesak.threejslearningapp.domain.common.QuickFile;
+import cz.uhk.zlesak.threejslearningapp.domain.model.ModelFilter;
 import cz.uhk.zlesak.threejslearningapp.domain.model.QuickModelEntity;
 import cz.uhk.zlesak.threejslearningapp.domain.texture.QuickTextureEntity;
-import cz.uhk.zlesak.threejslearningapp.domain.common.PageResult;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContextException;
@@ -40,7 +39,7 @@ public class ModelService implements IService {
      * Initializes controller with dependencies for texture management, model API client, and JSON processing.
      *
      * @param textureService the controller for managing textures associated with models.
-     * @param modelApiClient    the API client for interacting with model-related endpoints.
+     * @param modelApiClient the API client for interacting with model-related endpoints.
      */
     @Autowired
     public ModelService(TextureService textureService, ModelApiClient modelApiClient) {
@@ -68,7 +67,7 @@ public class ModelService implements IService {
         }
 
         try {
-            Entity entity = ModelEntity.builder()
+            ModelEntity entity = ModelEntity.builder()
                     .Name(modelName)
                     .Created(Instant.now())
                     .build();
@@ -130,11 +129,10 @@ public class ModelService implements IService {
      *
      * @param modelId the ID of the model to be retrieved.
      * @throws RuntimeException if there is an error during the retrieval of the model entity.
-     * @see ModelApiClient#getFileEntityById(String)
      */
     private void getModel(String modelId) throws RuntimeException {
         try {
-            this.modelEntity = modelApiClient.getFileEntityById(modelId);
+            this.modelEntity = modelApiClient.read(modelId);
         } catch (Exception e) {
             log.error("Chyba při získávání modelu: {}", e.getMessage(), e);
             throw new RuntimeException("Chyba při získávání modelu: " + e.getMessage(), e);
@@ -149,11 +147,11 @@ public class ModelService implements IService {
      * @return List of QuickModelEntity representing the models.
      * @throws RuntimeException if there is an error during the retrieval of the models.
      */
-    public PageResult<QuickFile> getModels(FilterParameters filterParameters) throws RuntimeException {
+    public PageResult<QuickModelEntity> getModels(FilterParameters<ModelFilter> filterParameters) throws RuntimeException {
         try {
-            return modelApiClient.getFileEntities(filterParameters.getPageNumber() - 1, filterParameters.getPageSize(), filterParameters.getOrderBy(), filterParameters.getSortDirection());
+            return modelApiClient.readEntities(filterParameters.getPageRequest());
         } catch (Exception e) {
-            log.error("Chyba při získávání stránkování modelů pro page {}, limit {}, error message: {}", filterParameters.getPageNumber(), filterParameters.getPageSize(), e.getMessage(), e);
+            log.error("Chyba při získávání stránkování modelů pro page {}, limit {}, error message: {}", filterParameters.getPageRequest().getPageNumber(), filterParameters.getPageRequest().getPageSize(), e.getMessage(), e);
             throw new RuntimeException("Chyba při získávání modelu: " + e.getMessage(), e);
         }
     }

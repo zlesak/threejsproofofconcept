@@ -4,21 +4,22 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import cz.uhk.zlesak.threejslearningapp.api.contracts.IApiClient;
 import cz.uhk.zlesak.threejslearningapp.api.contracts.IFileApiClient;
 import cz.uhk.zlesak.threejslearningapp.common.InputStreamMultipartFile;
-import cz.uhk.zlesak.threejslearningapp.domain.common.*;
-import cz.uhk.zlesak.threejslearningapp.exceptions.ApiCallException;
-import cz.uhk.zlesak.threejslearningapp.domain.texture.TextureEntity;
+import cz.uhk.zlesak.threejslearningapp.domain.common.PageResult;
 import cz.uhk.zlesak.threejslearningapp.domain.texture.QuickTextureEntity;
+import cz.uhk.zlesak.threejslearningapp.domain.texture.TextureEntity;
+import cz.uhk.zlesak.threejslearningapp.domain.texture.TextureFilter;
+import cz.uhk.zlesak.threejslearningapp.domain.texture.TextureUploadEntity;
 import org.apache.commons.lang3.NotImplementedException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.*;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
-import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestTemplate;
-
-import java.io.ByteArrayInputStream;
-import java.util.List;
 
 /**
  * TextureApiClient provides connection to the backend service for managing textures.
@@ -27,104 +28,118 @@ import java.util.List;
  * The base URL for the API is determined by the IApiClient interface.
  */
 @Component
-public class TextureApiClient implements IFileApiClient {
-    private final RestTemplate restTemplate;
-    private final ObjectMapper objectMapper;
-    private final String baseUrl;
-
+public class TextureApiClient extends AbstractApiClient<TextureEntity, QuickTextureEntity, TextureFilter> implements IFileApiClient<TextureUploadEntity, QuickTextureEntity> {
     /**
      * Constructor for TextureApiClient.
-     * Initializes the RestTemplate and ObjectMapper, and sets the base URL for API requests.
      *
      * @param restTemplate the RestTemplate used for making HTTP requests
      * @param objectMapper the ObjectMapper used for JSON serialization/deserialization
      */
     @Autowired
     public TextureApiClient(RestTemplate restTemplate, ObjectMapper objectMapper) {
-        this.objectMapper = objectMapper;
-        this.restTemplate = restTemplate;
-        this.baseUrl = IApiClient.getBaseUrl() + "texture/";
+        super(restTemplate, objectMapper, "texture/");
+    }
+
+    //region CRUD operations from IApiClient
+
+    /**
+     * Creates a new texture.
+     *
+     * @param textureEntity Texture entity to create
+     * @return Created texture entity
+     * @throws Exception if API call fails
+     */
+    @Override
+    public TextureEntity create(TextureEntity textureEntity) throws Exception {
+        throw new NotImplementedException("Vytváření textur není zatím implementováno.");
+//        return sendPostRequest(baseUrl + "create", textureEntity, TextureEntity.class, "Chyba při vytváření textury", null);
     }
 
     /**
-     * API call function to retrieve a texture entity by its ID.
-     * This method retrieves a texture file from the backend service using its ID.
+     * Gets a texture by ID.
      *
-     * @param fileEntityId The ID of the texture entity to retrieve.
-     * @return Returns the TextureEntity if found, otherwise throws an exception.
-     * @throws Exception Throws exception if anything goes wrong when retrieving the texture via this API call.
+     * @param textureId ID of the texture to retrieve
+     * @return Texture entity
+     * @throws Exception if API call fails
      */
     @Override
-    public TextureEntity getFileEntityById(String fileEntityId) throws Exception {
-        String url = baseUrl + "download/" + fileEntityId;
-        try {
-            ResponseEntity<byte[]> response = restTemplate.exchange(
-                    url,
-                    HttpMethod.GET,
-                    null,
-                    byte[].class
-            );
-            if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
-                String contentDisposition = response.getHeaders().getFirst(HttpHeaders.CONTENT_DISPOSITION);
-                String filename = null;
-                if (contentDisposition != null && contentDisposition.contains("filename=")) {
-                    filename = contentDisposition.substring(contentDisposition.indexOf("filename=") + 9).replace("\"", "");
-                }
-                InputStreamMultipartFile file = new InputStreamMultipartFile(new ByteArrayInputStream(response.getBody()), filename, filename);
-                return TextureEntity.builder()
-                        .Id(fileEntityId)
-                        .Name(filename)
-                        .File(file)
-                        .build();
-            } else {
-                throw new Exception("Textura nalezena nebo chyba při stahování.");
-            }
-        } catch (HttpStatusCodeException ex) {
-            throw new ApiCallException("Nepodařilo se stáhnout texturu", null, null, ex.getStatusCode(), ex.getResponseBodyAsString(), ex);
-        }
+    public TextureEntity read(String textureId) throws Exception {
+        InputStreamMultipartFile file = downloadFileEntity(textureId);
+        return TextureEntity.builder()
+                .Id(textureId)
+                .Name(file.getName())
+                .File(file)
+                .build();
+//        throw new NotImplementedException("Získávání textur dle ID není zatím implementováno.");
+//        return sendGetRequest(baseUrl + textureId, TextureEntity.class, "Chyba při získávání textury dle ID", textureId);
     }
 
     /**
-     * This method is not implemented as the textures are not retrieved by author but the model that they belong to.
+     * Gets paginated list of textures.
      *
-     * @param authorId The ID of the author.
-     * @throws NotImplementedException Always thrown as this method is not implemented for textures.
+     * @param pageRequest PageRequest object containing pagination info
+     * @return PageResult of QuickTextureEntity
+     * @throws Exception if API call fails
      */
     @Override
-    public List<Entity> getFileEntitiesByAuthor(String authorId) throws NotImplementedException {
-        throw new NotImplementedException("Tato metoda není implementována pro textury.");
+    public PageResult<QuickTextureEntity> readEntities(PageRequest pageRequest) throws Exception {
+        return readEntitiesFiltered(pageRequest, null);
     }
 
     /**
-     * This method is not implemented as the textures are not needed to be retrieved in a paginated way, or other.
+     * Gets paginated list of textures with filtering.
      *
-     * @param page  page number.
-     * @param limit number of items per page.
-     * @param orderBy field to order by.
-     * @param sortDirection direction of sorting.
-     *
-     * @return an empty list as this method is not implemented for textures.
+     * @param pageRequest PageRequest object containing pagination info
+     * @param filter      TextureFilter object containing filter criteria
+     * @return PageResult of QuickTextureEntity
+     * @throws Exception if API call fails
      */
     @Override
-    public PageResult<QuickFile> getFileEntities(int page, int limit, String orderBy, SortDirectionEnum sortDirection) {
-        throw new NotImplementedException();
+    public PageResult<QuickTextureEntity> readEntitiesFiltered(PageRequest pageRequest, TextureFilter filter) throws Exception {
+        throw new NotImplementedException("Filtrování textur není zatím implementováno.");
+//        String url = pageRequestToQueryParams(pageRequest) + filterToQueryParams(filter);
+//        ResponseEntity<String> response = sendGetRequestRaw(url, "Chyba při získávání seznamu textur", null);
+//        JavaType type = objectMapper.getTypeFactory().constructParametricType(PageResult.class, QuickTextureEntity.class);
+//        return parseResponse(response, type, "Chyba při získávání seznamu textur", null);
     }
 
     /**
-     * API call function to upload a texture file along with its metadata.
-     * This method uploads a texture file and its associated metadata to the backend.
+     * Updates an existing texture.
      *
-     * @param inputStreamMultipartFile The InputStreamMultipartFile containing the texture file.
-     * @param textureEntity            The IEntity containing metadata for the texture.
-     * @return Returns ID of uploaded texture proving its successful upload.
-     * @throws Exception Throws exception if anything goes wrong when uploading the texture via this API call.
+     * @param textureId     ID of the model to update
+     * @param textureEntity Texture entity to update
+     * @return Updated texture entity
+     * @throws Exception if API call fails
      */
     @Override
-    public QuickTextureEntity uploadFileEntity(InputStreamMultipartFile inputStreamMultipartFile, IEntity textureEntity) throws Exception {
-        String url = baseUrl + "upload";
+    public TextureEntity update(String textureId, TextureEntity textureEntity) throws Exception {
+        throw new NotImplementedException("Aktualizace textur není zatím implementováno.");
+//        return sendPutRequest(baseUrl + "update/" + textureId, textureEntity, TextureEntity.class, "Chyba při aktualizaci textury", textureId);
+
+    }
+
+    /**
+     * Deletes a texture by ID.
+     *
+     * @param textureId ID of the model to delete
+     * @return True if deletion was successful, false otherwise
+     * @throws Exception if API call fails
+     */
+    @Override
+    public boolean delete(String textureId) throws Exception {
+        throw new NotImplementedException("Mazání textur není zatím implementováno.");
+//        sendDeleteRequest(baseUrl + "delete/" + textureId, "Chyba při mazání textury", textureId);
+//        return true;
+    }
+//endregion
+
+    /**
+     *
+     */
+    @Override
+    public QuickTextureEntity uploadFileEntity(InputStreamMultipartFile inputStreamMultipartFile, TextureUploadEntity textureEntity) throws Exception {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.MULTIPART_FORM_DATA);
-
 
         MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
         body.add("texture", inputStreamMultipartFile.getResource());
@@ -135,30 +150,18 @@ public class TextureApiClient implements IFileApiClient {
         HttpEntity<String> metadataPart = new HttpEntity<>(metadataJson, metadataHeaders);
         body.add("metadata", metadataPart);
 
-        HttpEntity<MultiValueMap<String, Object>> request = new HttpEntity<>(body, headers);
-        try {
-            ResponseEntity<String> response = restTemplate.exchange(
-                    url,
-                    HttpMethod.POST,
-                    request,
-                    String.class
-            );
-            String responseBody = response.getBody();
-            return objectMapper.readValue(responseBody, QuickTextureEntity.class);
-        } catch (HttpStatusCodeException ex) {
-            throw new ApiCallException("Chyba při nahrávání textury", null, request.toString(), ex.getStatusCode(), ex.getResponseBodyAsString(), ex);
-        }
+        return sendPostRequest(baseUrl + "upload", body, QuickTextureEntity.class, "Chyba při nahrávání textury", null, headers);
     }
 
+
     /**
-     * This method is not implemented at this moment as the textures should be deleted on BE side after their aro no longer associated with any model.
      *
-     * @param modelId The ID of the model.
-     * @throws NotImplementedException Always thrown as this method is not implemented for textures.
      */
     @Override
-    public void deleteFileEntity(String modelId) throws NotImplementedException {
-        throw new NotImplementedException("Tato metoda není implementována pro textury.");
+    public InputStreamMultipartFile downloadFileEntity(String fileEntityId) throws Exception {
+        String url = baseUrl + "download/" + fileEntityId;
+        ResponseEntity<byte[]> response = sendGetRequestRaw(url, byte[].class, "Chyba při stahování modelu dle ID", fileEntityId, false);
+        return parseFileResponse(response, "Textura nalezena nebo chyba při stahování.", fileEntityId);
     }
 
     /**

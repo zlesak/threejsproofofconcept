@@ -1,23 +1,26 @@
 package cz.uhk.zlesak.threejslearningapp.api.clients;
 
+import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import cz.uhk.zlesak.threejslearningapp.api.contracts.IApiClient;
 import cz.uhk.zlesak.threejslearningapp.api.contracts.IFileApiClient;
 import cz.uhk.zlesak.threejslearningapp.common.InputStreamMultipartFile;
-import cz.uhk.zlesak.threejslearningapp.domain.common.*;
-import cz.uhk.zlesak.threejslearningapp.exceptions.ApiCallException;
+import cz.uhk.zlesak.threejslearningapp.domain.common.PageResult;
 import cz.uhk.zlesak.threejslearningapp.domain.model.ModelEntity;
+import cz.uhk.zlesak.threejslearningapp.domain.model.ModelFilter;
 import cz.uhk.zlesak.threejslearningapp.domain.model.QuickModelEntity;
 import org.apache.commons.lang3.NotImplementedException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.*;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
-import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestTemplate;
 
-import java.io.ByteArrayInputStream;
 import java.util.List;
 
 /**
@@ -27,169 +30,145 @@ import java.util.List;
  * The base URL for the API is determined by the IApiClient interface.
  */
 @Component
-public class ModelApiClient implements IFileApiClient {
-    private final RestTemplate restTemplate;
-    private final ObjectMapper objectMapper;
-    private final String baseUrl;
+public class ModelApiClient extends AbstractApiClient<ModelEntity, QuickModelEntity, ModelFilter> implements IFileApiClient<ModelEntity, QuickModelEntity> {
 
     /**
      * Constructor for ModelApiClient.
-     * Initializes the RestTemplate and ObjectMapper, and sets the base URL for API requests.
      *
      * @param restTemplate the RestTemplate used for making HTTP requests
      * @param objectMapper the ObjectMapper used for JSON serialization/deserialization
      */
     @Autowired
     public ModelApiClient(RestTemplate restTemplate, ObjectMapper objectMapper) {
-        this.objectMapper = objectMapper;
-        this.restTemplate = restTemplate;
-        this.baseUrl = IApiClient.getBaseUrl() + "model/";
+        super(restTemplate, objectMapper, "model/");
+    }
+
+    //region CRUD operations from IApiClient
+
+    /**
+     * Creates a new model.
+     *
+     * @param modelEntity Model entity to create
+     * @return Created model entity
+     * @throws Exception if API call fails
+     */
+    @Override
+    public ModelEntity create(ModelEntity modelEntity) throws Exception {
+        return sendPostRequest(baseUrl + "create", modelEntity, ModelEntity.class, "Chyba při vytváření modelu", null, null);
     }
 
     /**
-     * API call function to retrieve a model entity by its ID.
-     * This method downloads the model file and returns a ModelEntity containing the file and its metadata.
-     * It uses the RestTemplate to make a GET request to the backend service.
+     * Gets a model by ID.
      *
-     * @param fileEntityId The ID of the model entity to retrieve.
-     * @return ModelEntity containing the file and its metadata.
-     * @throws Exception if the model is not found or there is an error during the download process.
+     * @param modelId ID of the model to retrieve
+     * @return Model entity
+     * @throws Exception if API call fails
      */
     @Override
-    public ModelEntity getFileEntityById(String fileEntityId) throws Exception {
-        String url = baseUrl + "download/" + fileEntityId;
-        try {
-            ResponseEntity<byte[]> response = restTemplate.exchange(
-                    url,
-                    HttpMethod.GET,
-                    null,
-                    byte[].class
-            );
-            if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
-                String contentDisposition = response.getHeaders().getFirst(HttpHeaders.CONTENT_DISPOSITION);
-                String filename = null;
-                if (contentDisposition != null && contentDisposition.contains("filename=")) {
-                    filename = contentDisposition.substring(contentDisposition.indexOf("filename=") + 9).replace("\"", "");
-                }
-                InputStreamMultipartFile file = new InputStreamMultipartFile(new ByteArrayInputStream(response.getBody()), filename, filename);
-                return ModelEntity.builder()
-                        .Id(fileEntityId)
-                        .Name(filename)
-                        .MainTextureEntity(null)
-                        .TextureEntities(List.of())
-                        .File(file)
-                        .build();
-            } else {
-                throw new Exception("Model nenalezen nebo chyba při stahování.");
-            }
-        } catch (HttpStatusCodeException ex) {
-            throw new ApiCallException("Chyba při stahování modelu", null, null, ex.getStatusCode(), ex.getResponseBodyAsString(), ex);
-        }
+    public ModelEntity read(String modelId) throws Exception {
+
+        InputStreamMultipartFile fileEntity = downloadFileEntity(modelId);
+        return ModelEntity.builder()
+                .Id(modelId)
+                .Name(fileEntity.getName())
+                .MainTextureEntity(null)
+                .TextureEntities(List.of())
+                .File(fileEntity)
+                .build();
+//        return sendGetRequest(baseUrl + modelId, ModelEntity.class, "Chyba při získávání modelu dle ID", modelId);
     }
 
     /**
-     * This method is not implemented as of this moment.
+     * Gets paginated list of models.
      *
-     * @param authorId ID of the author whose file entities are to be retrieved.
-     * @return List of Entity objects representing the file entities authored by the specified author.
-     * @throws NotImplementedException as of now
+     * @param pageRequest PageRequest object containing pagination info
+     * @return PageResult of QuickModelEntity
+     * @throws Exception if API call fails
      */
     @Override
-    public List<Entity> getFileEntitiesByAuthor(String authorId) throws NotImplementedException {
-        throw new NotImplementedException("Tato metoda není implementována pro modely.");
+    public PageResult<QuickModelEntity> readEntities(PageRequest pageRequest) throws Exception {
+        return readEntitiesFiltered(pageRequest, null);
     }
 
     /**
-     * API call function to retrieve a paginated list of model entities.
-     * This method fetches a list of models from the backend service based on the specified page and limit.
-     * It uses the RestTemplate to make a GET request and returns a list of QuickFile objects.
+     * Gets paginated list of models with filtering.
      *
-     * @param page  the page number to retrieve
-     * @param limit the maximum number of items per page
-     * @param orderBy Field to order the chapters by
-     * @param sortDirection Direction of sorting (ASC or DESC)
-     *
-     * @return a list of QuickFile objects representing the model entities
-     * @throws Exception if there is an error during the retrieval process or if the response is not successful.
+     * @param pageRequest PageRequest object containing pagination info
+     * @param filter      ModelFilter object containing filter criteria
+     * @return PageResult of QuickModelEntity
+     * @throws Exception if API call fails
      */
     @Override
-    public PageResult<QuickFile> getFileEntities(int page, int limit, String orderBy, SortDirectionEnum sortDirection) throws Exception {
-        String url = baseUrl + "list-by?limit=" + limit + "&page=" + page + "&orderBy=" + orderBy + "&sortDirection=" + sortDirection.name();
-        try {
-            ResponseEntity<String> response = restTemplate.exchange(
-                    url,
-                    HttpMethod.GET,
-                    null,
-                    String.class
-            );
-            if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
-                return objectMapper.readValue(response.getBody(), objectMapper.getTypeFactory().constructParametricType(PageResult.class, QuickModelEntity.class));
-            } else {
-                throw new ApiCallException("Chyba při získávání seznamu modelů", null, null, response.getStatusCode(), response.getBody(), null);
-            }
-        } catch (HttpStatusCodeException ex) {
-            throw new ApiCallException("Chyba při získávání seznamu modelů", null, null, ex.getStatusCode(), ex.getResponseBodyAsString(), ex);
-        }
+    public PageResult<QuickModelEntity> readEntitiesFiltered(PageRequest pageRequest, ModelFilter filter) throws Exception {
+        String url = pageRequestToQueryParams(pageRequest, "list-by") + filterToQueryParams(filter);
+        ResponseEntity<String> response = sendGetRequestRaw(url, String.class, "Chyba při získávání seznamu modelů", null, true);
+        JavaType type = objectMapper.getTypeFactory().constructParametricType(PageResult.class, QuickModelEntity.class);
+        return parseResponse(response, type, "Chyba při získávání seznamu modelů", null);
     }
 
     /**
-     * API call function to upload a file entity.
-     * This method uploads a file to the backend service and associates it with a file entity.
-     * It uses the RestTemplate to make a POST request with multipart/form-data content type.
-     * The file is sent as a resource, and the metadata of the file entity is sent as a JSON part.
+     * Updates an existing model.
      *
-     * @param inputStreamMultipartFile the file to be uploaded, wrapped in an InputStreamMultipartFile
-     * @param fileEntity               the file entity containing metadata about the file
-     * @return the ID of the uploaded file entity as a String, proving the correct upload
-     * @throws Exception if there is an error during the upload process or if the response is not successful.
+     * @param modelId     ID of the model to update
+     * @param modelEntity Model entity to update
+     * @return Updated chapter entity
+     * @throws Exception if API call fails
      */
     @Override
-    public QuickModelEntity uploadFileEntity(InputStreamMultipartFile inputStreamMultipartFile, IEntity fileEntity) throws Exception {
-        String url = baseUrl + "upload";
+    public ModelEntity update(String modelId, ModelEntity modelEntity) throws Exception {
+        throw new NotImplementedException("Aktualizace modelů není zatím implementováno.");
+//        return sendPutRequest(baseUrl + "update/" + modelId, modelEntity, ModelEntity.class, "Chyba při aktualizaci modelu", modelId);
+
+    }
+
+    /**
+     * Deletes a model by ID.
+     *
+     * @param modelId ID of the model to delete
+     * @return True if deletion was successful, false otherwise
+     * @throws Exception if API call fails
+     */
+    @Override
+    public boolean delete(String modelId) throws Exception {
+        throw new NotImplementedException("Mazání modelů není zatím implementováno.");
+//        sendDeleteRequest(baseUrl + "delete/" + modelId, "Chyba při mazání kvízu", modelId);
+//        return true;
+    }
+//endregion
+
+    /**
+     *
+     */
+    @Override
+    public QuickModelEntity uploadFileEntity(InputStreamMultipartFile inputStreamMultipartFile, ModelEntity modelEntity) throws Exception {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.MULTIPART_FORM_DATA);
 
         MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
         body.add("model", inputStreamMultipartFile.getResource());
 
-        String metadataJson = objectMapper.writeValueAsString(fileEntity);
+        String metadataJson = objectMapper.writeValueAsString(modelEntity);
         HttpHeaders metadataHeaders = new HttpHeaders();
         metadataHeaders.setContentType(MediaType.APPLICATION_JSON);
         HttpEntity<String> metadataPart = new HttpEntity<>(metadataJson, metadataHeaders);
         body.add("metadata", metadataPart);
 
-        HttpEntity<MultiValueMap<String, Object>> request = new HttpEntity<>(body, headers);
-        try {
-            ResponseEntity<String> response = restTemplate.exchange(
-                    url,
-                    HttpMethod.POST,
-                    request,
-                    String.class
-            );
-            if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
-                return objectMapper.readValue(response.getBody(), QuickModelEntity.class);
-            } else {
-                throw new ApiCallException("Chyba při nahrávání modelu", null, request.toString(), response.getStatusCode(), response.getBody(), null);
-            }
-
-        } catch (HttpStatusCodeException ex) {
-            throw new ApiCallException("Chyba při nahrávání modelu", null, request.toString(), ex.getStatusCode(), ex.getResponseBodyAsString(), ex);
-        }
+        return sendPostRequest(baseUrl + "upload", body, QuickModelEntity.class, "Chyba při nahrávání modelu", null, headers);
     }
 
     /**
-     * This method is not implemented as of this moment.
      *
-     * @param modelId ID of the model to be deleted.
-     * @throws NotImplementedException as of now
      */
     @Override
-    public void deleteFileEntity(String modelId) throws NotImplementedException {
-        throw new NotImplementedException("Metoda deleteFileEntity není implementována pro ModelApiClient.");
+    public InputStreamMultipartFile downloadFileEntity(String fileEntityId) throws Exception {
+        String url = baseUrl + "download/" + fileEntityId;
+        ResponseEntity<byte[]> response = sendGetRequestRaw(url, byte[].class, "Chyba při stahování modelu dle ID", fileEntityId, false);
+        return parseFileResponse(response, "Model nenalezen nebo chyba při stahování.", fileEntityId);
     }
 
     /**
      * Generates the backend endpoint URL for downloading a model file by its ID.
+     *
      * @param modelId the ID of the model
      * @return the complete URL to download the model file
      */

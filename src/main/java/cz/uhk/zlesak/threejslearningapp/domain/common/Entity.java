@@ -1,8 +1,8 @@
 package cz.uhk.zlesak.threejslearningapp.domain.common;
 
+import cz.uhk.zlesak.threejslearningapp.common.InputStreamMultipartFile;
 import cz.uhk.zlesak.threejslearningapp.domain.model.ModelEntity;
 import cz.uhk.zlesak.threejslearningapp.domain.texture.TextureEntity;
-import cz.uhk.zlesak.threejslearningapp.common.InputStreamMultipartFile;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;

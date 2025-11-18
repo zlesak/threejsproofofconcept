@@ -3,15 +3,17 @@ package cz.uhk.zlesak.threejslearningapp.views.chapter;
 import com.vaadin.flow.component.AttachEvent;
 import com.vaadin.flow.component.ComponentUtil;
 import com.vaadin.flow.component.Tag;
-import com.vaadin.flow.component.UI;
 import com.vaadin.flow.router.AfterNavigationEvent;
 import com.vaadin.flow.router.Route;
 import cz.uhk.zlesak.threejslearningapp.common.SpringContextUtils;
 import cz.uhk.zlesak.threejslearningapp.components.common.Pagination;
 import cz.uhk.zlesak.threejslearningapp.components.lists.ChapterListItem;
 import cz.uhk.zlesak.threejslearningapp.domain.chapter.ChapterEntity;
+import cz.uhk.zlesak.threejslearningapp.domain.chapter.ChapterFilter;
 import cz.uhk.zlesak.threejslearningapp.domain.common.FilterParameters;
 import cz.uhk.zlesak.threejslearningapp.domain.common.PageResult;
+import cz.uhk.zlesak.threejslearningapp.domain.model.ModelFilter;
+import cz.uhk.zlesak.threejslearningapp.domain.quiz.QuizFilter;
 import cz.uhk.zlesak.threejslearningapp.events.threejs.SearchEvent;
 import cz.uhk.zlesak.threejslearningapp.services.ChapterService;
 import cz.uhk.zlesak.threejslearningapp.views.layouts.ListingLayout;
@@ -20,6 +22,8 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 
 import java.util.List;
 import java.util.function.Consumer;
@@ -33,7 +37,7 @@ import java.util.function.Consumer;
 @Scope("prototype")
 @Tag("chapters-listing")
 @PermitAll
-public class ChapterListView extends ListingLayout {
+public class ChapterListView extends ListingLayout<ChapterFilter> {
     private final ChapterService chapterService;
     @Setter
     private Consumer<ChapterEntity> chapterSelectedListener;
@@ -48,6 +52,7 @@ public class ChapterListView extends ListingLayout {
      */
     @Autowired
     public ChapterListView(ChapterService chapterService) {
+        filterParameters = new FilterParameters<>(PageRequest.of(0, 6, Sort.Direction.ASC, "Name"), new ChapterFilter(""));
         this.chapterService = chapterService;
         this.quizMode = false;
     }
@@ -58,7 +63,6 @@ public class ChapterListView extends ListingLayout {
      * @see cz.uhk.zlesak.threejslearningapp.views.quizes.QuizCreateView
      */
     public ChapterListView() {
-        filterParameters = new FilterParameters();
         this.chapterService = SpringContextUtils.getBean(ChapterService.class);
         this.quizMode = true;
     }
@@ -83,8 +87,8 @@ public class ChapterListView extends ListingLayout {
      */
     @Override
     public void afterNavigation(AfterNavigationEvent event) {
-        afterNavigationAction(event);
-        filter.setSearchFieldValue(filterParameters.getSearchText());
+        filterParameters = new FilterParameters<>(PageRequest.of(0, 6, Sort.Direction.ASC, "Name"), new ChapterFilter(""));
+        filter.setSearchFieldValue(filterParameters.getFilter().getSearchText());
         listChapters();
     }
 
@@ -96,45 +100,21 @@ public class ChapterListView extends ListingLayout {
         itemListLayout.removeAll();
         paginationLayout.removeAll();
 
-        UI.getCurrent().getPage().getHistory().replaceState(null, filterParameters.getLocationQueryParams("chapters"));
-
-        if (filterParameters.getSearchText() != null && !filterParameters.getSearchText().isBlank()) {
-            queryFilteredChapters();
-        } else {
-            PageResult<ChapterEntity> chapterEntityPageResult = chapterService.getChapters(filterParameters);
-            List<ChapterEntity> chapterEntities = chapterEntityPageResult.elements().stream().toList();
-            for (ChapterEntity chapter : chapterEntities) {
-                ChapterListItem itemComponent = new ChapterListItem(chapter, this.quizMode);
-                if (chapterSelectedListener != null) {
-                    itemComponent.setSelectButtonClickListener(e -> chapterSelectedListener.accept(chapter));
-                }
-                itemListLayout.add(itemComponent);
-            }
-            Pagination pagination = new Pagination(filterParameters.getPageNumber(), filterParameters.getPageSize(), chapterEntityPageResult.total(),
-                    p -> {
-                        filterParameters.setPageNumber(p);
-                        UI.getCurrent().navigate(filterParameters.getLocationQueryParams("chapters"));
-                    }
-            );
-            paginationLayout.add(pagination);
-        }
-    }
-
-    /**
-     * Fetches and displays chapters based on the current filter parameters.
-     * It retrieves the filtered list of chapters from the ChapterService and populates the item list layout with ChapterListItem components.
-     * A Pagination component is added to the pagination layout, although paging of filtered results is not yet supported. TODO
-     */
-    private void queryFilteredChapters() {
-        List<ChapterEntity> filteredChapters = chapterService.getChapters(filterParameters.getSearchText());
-        for (ChapterEntity chapter : filteredChapters) {
+        PageResult<ChapterEntity> chapterEntityPageResult = chapterService.getChapters(filterParameters);
+        List<ChapterEntity> chapterEntities = chapterEntityPageResult.elements().stream().toList();
+        for (ChapterEntity chapter : chapterEntities) {
             ChapterListItem itemComponent = new ChapterListItem(chapter, this.quizMode);
             if (chapterSelectedListener != null) {
                 itemComponent.setSelectButtonClickListener(e -> chapterSelectedListener.accept(chapter));
             }
             itemListLayout.add(itemComponent);
         }
-        Pagination pagination = new Pagination(1, filteredChapters.size(), filteredChapters.size(), null); //TODO BE paging for filtered results
+        Pagination pagination = new Pagination(filterParameters.getPageRequest().getPageNumber(), filterParameters.getPageRequest().getPageSize(), chapterEntityPageResult.total(),
+                p -> {
+                    filterParameters.setPageNumber(p);
+                    listChapters();
+                }
+        );
         paginationLayout.add(pagination);
     }
 
@@ -144,11 +124,10 @@ public class ChapterListView extends ListingLayout {
      * @param event the SearchEvent containing filter parameters
      */
     private void showFilteredChapters(SearchEvent event) {
-        filterParameters.setOrderBy(event.getOrderBy());
-        filterParameters.setSortDirection(event.getSortDirection());
-        filterParameters.setSearchText(event.getValue());
+        filterParameters.setFilteredParameters(event, new ChapterFilter(event.getValue()));
         listChapters();
     }
+
     /**
      * Handles actions to be performed when the view is attached to the UI.
      * It registers a listener for SearchEvent to update the displayed chapters based on search criteria.

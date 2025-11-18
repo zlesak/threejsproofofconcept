@@ -3,9 +3,9 @@ package cz.uhk.zlesak.threejslearningapp.services;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import cz.uhk.zlesak.threejslearningapp.api.clients.TextureApiClient;
 import cz.uhk.zlesak.threejslearningapp.common.InputStreamMultipartFile;
+import cz.uhk.zlesak.threejslearningapp.domain.texture.QuickTextureEntity;
 import cz.uhk.zlesak.threejslearningapp.domain.texture.TextureEntity;
 import cz.uhk.zlesak.threejslearningapp.domain.texture.TextureUploadEntity;
-import cz.uhk.zlesak.threejslearningapp.domain.texture.QuickTextureEntity;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContextException;
@@ -125,7 +125,7 @@ public class TextureService implements IService {
      */
     private void getTexture(String textureId) {
         try {
-            this.textureEntity = textureApiClient.getFileEntityById(textureId);
+            this.textureEntity = textureApiClient.read(textureId);
         } catch (Exception e) {
             log.error("Chyba při získávání textury: {}", e.getMessage(), e);
             throw new RuntimeException("Chyba při získávání textury: " + e.getMessage(), e);

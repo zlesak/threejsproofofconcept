@@ -1,213 +1,112 @@
 package cz.uhk.zlesak.threejslearningapp.api.clients;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import cz.uhk.zlesak.threejslearningapp.api.contracts.IApiClient;
 import cz.uhk.zlesak.threejslearningapp.api.contracts.IChapterApiClient;
-import cz.uhk.zlesak.threejslearningapp.exceptions.ApiCallException;
 import cz.uhk.zlesak.threejslearningapp.domain.chapter.ChapterEntity;
+import cz.uhk.zlesak.threejslearningapp.domain.chapter.ChapterFilter;
 import cz.uhk.zlesak.threejslearningapp.domain.common.PageResult;
-import cz.uhk.zlesak.threejslearningapp.domain.common.SortDirectionEnum;
-import org.apache.commons.lang3.NotImplementedException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.*;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
-import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestTemplate;
-
-import java.util.List;
-import java.util.Map;
 
 /**
  * ChapterApiClient provides connection to the backend service for managing chapters.
- * It implements the IChapterApiClient interface and provides methods for creating, updating, deleting, and retrieving chapters.
- * It uses RestTemplate for making HTTP requests to the backend service.
- * The base URL for the API is determined by the IApiClient interface
+ * Extends AbstractApiClient and implements IChapterApiClient interface.
  */
 @Component
-public class ChapterApiClient implements IChapterApiClient {
-    private final RestTemplate restTemplate;
-    private final ObjectMapper objectMapper;
-    private final String baseUrl;
-
+public class ChapterApiClient extends AbstractApiClient<ChapterEntity, ChapterEntity, ChapterFilter> implements IChapterApiClient { //TODO QUICKCHAPTERENTITY
     /**
      * Constructor for ChapterApiClient.
-     * Initializes the RestTemplate and ObjectMapper, and sets the base URL for API requests.
      *
-     * @param restTemplate the RestTemplate used for making HTTP requests
-     * @param objectMapper the ObjectMapper used for JSON serialization/deserialization
+     * @param restTemplate RestTemplate for making HTTP requests
+     * @param objectMapper ObjectMapper for JSON serialization/deserialization
      */
     @Autowired
     public ChapterApiClient(RestTemplate restTemplate, ObjectMapper objectMapper) {
-        this.restTemplate = restTemplate;
-        this.objectMapper = objectMapper;
-        this.baseUrl = IApiClient.getBaseUrl() + "chapter/";
+        super(restTemplate, objectMapper, "chapter/");
     }
+//region CRUD operations from IApiClient
 
     /**
-     * API call function to endpoint create to create chapter coming from frontend view
+     * Creates a new chapter.
      *
-     * @param chapter Chapter entity to save via API
-     * @return Returns saved chapter, as the behavior is to redirect user to the created chapter
-     * @throws Exception Throws exception if anything goes bad when saving the chapter via this API call
+     * @param chapterEntity Chapter entity to create
+     * @return Created chapter entity
+     * @throws Exception if API call fails
      */
     @Override
-    public ChapterEntity createChapter(ChapterEntity chapter) throws Exception {
-        String url = baseUrl + "create";
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        HttpEntity<ChapterEntity> request = new HttpEntity<>(chapter, headers);
-
-        try {
-            ResponseEntity<ChapterEntity> response = restTemplate.exchange(
-                    url,
-                    HttpMethod.POST,
-                    request,
-                    ChapterEntity.class);
-            return objectMapper.readValue(objectMapper.writeValueAsString(response.getBody()), ChapterEntity.class);
-        } catch (HttpStatusCodeException ex) {
-            throw new ApiCallException("Chyba při nahrávání kapitoly", null, request.toString(), ex.getStatusCode(), ex.getResponseBodyAsString(), ex);
-
-        } catch (Exception e) {
-            throw new Exception("Neočekávaná chyba při volání API pro nahrání kapitoly: " + e.getMessage(), e);
-        }
+    public ChapterEntity create(ChapterEntity chapterEntity) throws Exception {
+        return sendPostRequest(baseUrl + "create", chapterEntity, ChapterEntity.class, "Chyba při vytváření kapitoly", null, null);
     }
 
     /**
-     * API call function to update chapter coming from frontend view
-     * This method is not implemented yet and will throw NotImplementedException.
-     *
-     * @param chapterId     ID of the chapter to update
-     * @param chapterEntity ChapterEntity containing updated chapter data
-     * @throws NotImplementedException Throws NotImplementedException as of this moment
-     */
-    @Override
-    public void updateChapter(String chapterId, ChapterEntity chapterEntity) throws NotImplementedException {
-        throw new NotImplementedException("Update chapter method is not implemented yet.");
-    }
-
-    /**
-     * API call function to delete chapter by its ID
-     * This method is not implemented yet and will throw NotImplementedException.
-     *
-     * @param chapterId ID of the chapter to delete
-     * @throws NotImplementedException Throws NotImplementedException as of this moment
-     */
-    @Override
-    public void deleteChapter(String chapterId) throws NotImplementedException {
-        throw new NotImplementedException("Delete chapter method is not implemented yet.");
-    }
-
-    /**
-     * API call function to get chapter by its ID
-     * This method retrieves a chapter entity by its ID from the backend service.
-     * It uses the RestTemplate to make a GET request to the backend service.
-     * If the request is successful, it returns the chapter entity.
-     * If there is an error during the request, it throws an ApiCallException with details about the error.
+     * Gets a chapter by ID.
      *
      * @param chapterId ID of the chapter to retrieve
-     * @return Returns the ChapterEntity corresponding to the provided chapterId
-     * @throws Exception Throws an exception if there is an error during the API call
+     * @return Chapter entity
+     * @throws Exception if API call fails
      */
     @Override
-    public ChapterEntity getChapterById(String chapterId) throws Exception {
-        String url = baseUrl + chapterId;
-        HttpHeaders headers = new HttpHeaders();
-        headers.setAccept(List.of(MediaType.APPLICATION_JSON));
-        HttpEntity<Void> requestEntity = new HttpEntity<>(headers);
-
-        try {
-            ResponseEntity<ChapterEntity> response = restTemplate.exchange(
-                    url,
-                    HttpMethod.GET,
-                    requestEntity,
-                    ChapterEntity.class
-            );
-            return objectMapper.readValue(objectMapper.writeValueAsString(response.getBody()), ChapterEntity.class);
-        } catch (HttpStatusCodeException ex) {
-            throw new ApiCallException("Chyba při získávání kapitoly dle jejího ID", chapterId, requestEntity.toString(), ex.getStatusCode(), ex.getResponseBodyAsString(), ex);
-
-        } catch (Exception e) {
-            throw new Exception("Neočekávaná chyba při volání API pro získání kapitoly: " + e.getMessage(), e);
-        }
+    public ChapterEntity read(String chapterId) throws Exception {
+        return sendGetRequest(baseUrl + chapterId, ChapterEntity.class, "Chyba při získávání kapitoly dle ID", chapterId);
     }
 
     /**
-     * API call function to get all chapters
-     * This method currently returns an empty list and does not perform any API call.
+     * Gets paginated list of chapters.
      *
-     * @param limit Number of chapters to retrieve per page
-     * @param page  Page number to retrieve
-     * @param orderBy Field to order the chapters by
-     * @param sortDirection Direction of sorting (ASC or DESC)
-     *
-     * @return Returns an empty list of ChapterEntity
-     * @throws Exception Throws an exception if there is an error during the API call
+     * @param pageRequest PageRequest object containing pagination info
+     * @return PageResult of QuickChapterEntity
+     * @throws Exception if API call fails
      */
     @Override
-    public PageResult<ChapterEntity> getChapters(int page, int limit, String orderBy, SortDirectionEnum sortDirection) throws Exception {
-        String url = baseUrl + "list?limit=" + limit + "&page=" + page + "&orderBy=" + orderBy + "&sortDirection=" + sortDirection.name();
-        try {
-            ResponseEntity<String> response = restTemplate.exchange(
-                    url,
-                    HttpMethod.GET,
-                    null,
-                    String.class
-            );
-            if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
-                return objectMapper.readValue(response.getBody(), objectMapper.getTypeFactory().constructParametricType(PageResult.class, ChapterEntity.class));
-            } else {
-                throw new ApiCallException("Chyba při získávání seznamu kapitol", null, null, response.getStatusCode(), response.getBody(), null);
-            }
-        } catch (HttpStatusCodeException ex) {
-            throw new ApiCallException("Chyba při získávání seznamu kapitol", null, null, ex.getStatusCode(), ex.getResponseBodyAsString(), ex);
-        }
+    public PageResult<ChapterEntity> readEntities(PageRequest pageRequest) throws Exception {
+        return readEntitiesFiltered(pageRequest, null);
     }
 
     /**
-     * API call function to get chapters by author ID
-     * This method is not implemented yet and will throw NotImplementedException.
+     * Gets paginated list of chapters with filtering.
      *
-     * @param authorId ID of the author whose chapters are to be retrieved
-     * @return List of chapter IDs authored by the specified author
-     * @throws NotImplementedException Throws NotImplementedException as of this moment
+     * @param pageRequest PageRequest object containing pagination info
+     * @param filter      ChapterFilter object containing filter criteria
+     * @return PageResult of QuickChapterEntity
+     * @throws Exception if API call fails
      */
     @Override
-    public List<String> getChaptersByAuthor(String authorId) throws NotImplementedException {
-        throw new NotImplementedException("Get chapters by author method is not implemented yet.");
+    public PageResult<ChapterEntity> readEntitiesFiltered(PageRequest pageRequest, ChapterFilter filter) throws Exception { //TODO QUICKCHAPTERENTITY
+        String url = pageRequestToQueryParams(pageRequest, null) + filterToQueryParams(filter);
+        ResponseEntity<String> response = sendGetRequestRaw(url, String.class, "Chyba při získávání seznamu kapitol", null, true);
+        JavaType type = objectMapper.getTypeFactory().constructParametricType(PageResult.class, ChapterEntity.class);
+        return parseResponse(response, type, "Chyba při získávání seznamu kapitol", null);
     }
 
     /**
-     * API call function to get chapters filtered by text
-     * This method retrieves a list of chapters that match the provided text filter from the backend service.
-     * It uses the RestTemplate to make a GET request to the backend service.
-     * If the request is successful, it returns the list of matching chapters.
-     * If there is an error during the request, it throws an ApiCallException with details about the error.
-     * @param text Text filter to search chapters
-     * @return List of ChapterEntity objects that match the text filter
-     * @throws ApiCallException Throws an ApiCallException if there is an error during the API call
+     * Updates an existing chapter.
+     *
+     * @param chapterId     ID of the chapter to update
+     * @param chapterEntity Chapter entity to update
+     * @return Updated chapter entity
+     * @throws Exception if API call fails
      */
-    public List<ChapterEntity> getChaptersFiltered(String text) throws ApiCallException {
-        String url = baseUrl + "search-fulltext?keyword=" + text;
+    @Override //TODO implement into MISH (endpoint není s ID zatím)
+    public ChapterEntity update(String chapterId, ChapterEntity chapterEntity) throws Exception {
+        return sendPutRequest(baseUrl + "update/" + chapterId, chapterEntity, ChapterEntity.class, "Chyba při aktualizaci kapitoly", chapterId);
 
-        try {
-            ResponseEntity<String> response = restTemplate.exchange(
-                    url,
-                    HttpMethod.GET,
-                    null,
-                    String.class
-            );
-            if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
-                Map<String, List<ChapterEntity>> map = objectMapper.readValue(response.getBody(), new TypeReference<>() {});
-                return map.get("chapters");
-            } else {
-                throw new ApiCallException("Chyba při získávání filtrovaných kapitol", null, null, response.getStatusCode(), response.getBody(), null);
-            }
-        } catch (HttpStatusCodeException ex) {
-            throw new ApiCallException("Chyba při získávání filtrovaných kapitol", null, null, ex.getStatusCode(), ex.getResponseBodyAsString(), ex);
-        } catch (JsonProcessingException | ApiCallException e) {
-            throw new RuntimeException(e);
-        }
     }
+
+    /**
+     * Deletes a chapter by ID.
+     *
+     * @param chapterId ID of the chapter to delete
+     * @return True if deletion was successful, false otherwise
+     * @throws Exception if API call fails
+     */
+    @Override
+    public boolean delete(String chapterId) throws Exception {
+        sendDeleteRequest(baseUrl + "delete/" + chapterId, "Chyba při mazání kapitoly", chapterId);
+        return true;
+    }
+//endregion
 }

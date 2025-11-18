@@ -3,7 +3,6 @@ package cz.uhk.zlesak.threejslearningapp.views.model;
 import com.vaadin.flow.component.AttachEvent;
 import com.vaadin.flow.component.ComponentUtil;
 import com.vaadin.flow.component.Tag;
-import com.vaadin.flow.component.UI;
 import com.vaadin.flow.router.AfterNavigationEvent;
 import com.vaadin.flow.router.Route;
 import cz.uhk.zlesak.threejslearningapp.common.SpringContextUtils;
@@ -11,8 +10,7 @@ import cz.uhk.zlesak.threejslearningapp.components.common.Pagination;
 import cz.uhk.zlesak.threejslearningapp.components.lists.ModelListItem;
 import cz.uhk.zlesak.threejslearningapp.domain.common.FilterParameters;
 import cz.uhk.zlesak.threejslearningapp.domain.common.PageResult;
-import cz.uhk.zlesak.threejslearningapp.domain.common.QuickFile;
-import cz.uhk.zlesak.threejslearningapp.domain.common.SortDirectionEnum;
+import cz.uhk.zlesak.threejslearningapp.domain.model.ModelFilter;
 import cz.uhk.zlesak.threejslearningapp.domain.model.QuickModelEntity;
 import cz.uhk.zlesak.threejslearningapp.events.threejs.SearchEvent;
 import cz.uhk.zlesak.threejslearningapp.services.ModelService;
@@ -21,8 +19,11 @@ import jakarta.annotation.security.PermitAll;
 import lombok.Setter;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.context.annotation.Scope;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Consumer;
 
 /**
@@ -34,7 +35,7 @@ import java.util.function.Consumer;
 @Scope("prototype")
 @Tag("models-listing")
 @PermitAll
-public class ModelListView extends ListingLayout {
+public class ModelListView extends ListingLayout<ModelFilter> {
     private final ModelService modelService;
     @Setter
     private Consumer<QuickModelEntity> modelSelectedListener;
@@ -47,7 +48,7 @@ public class ModelListView extends ListingLayout {
      * @see cz.uhk.zlesak.threejslearningapp.components.dialogs.ModelListDialog
      */
     public ModelListView() {
-        filterParameters = new FilterParameters(1, 6, "Name", SortDirectionEnum.ASC, "");
+        filterParameters = new FilterParameters<>(PageRequest.of(0, 6, Sort.Direction.ASC, "Name"), new ModelFilter(""));
         this.modelService = SpringContextUtils.getBean(ModelService.class);
         filter.getSearchField().setEnabled(false);
     }
@@ -71,7 +72,8 @@ public class ModelListView extends ListingLayout {
      */
     @Override
     public void afterNavigation(AfterNavigationEvent event) {
-        afterNavigationAction(event);
+        filterParameters = new FilterParameters<>(PageRequest.of(0, 6, Sort.Direction.ASC, "Name"), new ModelFilter(""));
+        filter.setSearchFieldValue(filterParameters.getFilter().getSearchText());
         listModels(true);
     }
 
@@ -85,11 +87,10 @@ public class ModelListView extends ListingLayout {
     public void listModels(boolean listView) {
         itemListLayout.removeAll();
         paginationLayout.removeAll();
-        PageResult<QuickFile> quickFilePageResult = modelService.getModels(filterParameters);
+        PageResult<QuickModelEntity> quickFilePageResult = modelService.getModels(filterParameters);
 
         List<QuickModelEntity> quickModelEntities = quickFilePageResult.elements().stream()
-                .filter(f -> f instanceof QuickModelEntity)
-                .map(f -> (QuickModelEntity) f)
+                .filter(Objects::nonNull)
                 .toList();
         for (QuickModelEntity model : quickModelEntities) {
             ModelListItem itemComponent = new ModelListItem(model, listView);
@@ -106,21 +107,22 @@ public class ModelListView extends ListingLayout {
 
     /**
      * Generates a Pagination component based on the current view format and page result.
-     * @param listView boolean indicating whether the view is in list format
+     *
+     * @param listView            boolean indicating whether the view is in list format
      * @param quickFilePageResult the PageResult containing QuickFile elements
      * @return a Pagination component configured for the current view format
      */
     @NotNull
-    private Pagination getPagination(boolean listView, PageResult<QuickFile> quickFilePageResult) {
+    private Pagination getPagination(boolean listView, PageResult<QuickModelEntity> quickFilePageResult) {
         Pagination pagination;
         if (listView) {
-            pagination = new Pagination(filterParameters.getPageNumber(), filterParameters.getPageSize(), quickFilePageResult.total(),
+            pagination = new Pagination(filterParameters.getPageRequest().getPageNumber(), filterParameters.getPageRequest().getPageSize(), quickFilePageResult.total(),
                     p -> {
                         filterParameters.setPageNumber(p);
-                        UI.getCurrent().navigate(filterParameters.getLocationQueryParams("models"));
+                        listModels(true);
                     });
         } else {
-            pagination = new Pagination(filterParameters.getPageNumber(), filterParameters.getPageSize(), quickFilePageResult.total(),
+            pagination = new Pagination(filterParameters.getPageRequest().getPageNumber(), filterParameters.getPageRequest().getPageSize(), quickFilePageResult.total(),
                     p -> {
                         filterParameters.setPageNumber(p);
                         listModels(false);
@@ -131,18 +133,18 @@ public class ModelListView extends ListingLayout {
 
     /**
      * Displays models filtered based on the search event parameters.
+     *
      * @param event the SearchEvent containing filter parameters
      */
     private void showFilteredModels(SearchEvent event) {
-        filterParameters.setOrderBy(event.getOrderBy());
-        filterParameters.setSortDirection(event.getSortDirection());
-        filterParameters.setSearchText(event.getValue());
+        filterParameters.setFilteredParameters(event, new ModelFilter(event.getValue()));
         listModels(true);
     }
 
     /**
      * Handles actions to be performed when the view is attached to the UI.
      * It registers a listener for SearchEvent to update the displayed models based on search criteria.
+     *
      * @param attachEvent the AttachEvent containing attachment details
      */
     @Override

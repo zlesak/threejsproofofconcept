@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import cz.uhk.zlesak.threejslearningapp.api.clients.ChapterApiClient;
 import cz.uhk.zlesak.threejslearningapp.components.notifications.ErrorNotification;
 import cz.uhk.zlesak.threejslearningapp.domain.chapter.ChapterEntity;
+import cz.uhk.zlesak.threejslearningapp.domain.chapter.ChapterFilter;
 import cz.uhk.zlesak.threejslearningapp.domain.chapter.SubChapterForSelect;
 import cz.uhk.zlesak.threejslearningapp.domain.common.FilterParameters;
 import cz.uhk.zlesak.threejslearningapp.domain.common.PageResult;
@@ -120,7 +121,7 @@ public class ChapterService implements IService {
                 .Models(uploadedModels)
                 .build();
         try {
-            return chapterApiClient.createChapter(chapter).getId();
+            return chapterApiClient.create(chapter).getId();
         } catch (Exception e) {
             log.error("Chyba při vytváření kapitoly: {}", e.getMessage(), e);
             throw e;
@@ -134,11 +135,10 @@ public class ChapterService implements IService {
      *
      * @param chapterId the ID of the chapter to be retrieved
      * @throws Exception if there is an error retrieving the chapter or if the chapter does not exist
-     * @see ChapterApiClient#getChapterById(String)
      */
     private void getChapter(String chapterId) throws Exception {
         try {
-            chapterEntity = chapterApiClient.getChapterById(chapterId);
+            chapterEntity = chapterApiClient.read(chapterId);
         } catch (Exception e) {
             log.error("Chyba při získávání kapitoly: {}", e.getMessage(), e);
             throw new Exception("Chyba při získávání kapitoly: " + e.getMessage());
@@ -388,25 +388,13 @@ public class ChapterService implements IService {
      * @return a list of ChapterEntity objects representing all chapters
      * @throws RuntimeException if there is an error during the retrieval of chapters
      */
-    public PageResult<ChapterEntity> getChapters(FilterParameters filterParameters) throws RuntimeException {
+    public PageResult<ChapterEntity> getChapters(FilterParameters<ChapterFilter> filterParameters) throws RuntimeException {
 
         try {
-            return chapterApiClient.getChapters(filterParameters.getPageNumber() - 1, filterParameters.getPageSize(), filterParameters.getOrderBy(), filterParameters.getSortDirection());
+            return chapterApiClient.readEntities(filterParameters.getPageRequest());
         } catch (Exception e) {
-            log.error("Chyba při získávání stránkování kapitol pro page {}, limit {}, error message: {}", filterParameters.getPageNumber(), filterParameters.getPageSize(), e.getMessage(), e);
+            log.error("Chyba při získávání stránkování kapitol pro page {}, limit {}, error message: {}", filterParameters.getPageRequest().getPageNumber(), filterParameters.getPageRequest().getPageSize(), e.getMessage(), e);
             throw new RuntimeException("Chyba při získávání kapitol: " + e.getMessage(), e);
-        }
-    }
-
-    public List<ChapterEntity> getChapters(String text) throws ApplicationContextException {
-        if (text == null || text.isBlank()) {
-            throw new ApplicationContextException("Text pro filtrování kapitol nesmí být prázdný.");
-        }
-        try {
-            return chapterApiClient.getChaptersFiltered(text);
-        } catch (Exception e) {
-            log.error("Chyba při získávání kapitol filtrovaných pro text {}, error message: {}", text, e.getMessage(), e);
-            throw new ApplicationContextException("Chyba při získávání kapitol: " + e.getMessage(), e);
         }
     }
 }

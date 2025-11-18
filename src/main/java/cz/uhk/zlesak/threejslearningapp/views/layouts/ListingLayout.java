@@ -4,10 +4,8 @@ import com.vaadin.flow.component.Tag;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.Scroller;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
-import com.vaadin.flow.router.AfterNavigationEvent;
 import cz.uhk.zlesak.threejslearningapp.components.common.Filter;
 import cz.uhk.zlesak.threejslearningapp.domain.common.FilterParameters;
-import cz.uhk.zlesak.threejslearningapp.domain.common.SortDirectionEnum;
 import org.springframework.context.annotation.Scope;
 
 /**
@@ -17,11 +15,11 @@ import org.springframework.context.annotation.Scope;
  */
 @Scope("prototype")
 @Tag("listing-scaffold")
-public abstract class ListingLayout extends BaseLayout {
+public abstract class ListingLayout<R> extends BaseLayout {
     protected final VerticalLayout listingLayout, itemListLayout, paginationLayout, secondaryFilterLayout;
     protected final Filter filter = new Filter();
 
-    protected FilterParameters filterParameters;
+    protected FilterParameters<R> filterParameters;
 
     /**
      * Constructor for ListingScaffold.
@@ -51,31 +49,5 @@ public abstract class ListingLayout extends BaseLayout {
         getContent().setPadding(false);
         getContent().add(listingLayout);
         getContent().setSizeFull();
-    }
-
-    /**
-     * Handles actions to be performed after navigation events.
-     *
-     * @param event the AfterNavigationEvent containing navigation details
-     */
-    protected void afterNavigationAction(AfterNavigationEvent event) {
-        filterParameters = new FilterParameters();
-
-        var params = event.getLocation().getQueryParameters().getParameters();
-        if (params.containsKey("page")) {
-            filterParameters.setPageNumber(Integer.parseInt(params.get("page").getFirst()));
-        }
-        if (params.containsKey("limit")) {
-            filterParameters.setPageSize(Integer.parseInt(params.get("limit").getFirst()));
-        }
-        if (params.containsKey("orderBy")) {
-            filterParameters.setOrderBy(String.valueOf(params.get("orderBy").getFirst()));
-        }
-        if (params.containsKey("sortDirection")) {
-            filterParameters.setSortDirection(SortDirectionEnum.valueOf(params.get("sortDirection").getFirst()));
-        }
-        if (params.containsKey("searchText")) {
-            filterParameters.setSearchText(String.valueOf(params.get("searchText").getFirst()));
-        }
     }
 }
