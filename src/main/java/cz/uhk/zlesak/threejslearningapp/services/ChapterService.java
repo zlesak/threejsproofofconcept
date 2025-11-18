@@ -23,7 +23,7 @@ import java.time.Instant;
 import java.util.*;
 
 /**
- * Controller for managing chapters in the application.
+ * Service for managing chapters in the application.
  * This class provides methods to create chapters, retrieve chapter details, and manage sub-chapters.
  * Provides the connector to the ChapterApiClient for performing operations related to chapters on BE side.
  */

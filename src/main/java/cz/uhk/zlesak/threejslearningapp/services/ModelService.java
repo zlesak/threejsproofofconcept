@@ -20,7 +20,7 @@ import java.time.Instant;
 import java.util.List;
 
 /**
- * Controller for managing 3D models, including uploading and retrieving model files and textures.
+ * Service for managing 3D models, including uploading and retrieving model files and textures.
  * This class handles the interaction with the model API client to upload models and textures,
  * and provides methods to retrieve model files, names, and base64 representations.
  * It also integrates with the textureService to manage textures associated with the models as the textures are an integral part of the model data.

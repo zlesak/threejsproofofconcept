@@ -6,19 +6,23 @@ import com.vaadin.flow.component.Tag;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.router.AfterNavigationEvent;
 import com.vaadin.flow.router.Route;
+import cz.uhk.zlesak.threejslearningapp.common.SpringContextUtils;
 import cz.uhk.zlesak.threejslearningapp.components.common.Pagination;
 import cz.uhk.zlesak.threejslearningapp.components.lists.ChapterListItem;
 import cz.uhk.zlesak.threejslearningapp.domain.chapter.ChapterEntity;
+import cz.uhk.zlesak.threejslearningapp.domain.common.FilterParameters;
 import cz.uhk.zlesak.threejslearningapp.domain.common.PageResult;
 import cz.uhk.zlesak.threejslearningapp.events.threejs.SearchEvent;
 import cz.uhk.zlesak.threejslearningapp.services.ChapterService;
 import cz.uhk.zlesak.threejslearningapp.views.layouts.ListingLayout;
 import jakarta.annotation.security.PermitAll;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 
 import java.util.List;
+import java.util.function.Consumer;
 
 /**
  * ChapterListView Class - Shows the list of available chapters to the user.
@@ -31,7 +35,10 @@ import java.util.List;
 @PermitAll
 public class ChapterListView extends ListingLayout {
     private final ChapterService chapterService;
+    @Setter
+    private Consumer<ChapterEntity> chapterSelectedListener;
 
+    private final boolean quizMode;
 
     /**
      * Constructor for ChapterListView.
@@ -42,6 +49,18 @@ public class ChapterListView extends ListingLayout {
     @Autowired
     public ChapterListView(ChapterService chapterService) {
         this.chapterService = chapterService;
+        this.quizMode = false;
+    }
+
+    /**
+     * No-args constructor for a dialog window for selecting a chapter in quiz create mode
+     *
+     * @see cz.uhk.zlesak.threejslearningapp.views.quizes.QuizCreateView
+     */
+    public ChapterListView() {
+        filterParameters = new FilterParameters();
+        this.chapterService = SpringContextUtils.getBean(ChapterService.class);
+        this.quizMode = true;
     }
 
     /**
@@ -82,13 +101,13 @@ public class ChapterListView extends ListingLayout {
         if (filterParameters.getSearchText() != null && !filterParameters.getSearchText().isBlank()) {
             queryFilteredChapters();
         } else {
-
             PageResult<ChapterEntity> chapterEntityPageResult = chapterService.getChapters(filterParameters);
-
             List<ChapterEntity> chapterEntities = chapterEntityPageResult.elements().stream().toList();
-
             for (ChapterEntity chapter : chapterEntities) {
-                ChapterListItem itemComponent = new ChapterListItem(chapter);
+                ChapterListItem itemComponent = new ChapterListItem(chapter, this.quizMode);
+                if (chapterSelectedListener != null) {
+                    itemComponent.setSelectButtonClickListener(e -> chapterSelectedListener.accept(chapter));
+                }
                 itemListLayout.add(itemComponent);
             }
             Pagination pagination = new Pagination(filterParameters.getPageNumber(), filterParameters.getPageSize(), chapterEntityPageResult.total(),
@@ -108,12 +127,14 @@ public class ChapterListView extends ListingLayout {
      */
     private void queryFilteredChapters() {
         List<ChapterEntity> filteredChapters = chapterService.getChapters(filterParameters.getSearchText());
-
         for (ChapterEntity chapter : filteredChapters) {
-            ChapterListItem itemComponent = new ChapterListItem(chapter);
+            ChapterListItem itemComponent = new ChapterListItem(chapter, this.quizMode);
+            if (chapterSelectedListener != null) {
+                itemComponent.setSelectButtonClickListener(e -> chapterSelectedListener.accept(chapter));
+            }
             itemListLayout.add(itemComponent);
         }
-        Pagination pagination = new Pagination(1, filteredChapters.size(), filteredChapters.size(), null); //TODO BE needs to support paging of filtered results, otherwise pagination is pointless here
+        Pagination pagination = new Pagination(1, filteredChapters.size(), filteredChapters.size(), null); //TODO BE paging for filtered results
         paginationLayout.add(pagination);
     }
 
