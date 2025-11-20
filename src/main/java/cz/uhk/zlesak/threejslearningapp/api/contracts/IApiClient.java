@@ -9,6 +9,7 @@ import org.springframework.data.domain.PageRequest;
  *
  * @param <T> Entity type that this API client works with
  * @param <S> Entity type that is returned in paginated results
+ * @param <F> Filter type used for filtered listing
  */
 public interface IApiClient <T, S, F> {
     static String getBaseUrl() {

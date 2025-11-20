@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import cz.uhk.zlesak.threejslearningapp.api.contracts.IApiClient;
 import cz.uhk.zlesak.threejslearningapp.common.InputStreamMultipartFile;
+import cz.uhk.zlesak.threejslearningapp.domain.common.PageResult;
 import cz.uhk.zlesak.threejslearningapp.exceptions.ApiCallException;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.*;
@@ -18,22 +19,117 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
- * Abstract base class for API clients.
- * Provides common functionality for HTTP requests, headers, and response handling.
- *
- * @param <T> Entity type that this API client works with
+ * AbstractApiClient provides common functionality for API clients.
+ * @param <E> entity type
+ * @param <Q> quick entity type
+ * @param <F> filter type
  */
-public abstract class AbstractApiClient<T, S, F> implements IApiClient<T, S, F> {
+public abstract class AbstractApiClient<E, Q, F> implements IApiClient<E, Q, F> {
 
     protected final RestTemplate restTemplate;
     protected final ObjectMapper objectMapper;
     protected final String baseUrl;
 
+    /**
+     * Constructor for AbstractApiClient.
+     * @param restTemplate rest template
+     * @param objectMapper object mapper
+     * @param endpoint API endpoint
+     */
     public AbstractApiClient(RestTemplate restTemplate, ObjectMapper objectMapper, String endpoint) {
         this.restTemplate = restTemplate;
         this.objectMapper = objectMapper;
         this.baseUrl = IApiClient.getBaseUrl() + endpoint;
     }
+
+    /**
+     * Gets the entity class.
+     * @return entity class
+     */
+    protected abstract Class<E> getEntityClass();
+
+    /**
+     * Gets the quick entity class.
+     * @return quick entity class
+     */
+    protected abstract Class<Q> getQuicEntityClass();
+
+
+    //region CRUD operations from IApiClient
+
+    /**
+     * Creates a new entity.
+     * @param entity entity to create
+     * @return created entity
+     * @throws Exception if API call fails
+     */
+    @Override
+    public E create(E entity) throws Exception {
+        return sendPostRequest(baseUrl + "create", entity, getEntityClass(), "Chyba při vytváření entity typu: " + getEntityClass().getSimpleName(), null, null);
+    }
+
+    /**
+     * Reads an entity by ID.
+     * @param id ID of the entity to read
+     * @return entity
+     * @throws Exception if API call fails
+     */
+    @Override
+    public E read(String id) throws Exception {
+        return sendGetRequest(baseUrl + id, getEntityClass(), "Chyba při získávání entity dle ID", id);
+    }
+
+    /**
+     * Reads paginated entities without filtering.
+     * @param pageRequest PageRequest object containing pagination info
+     * @return PageResult of quick entities
+     * @throws Exception if API call fails
+     */
+    @Override
+    public PageResult<Q> readEntities(PageRequest pageRequest) throws Exception {
+        return readEntitiesFiltered(pageRequest, null);
+    }
+
+    /**
+     * Reads paginated entities with filtering.
+     * @param pageRequest PageRequest object containing pagination info
+     * @param filter filter object containing filter criteria
+     * @return PageResult of quick entities
+     * @throws Exception if API call fails
+     */
+    @Override
+    public PageResult<Q> readEntitiesFiltered(PageRequest pageRequest, F filter) throws Exception {
+        String url = pageRequestToQueryParams(pageRequest, null) + filterToQueryParams(filter);
+        ResponseEntity<String> response = sendGetRequestRaw(url, String.class, "Chyba při získávání seznamu entity typu: " + getQuicEntityClass().getSimpleName(), null, true);
+        JavaType type = objectMapper.getTypeFactory().constructParametricType(PageResult.class, getQuicEntityClass());
+        return parseResponse(response, type, "Chyba při získávání seznamu entit typu: " + getQuicEntityClass().getSimpleName(), null);
+    }
+
+    /**
+     * Updates an entity by ID.
+     * @param id ID of the entity to update
+     * @param entity entity with updated data
+     * @return updated entity
+     * @throws Exception if API call fails
+     */
+    @Override
+    public E update(String id, E entity) throws Exception {
+        return sendPutRequest(baseUrl + "update/" + id, entity, getEntityClass(), "Chyba při aktualizaci entity typu: " + getEntityClass().getSimpleName(), id);
+    }
+
+    /**
+     * Deletes an entity by ID.
+     * @param id ID of the entity to delete
+     * @return true if deletion was successful
+     * @throws Exception if API call fails
+     */
+    @Override
+    public boolean delete(String id) throws Exception {
+        sendDeleteRequest(baseUrl + "delete/" + id, "Chyba při mazání entity typu: " + getEntityClass().getSimpleName(), id);
+        return true;
+    }
+    //endregion
+
 
     /**
      * Sends a POST request and returns the response body as the specified type.
@@ -75,7 +171,7 @@ public abstract class AbstractApiClient<T, S, F> implements IApiClient<T, S, F> 
      * @return Response body
      * @throws Exception if request fails
      */
-    protected <R> R sendGetRequest(String url, Class<R> responseType, String errorMessage, String entityId) throws Exception {
+    private <R> R sendGetRequest(String url, Class<R> responseType, String errorMessage, String entityId) throws Exception {
         HttpHeaders headers = createJsonHeaders();
         HttpEntity<Void> requestEntity = new HttpEntity<>(headers);
 
@@ -133,7 +229,7 @@ public abstract class AbstractApiClient<T, S, F> implements IApiClient<T, S, F> 
      * @return Response body
      * @throws Exception if request fails
      */
-    protected <R> R sendPutRequest(String url, Object body, Class<R> responseType, String errorMessage, String entityId) throws Exception {
+    private <R> R sendPutRequest(String url, Object body, Class<R> responseType, String errorMessage, String entityId) throws Exception {
         HttpHeaders headers = createJsonHeaders();
         HttpEntity<?> request = new HttpEntity<>(body, headers);
 
@@ -155,7 +251,7 @@ public abstract class AbstractApiClient<T, S, F> implements IApiClient<T, S, F> 
      * @param entityId     Optional entity ID for error reporting
      * @throws Exception if request fails
      */
-    protected void sendDeleteRequest(String url, String errorMessage, String entityId) throws Exception {
+    private void sendDeleteRequest(String url, String errorMessage, String entityId) throws Exception {
         try {
             restTemplate.exchange(url, HttpMethod.DELETE, null, Void.class);
         } catch (HttpStatusCodeException ex) {
@@ -211,7 +307,7 @@ public abstract class AbstractApiClient<T, S, F> implements IApiClient<T, S, F> 
      *
      * @return HttpHeaders with JSON content type
      */
-    protected HttpHeaders createJsonHeaders() {
+    private HttpHeaders createJsonHeaders() {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         return headers;
@@ -222,7 +318,7 @@ public abstract class AbstractApiClient<T, S, F> implements IApiClient<T, S, F> 
      *
      * @return HttpHeaders with JSON accept type
      */
-    protected HttpHeaders createAcceptJsonHeaders() {
+    private HttpHeaders createAcceptJsonHeaders() {
         HttpHeaders headers = new HttpHeaders();
         headers.setAccept(List.of(MediaType.APPLICATION_JSON));
         return headers;
@@ -236,7 +332,6 @@ public abstract class AbstractApiClient<T, S, F> implements IApiClient<T, S, F> 
      *
      * @param filter filter object (např. QuizFilter)
      * @return query string (bez počátečního ?)
-     * @see #pageRequestToQueryParams(PageRequest)
      */
     protected String filterToQueryParams(F filter) {
         if (filter == null) return "";

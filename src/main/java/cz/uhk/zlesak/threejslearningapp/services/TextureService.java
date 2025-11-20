@@ -183,6 +183,6 @@ public class TextureService implements IService {
      * @return the backend endpoint URL for the texture file
      */
     public String getTextureFileBeEndpointUrl(String textureId) {
-        return textureApiClient.getTextureStreamBeEndpointUrl(textureId);
+        return textureApiClient.getStreamBeEndpointUrl(textureId);
     }
 }

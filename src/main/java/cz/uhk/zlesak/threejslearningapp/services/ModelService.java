@@ -209,6 +209,6 @@ public class ModelService implements IService {
      * @return the URL for the texture file BE endpoint.
      */
     public String getModelFileBeEndpointUrl(String textureId) {
-        return modelApiClient.getModelFileBeEndpointUrl(textureId);
+        return modelApiClient.getStreamBeEndpointUrl(textureId);
     }
 }
