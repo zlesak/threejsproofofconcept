@@ -4,17 +4,13 @@ import com.vaadin.flow.component.AttachEvent;
 import com.vaadin.flow.component.ComponentUtil;
 import com.vaadin.flow.component.Tag;
 import com.vaadin.flow.component.UI;
-import com.vaadin.flow.router.BeforeLeaveEvent;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.VaadinSession;
 import cz.uhk.zlesak.threejslearningapp.components.buttons.CreateModelButton;
-import cz.uhk.zlesak.threejslearningapp.components.dialogs.BeforeLeaveActionDialog;
-import cz.uhk.zlesak.threejslearningapp.components.notifications.ErrorNotification;
-import cz.uhk.zlesak.threejslearningapp.components.notifications.InfoNotification;
 import cz.uhk.zlesak.threejslearningapp.domain.model.QuickModelEntity;
 import cz.uhk.zlesak.threejslearningapp.events.model.ModelCreateEvent;
 import cz.uhk.zlesak.threejslearningapp.services.ModelService;
-import cz.uhk.zlesak.threejslearningapp.views.layouts.ModelLayout;
+import cz.uhk.zlesak.threejslearningapp.views.abstractViews.AbstractModelView;
 import jakarta.annotation.security.RolesAllowed;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,25 +19,23 @@ import org.springframework.context.annotation.Scope;
 
 /**
  * View for creating a new 3D model.
- * Accessible only to users with ADMIN role.
  */
 @Slf4j
 @Route("createModel")
 @Tag("create-model")
 @Scope("prototype")
 @RolesAllowed(value = "TEACHER")
-public class ModelCreateView extends ModelLayout {
-    private boolean skipBeforeLeaveDialog = false;
+public class ModelCreateView extends AbstractModelView {
     private final ModelService modelService;
 
     /**
-     * Constructor for CreateModelView.
+     * Constructor for ModelCreateView.
      *
      * @param modelService the model service for handling model operations
      */
     @Autowired
     public ModelCreateView(ModelService modelService) {
-        super();
+        super("page.title.createModelView", false);
         this.modelService = modelService;
 
         CreateModelButton createButton = new CreateModelButton(modelUploadForm);
@@ -59,10 +53,10 @@ public class ModelCreateView extends ModelLayout {
             showSuccessNotification();
             navigateToModelDetailView(quickModelEntity);
         } catch (ApplicationContextException e) {
-            showErrorNotification(e.getMessage());
+            showErrorNotification(text("notification.uploadError"), e.getMessage());
         } catch (Exception e) {
             log.error("Unexpected error while uploading model", e);
-            showErrorNotification(e.getMessage());
+            showErrorNotification(text("notification.uploadError"), e.getMessage());
         }
     }
 
@@ -109,44 +103,6 @@ public class ModelCreateView extends ModelLayout {
         skipBeforeLeaveDialog = true;
         VaadinSession.getCurrent().setAttribute("quickModelEntity", quickModelEntity);
         UI.getCurrent().navigate("model/" + quickModelEntity.getModel().getId());
-    }
-
-    /**
-     * Shows a success notification.
-     */
-    private void showSuccessNotification() {
-        new InfoNotification(text("notification.uploadSuccess"));
-    }
-
-    /**
-     * Shows an error notification with the given message.
-     *
-     * @param errorMessage the error message to display
-     */
-    private void showErrorNotification(String errorMessage) {
-        new ErrorNotification(text("notification.uploadError") + ": " + errorMessage);
-    }
-
-    /**
-     * Handles the before leave event to show a confirmation dialog.
-     *
-     * @param event before leave event with event details
-     */
-    @Override
-    public void beforeLeave(BeforeLeaveEvent event) {
-        if (!skipBeforeLeaveDialog) {
-            BeforeLeaveActionDialog.leave(event);
-        }
-    }
-
-    /**
-     * Gets the title of the page.
-     *
-     * @return the page title
-     */
-    @Override
-    public String getPageTitle() {
-        return text("page.title.createModelView");
     }
 
     /**

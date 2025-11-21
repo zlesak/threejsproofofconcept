@@ -5,10 +5,10 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.Scroller;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.select.Select;
-import cz.uhk.zlesak.threejslearningapp.components.dialogs.ModelListDialog;
+import cz.uhk.zlesak.threejslearningapp.components.dialogs.listDialogs.ModelListDialog;
 import cz.uhk.zlesak.threejslearningapp.i18n.I18nAware;
 import cz.uhk.zlesak.threejslearningapp.domain.model.QuickModelEntity;
-import cz.uhk.zlesak.threejslearningapp.views.model.ModelListView;
+import cz.uhk.zlesak.threejslearningapp.views.model.ModelListingView;
 import org.springframework.context.ApplicationContextException;
 
 import java.util.HashMap;
@@ -118,8 +118,8 @@ public class ModelsSelectScroller extends Scroller implements I18nAware {
     private Button getChooseAlreadyCreatedModelButton(Select<QuickModelEntity> modelSelect) {
         Button chooseAlreadyCreatedModelButton = new Button(text("modelSelectButton.label"));
 
-        ModelListDialog modelListDialog = new ModelListDialog(new ModelListView());
-        modelListDialog.setModelSelectedListener(entity -> {
+        ModelListDialog modelListDialog = new ModelListDialog(new ModelListingView());
+        modelListDialog.setEntitySelectedListener(entity -> {
             modelSelect.setItems(entity);
             modelSelect.setValue(entity);
             if (modelSelect.getValue() != null) {

@@ -4,10 +4,8 @@ import com.vaadin.flow.component.AttachEvent;
 import com.vaadin.flow.component.ComponentUtil;
 import com.vaadin.flow.component.Tag;
 import com.vaadin.flow.component.UI;
-import com.vaadin.flow.router.BeforeLeaveEvent;
 import com.vaadin.flow.router.Route;
 import cz.uhk.zlesak.threejslearningapp.common.TextureMapHelper;
-import cz.uhk.zlesak.threejslearningapp.components.dialogs.BeforeLeaveActionDialog;
 import cz.uhk.zlesak.threejslearningapp.components.forms.CreateChapterForm;
 import cz.uhk.zlesak.threejslearningapp.components.notifications.ErrorNotification;
 import cz.uhk.zlesak.threejslearningapp.domain.model.QuickModelEntity;
@@ -16,7 +14,7 @@ import cz.uhk.zlesak.threejslearningapp.events.chapter.CreateChapterEvent;
 import cz.uhk.zlesak.threejslearningapp.services.ChapterService;
 import cz.uhk.zlesak.threejslearningapp.services.ModelService;
 import cz.uhk.zlesak.threejslearningapp.services.TextureService;
-import cz.uhk.zlesak.threejslearningapp.views.layouts.ChapterLayout;
+import cz.uhk.zlesak.threejslearningapp.views.abstractViews.AbstractChapterView;
 import jakarta.annotation.security.RolesAllowed;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,16 +27,15 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * CreateChapterView for creating a new chapter.
+ * ChapterCreateView for creating a new chapter.
  * Accessible at the route "/createChapter".
- * Allows admin users to create chapters with content and associated 3D models.
  */
 @Slf4j
 @Route("createChapter")
 @Tag("create-chapter")
 @Scope("prototype")
 @RolesAllowed(value = "TEACHER")
-public class ChapterCreateView extends ChapterLayout {
+public class ChapterCreateView extends AbstractChapterView {
     private final TextureService textureService;
     private final ModelService modelService;
     private final ChapterService chapterService;
@@ -54,7 +51,7 @@ public class ChapterCreateView extends ChapterLayout {
      */
     @Autowired
     public ChapterCreateView(ChapterService chapterService, ModelService modelService, TextureService textureService) {
-        super(true);
+        super("page.title.createChapterView", true, false);
 
         this.modelService = modelService;
         this.textureService = textureService;
@@ -87,7 +84,7 @@ public class ChapterCreateView extends ChapterLayout {
      */
     private void setupChapterForm() {
         CreateChapterForm createChapterForm = new CreateChapterForm(editorjs, mdEditor);
-        chapterContent.add(createChapterForm);
+        entityContent.add(createChapterForm);
         secondaryNavigation.init(editorjs);
     }
 
@@ -106,57 +103,6 @@ public class ChapterCreateView extends ChapterLayout {
     }
 
     /**
-     * Called before leaving the view.
-     * Shows a confirmation dialog if there are unsaved changes.
-     * Disposes of the renderer to free up memory.
-     *
-     * @param event before leave event with event details
-     */
-    @Override
-    public void beforeLeave(BeforeLeaveEvent event) {
-        if (skipBeforeLeaveDialog) {
-            disposeRendererAndProceed(event);
-            return;
-        }
-
-        BeforeLeaveActionDialog.leave(event, this::disposeRendererAndProceed);
-    }
-
-    /**
-     * Disposes of the renderer and proceeds with navigation.
-     *
-     * @param event the before leave event
-     */
-    private void disposeRendererAndProceed(BeforeLeaveEvent event) {
-        BeforeLeaveEvent.ContinueNavigationAction postponed = event.postpone();
-        disposeRendererAndProceed(postponed);
-    }
-
-    /**
-     * Disposes of the renderer and proceeds with navigation.
-     *
-     * @param postponed the postponed navigation action
-     */
-    private void disposeRendererAndProceed(BeforeLeaveEvent.ContinueNavigationAction postponed) {
-        var ui = UI.getCurrent();
-        if (modelDiv.renderer != null) {
-            modelDiv.renderer.dispose(() -> ui.access(postponed::proceed));
-        } else {
-            postponed.proceed();
-        }
-    }
-
-    /**
-     * Provides the title for the page.
-     *
-     * @return the localized page title
-     */
-    @Override
-    public String getPageTitle() {
-        return text("page.title.createChapterView");
-    }
-
-    /**
      * Loads models into the renderer and prepares editor texture area selects.
      *
      * @param quickModelEntityMap map of model entities to be loaded
@@ -166,7 +112,7 @@ public class ChapterCreateView extends ChapterLayout {
         for (QuickModelEntity quickModelEntity : quickModelEntityMap.values()) {
             loadSingleModelWithTextures(quickModelEntity);
         }
-        setupModelDiv(quickModelEntityMap);
+        setupData(quickModelEntityMap);
     }
 
     /**

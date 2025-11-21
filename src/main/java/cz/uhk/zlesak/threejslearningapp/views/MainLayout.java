@@ -1,4 +1,4 @@
-package cz.uhk.zlesak.threejslearningapp.views.layouts;
+package cz.uhk.zlesak.threejslearningapp.views;
 
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.UI;
@@ -18,13 +18,12 @@ import cz.uhk.zlesak.threejslearningapp.components.buttons.LoginButton;
 import cz.uhk.zlesak.threejslearningapp.components.buttons.LogoutButton;
 import cz.uhk.zlesak.threejslearningapp.components.buttons.ThemeModeToggleButton;
 import cz.uhk.zlesak.threejslearningapp.components.common.MenuItemInfo;
-import cz.uhk.zlesak.threejslearningapp.components.lists.AvatarItem;
+import cz.uhk.zlesak.threejslearningapp.components.common.AvatarItem;
 import cz.uhk.zlesak.threejslearningapp.components.notifications.CookiesNotification;
-import cz.uhk.zlesak.threejslearningapp.views.MainPageView;
 import cz.uhk.zlesak.threejslearningapp.views.administration.AdministrationView;
-import cz.uhk.zlesak.threejslearningapp.views.chapter.ChapterListView;
-import cz.uhk.zlesak.threejslearningapp.views.model.ModelListView;
-import cz.uhk.zlesak.threejslearningapp.views.quizes.QuizListView;
+import cz.uhk.zlesak.threejslearningapp.views.chapter.ChapterListingView;
+import cz.uhk.zlesak.threejslearningapp.views.model.ModelListingView;
+import cz.uhk.zlesak.threejslearningapp.views.quizes.QuizListingView;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationContextException;
 import org.springframework.context.annotation.Scope;
@@ -111,9 +110,9 @@ public class MainLayout extends AppLayout {
     private List<MenuItemInfo> commonMenuItemsForLoggedUsers() {
         return new ArrayList<>(List.of(
                 new MenuItemInfo("MISH APP", VaadinIcon.HOME.create(), MainPageView.class),
-                new MenuItemInfo("Kapitoly", VaadinIcon.OPEN_BOOK.create(), ChapterListView.class),
-                new MenuItemInfo("Modely", VaadinIcon.CUBES.create(), ModelListView.class),
-                new MenuItemInfo("Kvízy", VaadinIcon.LIGHTBULB.create(), QuizListView.class)
+                new MenuItemInfo("Kapitoly", VaadinIcon.OPEN_BOOK.create(), ChapterListingView.class),
+                new MenuItemInfo("Modely", VaadinIcon.CUBES.create(), ModelListingView.class),
+                new MenuItemInfo("Kvízy", VaadinIcon.LIGHTBULB.create(), QuizListingView.class)
         ));
     }
 

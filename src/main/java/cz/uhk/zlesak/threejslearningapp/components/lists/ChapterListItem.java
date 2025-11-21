@@ -1,38 +1,24 @@
 package cz.uhk.zlesak.threejslearningapp.components.lists;
 
-import com.vaadin.flow.component.ClickEvent;
-import com.vaadin.flow.component.ComponentEventListener;
 import com.vaadin.flow.component.Tag;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
-import com.vaadin.flow.component.button.ButtonVariant;
-import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Span;
-import com.vaadin.flow.component.markdown.Markdown;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
-import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.server.VaadinSession;
 import cz.uhk.zlesak.threejslearningapp.domain.chapter.ChapterEntity;
 import cz.uhk.zlesak.threejslearningapp.domain.model.QuickModelEntity;
-import cz.uhk.zlesak.threejslearningapp.i18n.I18nAware;
 import lombok.extern.slf4j.Slf4j;
-import org.jetbrains.annotations.NotNull;
 
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 
 @Slf4j
 @Tag("div")
-public class ChapterListItem extends Div implements I18nAware {
-    private final Button selectButton = new Button(text("button.select"));
+public class ChapterListItem extends AbstractListItem {
 
-    public ChapterListItem(ChapterEntity chapter, boolean forQuiz) {
-        setWidthFull();
-        getStyle().set("border", "1px solid #ccc");
-        getStyle().set("border-radius", "8px");
-
-        VerticalLayout details = new VerticalLayout();
-        details.setWidth("50%");
+    public ChapterListItem(ChapterEntity chapter, boolean listView) {
+        super(listView);
 
         HorizontalLayout chapterName = new HorizontalLayout();
         Span nameLabel = new Span(text("chapter.title") + ": ");
@@ -86,49 +72,10 @@ public class ChapterListItem extends Div implements I18nAware {
 
             details.add(modelsRow);
         }
-        HorizontalLayout row = new HorizontalLayout();
 
-        if (!forQuiz) {
-            Button openButton = getOpenButton(chapter, text("button.open"));
-
-            Markdown markdown = new Markdown(text("chapter.content.loading"));
-            markdown.setWidthFull();
-            UI.getCurrent().getPage().executeJs(
-                    "return window.convertEditorJsToMarkdown($0)", chapter.getContent()
-            ).toCompletableFuture().whenComplete((md, t) -> markdown.setContent(md.asString()));
-            row.add(details, markdown, openButton);
-            row.setFlexGrow(0, details);
-            row.setFlexGrow(1, markdown);
-            row.setFlexGrow(0, openButton);// add select button to layout
-
-        }
-        else {
-            selectButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
-            selectButton.getStyle().set("margin", "12px").set("padding", "8px 24px");
-            row.add(details, selectButton);
-            row.setFlexGrow(0, details);
-            row.setFlexGrow(0, selectButton);
-        }
-
-        row.setJustifyContentMode(HorizontalLayout.JustifyContentMode.BETWEEN);
-        row.setAlignItems(HorizontalLayout.Alignment.CENTER);
-
-
-        add(row);
-    }
-
-    public void setSelectButtonClickListener(ComponentEventListener<ClickEvent<Button>> listener) {
-        selectButton.addClickListener(listener);
-    }
-
-    @NotNull
-    private static Button getOpenButton(ChapterEntity chapter, String label) {
-        Button button = new Button(label);
-        button.getStyle().set("margin", "12px").set("padding", "8px 24px");
-        button.addClickListener(e -> {
+        setOpenButtonClickListener(e -> {
             VaadinSession.getCurrent().setAttribute("chapterEntity", chapter);
             UI.getCurrent().navigate("chapter/" + chapter.getId());
         });
-        return button;
     }
 }

@@ -10,10 +10,10 @@ import com.vaadin.flow.router.Route;
 import cz.uhk.zlesak.threejslearningapp.services.ChapterService;
 import cz.uhk.zlesak.threejslearningapp.services.ModelService;
 import cz.uhk.zlesak.threejslearningapp.services.QuizService;
-import cz.uhk.zlesak.threejslearningapp.views.chapter.ChapterListView;
-import cz.uhk.zlesak.threejslearningapp.views.layouts.BaseLayout;
-import cz.uhk.zlesak.threejslearningapp.views.model.ModelListView;
-import cz.uhk.zlesak.threejslearningapp.views.quizes.QuizListView;
+import cz.uhk.zlesak.threejslearningapp.views.chapter.ChapterListingView;
+import cz.uhk.zlesak.threejslearningapp.views.abstractViews.AbstractView;
+import cz.uhk.zlesak.threejslearningapp.views.model.ModelListingView;
+import cz.uhk.zlesak.threejslearningapp.views.quizes.QuizListingView;
 import jakarta.annotation.security.RolesAllowed;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,7 +24,7 @@ import org.springframework.context.annotation.Scope;
 @Tag("administration-view")
 @Scope("prototype")
 @RolesAllowed({"ADMIN", "TEACHER"})
-public class AdministrationView extends BaseLayout {
+public class AdministrationView extends AbstractView {
 
     private final ChapterService chapterService;
     private final ModelService modelService;
@@ -36,12 +36,13 @@ public class AdministrationView extends BaseLayout {
     private Tab modelsTab;
     private Tab quizzesTab;
 
-    private ChapterListView chapterListView;
-    private ModelListView modelListView;
-    private QuizListView quizListView;
+    private ChapterListingView chapterListingView;
+    private ModelListingView modelListingView;
+    private QuizListingView quizListingView;
 
     @Autowired
     public AdministrationView(ChapterService chapterService, ModelService modelService, QuizService quizService) {
+        super("page.title.administrationView");
         this.chapterService = chapterService;
         this.modelService = modelService;
         this.quizService = quizService;
@@ -54,14 +55,14 @@ public class AdministrationView extends BaseLayout {
         modelsTab = new Tab(text("administration.tab.models"));
         quizzesTab = new Tab(text("administration.tab.quizzes"));
 
-        chapterListView = new ChapterListView(chapterService);
-        modelListView = new ModelListView();
-        quizListView = new QuizListView();
+        chapterListingView = new ChapterListingView(chapterService);
+        modelListingView = new ModelListingView();
+        quizListingView = new QuizListingView(quizService);
 
         navigationTabs = new TabSheet();
-        navigationTabs.add(chaptersTab, chapterListView);
-        navigationTabs.add(modelsTab, modelListView);
-        navigationTabs.add(quizzesTab, quizListView);
+        navigationTabs.add(chaptersTab, chapterListingView);
+        navigationTabs.add(modelsTab, modelListingView);
+        navigationTabs.add(quizzesTab, quizListingView);
         navigationTabs.setWidthFull();
 
 
@@ -74,12 +75,9 @@ public class AdministrationView extends BaseLayout {
             Tab selectedTab = navigationTabs.getSelectedTab();
             if (selectedTab == chaptersTab) {
                 createButton.setText(text("button.createChapter"));
-
             } else if (selectedTab == modelsTab) {
                 createButton.setText(text("button.createModel"));
-                modelListView.listModels(true);
             } else if (selectedTab == quizzesTab) {
-
                 createButton.setText(text("button.createQuiz"));
             }
         });
@@ -97,11 +95,6 @@ public class AdministrationView extends BaseLayout {
         } else if (selectedTab == quizzesTab) {
             getUI().ifPresent(ui -> ui.navigate("createQuiz"));
         }
-    }
-
-    @Override
-    public String getPageTitle() {
-        return text("page.title.administrationView");
     }
 }
 

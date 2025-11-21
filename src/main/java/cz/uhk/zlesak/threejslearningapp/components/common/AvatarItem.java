@@ -1,4 +1,4 @@
-package cz.uhk.zlesak.threejslearningapp.components.lists;
+package cz.uhk.zlesak.threejslearningapp.components.common;
 
 import com.vaadin.flow.component.Composite;
 import com.vaadin.flow.component.HasSize;

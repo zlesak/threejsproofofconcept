@@ -1,4 +1,4 @@
-package cz.uhk.zlesak.threejslearningapp.views;
+package cz.uhk.zlesak.threejslearningapp.views.abstractViews;
 
 import com.vaadin.flow.router.*;
 import cz.uhk.zlesak.threejslearningapp.i18n.I18nAware;

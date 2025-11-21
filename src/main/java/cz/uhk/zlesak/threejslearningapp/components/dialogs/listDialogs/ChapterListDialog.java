@@ -1,7 +1,7 @@
 package cz.uhk.zlesak.threejslearningapp.components.dialogs.listDialogs;
 
 import cz.uhk.zlesak.threejslearningapp.domain.chapter.ChapterEntity;
-import cz.uhk.zlesak.threejslearningapp.views.chapter.ChapterListView;
+import cz.uhk.zlesak.threejslearningapp.views.chapter.ChapterListingView;
 
 /**
  * Dialog for listing and selecting ChapterEntity instances.
@@ -10,9 +10,9 @@ import cz.uhk.zlesak.threejslearningapp.views.chapter.ChapterListView;
 public class ChapterListDialog extends AbstractListDialog<ChapterEntity> {
     /**
      * Constructor for ChapterListDialog.
-     * @param chapterListView the ChapterListView to be used in the dialog
+     * @param chapterListingView the ChapterListingView to be used in the dialog
      */
-    public ChapterListDialog(ChapterListView chapterListView) {
-        super(chapterListView);
+    public ChapterListDialog(ChapterListingView chapterListingView) {
+        super(chapterListingView);
     }
 }

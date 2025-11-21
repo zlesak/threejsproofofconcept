@@ -1,6 +1,5 @@
 package cz.uhk.zlesak.threejslearningapp.domain.common;
 
-import cz.uhk.zlesak.threejslearningapp.components.common.Filter;
 import cz.uhk.zlesak.threejslearningapp.events.threejs.SearchEvent;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -13,11 +12,11 @@ import org.springframework.data.domain.Sort;
 @AllArgsConstructor
 @SuperBuilder
 @NoArgsConstructor
-public class FilterParameters<R> {
+public class FilterParameters<F> {
     PageRequest pageRequest = PageRequest.of(0, 10, Sort.Direction.ASC, "Name");
-    R filter;
+    F filter;
 
-    public void setFilteredParameters(SearchEvent searchEvent, R filter) {
+    public void setFilteredParameters(SearchEvent searchEvent, F filter) {
         this.pageRequest = PageRequest.of(
                 0,
                 10,
