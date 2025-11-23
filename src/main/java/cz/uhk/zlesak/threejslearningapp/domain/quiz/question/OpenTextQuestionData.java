@@ -7,22 +7,14 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
 /**
- * Open text question - user provides text answer.
+ * Open text question
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
 @AllArgsConstructor
 @SuperBuilder
-public class OpenTextQuestionData extends QuestionData {
-    /**
-     * Placeholder text for the input field
-     */
+public class OpenTextQuestionData extends AbstractQuestionData {
     String placeholder;
-
-    /**
-     * Maximum length of the answer
-     */
-    Integer maxLength;
 }
 

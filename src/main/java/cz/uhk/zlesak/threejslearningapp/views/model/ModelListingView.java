@@ -66,7 +66,7 @@ public class ModelListingView extends AbstractListingView<QuickModelEntity, Mode
      */
     @Override
     protected PageResult<QuickModelEntity> fetchPage(FilterParameters<ModelFilter> params) {
-        return modelService.getModels(filterParameters);
+        return modelService.readEntities(filterParameters);
     }
 
     /**

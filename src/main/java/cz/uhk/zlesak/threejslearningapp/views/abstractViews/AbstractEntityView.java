@@ -18,8 +18,8 @@ import java.util.Map;
  *
  */
 public abstract class AbstractEntityView extends AbstractView{
-    protected final VerticalLayout entityContentNavigation = new VerticalLayout();
-    protected final VerticalLayout entityContent = new VerticalLayout();
+    protected VerticalLayout entityContentNavigation = new VerticalLayout();
+    protected VerticalLayout entityContent = new VerticalLayout();
     protected final ModelContainer modelDiv = new ModelContainer();
     protected boolean skipBeforeLeaveDialog;
 
@@ -30,24 +30,20 @@ public abstract class AbstractEntityView extends AbstractView{
     public AbstractEntityView(String pageTitleKey, boolean skipBeforeLeaveDialog) {
         super(pageTitleKey);
         this.skipBeforeLeaveDialog = skipBeforeLeaveDialog;
-        entityContentNavigation.setSizeFull();
         entityContentNavigation.setPadding(false);
-        entityContentNavigation.getStyle().set("min-width", "0");
-        entityContentNavigation.getStyle().set("min-height", "0");
         entityContentNavigation.addClassName(LumoUtility.Gap.MEDIUM);
         entityContentNavigation.setVisible(false);
+        entityContentNavigation.getStyle().set("flex", "0 1 auto");
+        entityContentNavigation.getStyle().set("width", "fit-content");
+        entityContentNavigation.getStyle().set("max-width", "250px");
 
         entityContent.setSizeFull();
         entityContent.setPadding(false);
-        entityContent.getStyle().set("min-width", "0");
-        entityContent.getStyle().set("min-height", "0");
         entityContent.addClassName(LumoUtility.Gap.MEDIUM);
 
         HorizontalLayout entitySide = new HorizontalLayout(entityContentNavigation, entityContent);
         entitySide.setSizeFull();
         entitySide.setPadding(false);
-        entitySide.getStyle().set("min-width", "0");
-        entitySide.getStyle().set("min-height", "0");
         entitySide.addClassName(LumoUtility.Gap.MEDIUM);
         entitySide.setFlexGrow(0, entityContentNavigation);
         entitySide.setFlexGrow(1, entityContent);
@@ -56,18 +52,13 @@ public abstract class AbstractEntityView extends AbstractView{
         modelSide.setSizeFull();
         modelSide.setPadding(false);
         modelSide.getStyle().set("flex-grow", "1");
-        modelSide.getStyle().set("min-width", "0");
-        modelSide.getStyle().set("min-height", "0");
         modelSide.addClassName(LumoUtility.Gap.MEDIUM);
 
         SplitLayout splitLayout = new SplitLayout(entitySide, modelSide);
         splitLayout.setSizeFull();
-        splitLayout.getStyle().set("min-width", "0");
-        splitLayout.getStyle().set("min-height", "0");
         splitLayout.addClassName(LumoUtility.Gap.MEDIUM);
 
         getContent().add(splitLayout);
-        getContent().setSizeFull();
     }
 
     /**

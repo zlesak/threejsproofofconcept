@@ -58,6 +58,8 @@ public abstract class AbstractChapterView extends AbstractEntityView {
             tabsScroller.setSizeFull();
             entityContent.add(tabsScroller);
         } else {
+            entityContentNavigation.setVisible(true);
+            entityContentNavigation.add(navigationContentLayout);
             nameTextField.setWidthFull();
             entityContent.add(nameTextField, chapterContentScroller);
         }

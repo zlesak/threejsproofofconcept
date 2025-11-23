@@ -4,6 +4,7 @@ import com.vaadin.flow.component.Composite;
 import com.vaadin.flow.component.DetachEvent;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.shared.Registration;
+import com.vaadin.flow.theme.lumo.LumoUtility;
 import cz.uhk.zlesak.threejslearningapp.components.notifications.ErrorNotification;
 import cz.uhk.zlesak.threejslearningapp.components.notifications.InfoNotification;
 
@@ -21,6 +22,9 @@ public abstract class AbstractView extends Composite<VerticalLayout> implements 
     private final String pageTitleKey;
 
     public AbstractView(String pageTitleKey) {
+        getContent().setSizeFull();
+        getContent().addClassName(LumoUtility.Gap.XSMALL);
+        getContent().setSpacing(false);
         this.pageTitleKey = pageTitleKey;
     }
 

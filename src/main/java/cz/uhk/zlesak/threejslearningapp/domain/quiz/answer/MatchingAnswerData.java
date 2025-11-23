@@ -10,17 +10,13 @@ import java.util.Map;
 
 /**
  * Answer data for matching question.
- * Contains mapping of left items to right items.
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
 @AllArgsConstructor
 @SuperBuilder
-public class MatchingAnswerData extends AnswerData {
-    /**
-     * Correct matches: key = left item index, value = right item index
-     */
+public class MatchingAnswerData extends AbstractAnswerData {
     Map<Integer, Integer> correctMatches;
 }
 

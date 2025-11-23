@@ -9,17 +9,14 @@ import lombok.experimental.SuperBuilder;
 import java.util.List;
 
 /**
- * Single choice question - user can select only one correct answer.
+ * Single choice question.
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
 @AllArgsConstructor
 @SuperBuilder
-public class SingleChoiceQuestionData extends QuestionData {
-    /**
-     * List of available options
-     */
+public class SingleChoiceQuestionData extends AbstractQuestionData {
     List<String> options;
 }
 

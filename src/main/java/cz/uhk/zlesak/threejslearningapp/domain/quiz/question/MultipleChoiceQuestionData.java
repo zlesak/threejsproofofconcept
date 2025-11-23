@@ -9,17 +9,14 @@ import lombok.experimental.SuperBuilder;
 import java.util.List;
 
 /**
- * Multiple choice question - user can select multiple correct answers.
+ * Multiple choice question.
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
 @AllArgsConstructor
 @SuperBuilder
-public class MultipleChoiceQuestionData extends QuestionData {
-    /**
-     * List of available options
-     */
+public class MultipleChoiceQuestionData extends AbstractQuestionData {
     List<String> options;
 }
 

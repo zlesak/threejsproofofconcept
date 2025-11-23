@@ -10,17 +10,13 @@ import java.util.List;
 
 /**
  * Answer data for ordering question.
- * Contains the correct order of items.
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
 @AllArgsConstructor
 @SuperBuilder
-public class OrderingAnswerData extends AnswerData {
-    /**
-     * Correct order of items (items in correct sequence)
-     */
+public class OrderingAnswerData extends AbstractAnswerData {
     List<Integer> correctOrder;
 }
 

@@ -49,7 +49,7 @@ public class ModelListItem extends AbstractListItem {
             if (listView) {
                 UI.getCurrent().navigate("model/" + model.getModel().getId());
             } else {
-                UI.getCurrent().getPage().executeJs("window.open($0, '_blank')", "model/" + model.getModel().getId());
+                UI.getCurrent().getPage().executeJs("window.open($0, '_blank')", "model/" + model.getId());
             }
         });
     }

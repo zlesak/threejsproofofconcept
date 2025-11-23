@@ -10,22 +10,14 @@ import java.util.List;
 
 /**
  * Answer data for open text question.
- * Contains list of acceptable answers and exact match option boolean.
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
 @AllArgsConstructor
 @SuperBuilder
-public class OpenTextAnswerData extends AnswerData {
-    /**
-     * List of acceptable answers
-     */
+public class OpenTextAnswerData extends AbstractAnswerData {
     List<String> acceptableAnswers;
-
-    /**
-     * Whether to perform exact match or allow partial match
-     */
     Boolean exactMatch;
 }
 

@@ -17,4 +17,5 @@ import lombok.experimental.SuperBuilder;
 @SuperBuilder
 @NoArgsConstructor
 public class TextureFilter extends FilterBase {
+    String ModelId;
 }

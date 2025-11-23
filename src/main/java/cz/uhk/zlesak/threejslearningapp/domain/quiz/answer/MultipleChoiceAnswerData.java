@@ -10,17 +10,13 @@ import java.util.List;
 
 /**
  * Answer data for multiple choice question.
- * Contains items of correct options.
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
 @AllArgsConstructor
 @SuperBuilder
-public class MultipleChoiceAnswerData extends AnswerData {
-    /**
-     * Correct option items
-     */
+public class MultipleChoiceAnswerData extends AbstractAnswerData {
     List<Integer> correctItems;
 }
 

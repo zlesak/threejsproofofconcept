@@ -122,9 +122,8 @@ public class ChapterCreateView extends AbstractChapterView {
      * @throws IOException if there is an error loading model or texture streams
      */
     private void loadSingleModelWithTextures(QuickModelEntity quickModelEntity) throws IOException {
-        String modelUrl = modelService.getModelStreamEndpoint(
-                quickModelEntity.getModel().getId(),
-                quickModelEntity.getMainTexture() != null
+        String modelUrl = modelService.getModelFileBeEndpointUrl(
+                quickModelEntity.getModel().getId()
         );
 
         String textureUrl = getMainTextureUrl(quickModelEntity);
@@ -143,7 +142,7 @@ public class ChapterCreateView extends AbstractChapterView {
      */
     private String getMainTextureUrl(QuickModelEntity quickModelEntity) {
         if (quickModelEntity.getMainTexture() != null) {
-            return textureService.getTextureStreamEndpointUrl(
+            return textureService.getTextureFileBeEndpointUrl(
                     quickModelEntity.getMainTexture().getTextureFileId()
             );
         }
@@ -246,6 +245,7 @@ public class ChapterCreateView extends AbstractChapterView {
             String chapterId = chapterService.create(
                     ChapterEntity.builder()
                             .name(chapterName)
+                            .modelHeaderMap(allModels)
                             .content(bodyData)
                             .models(allModels.values().stream().toList())
                             .build()).getId();

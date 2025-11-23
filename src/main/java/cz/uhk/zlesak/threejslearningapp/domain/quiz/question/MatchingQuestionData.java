@@ -9,22 +9,15 @@ import lombok.experimental.SuperBuilder;
 import java.util.List;
 
 /**
- * Matching question - user matches items from left list to items in right list.
+ * Matching question
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
 @AllArgsConstructor
 @SuperBuilder
-public class MatchingQuestionData extends QuestionData {
-    /**
-     * Left column items (keys)
-     */
+public class MatchingQuestionData extends AbstractQuestionData {
     List<String> leftItems;
-
-    /**
-     * Right column items (values to match)
-     */
     List<String> rightItems;
 }
 

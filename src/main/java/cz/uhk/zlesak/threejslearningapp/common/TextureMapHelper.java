@@ -68,7 +68,7 @@ public abstract class TextureMapHelper {
     public static Map<String, String> otherTexturesMap(List<QuickTextureEntity> quickTextureEntityList, TextureService textureService) throws IOException {
         Map<String, String> otherTextures = new HashMap<>();
         for (QuickTextureEntity texture : quickTextureEntityList) {
-            String textureUrl = textureService.getTextureStreamEndpointUrl(texture.getTextureFileId());
+            String textureUrl = textureService.getTextureFileBeEndpointUrl(texture.getTextureFileId());
             otherTextures.put(texture.getTextureFileId(), textureUrl);
         }
         return otherTextures;

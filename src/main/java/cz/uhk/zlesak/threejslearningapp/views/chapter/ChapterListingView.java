@@ -52,6 +52,7 @@ public class ChapterListingView extends AbstractListingView<ChapterEntity, Chapt
      */
     public ChapterListingView() {
         super();
+        filterParameters = new FilterParameters<>(PageRequest.of(0, 6, Sort.Direction.ASC, "Name"), new ChapterFilter(""));
         this.chapterService = SpringContextUtils.getBean(ChapterService.class);
     }
 

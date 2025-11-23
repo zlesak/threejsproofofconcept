@@ -55,18 +55,18 @@ public abstract class AbstractListingView<Q, F> extends AbstractView {
         this.paginationLayout = new VerticalLayout();
         this.secondaryFilterLayout = new VerticalLayout(filter);
 
-        Scroller modelListScroller = new Scroller(itemListLayout, Scroller.ScrollDirection.VERTICAL);
+        Scroller listScroller = new Scroller(itemListLayout, Scroller.ScrollDirection.VERTICAL);
         itemListLayout.setSpacing(false);
         itemListLayout.getThemeList().add("spacing-s");
-        modelListScroller.setSizeFull();
+        listScroller.setSizeFull();
 
         paginationLayout.setAlignItems(FlexComponent.Alignment.CENTER);
         paginationLayout.setPadding(false);
 
-        listingLayout.setFlexGrow(1, modelListScroller);
+        listingLayout.setFlexGrow(1, listScroller);
         listingLayout.setSizeFull();
         listingLayout.setSpacing(false);
-        listingLayout.add(secondaryFilterLayout, modelListScroller, paginationLayout);
+        listingLayout.add(secondaryFilterLayout, listScroller, paginationLayout);
 
         getContent().setPadding(false);
         getContent().add(listingLayout);

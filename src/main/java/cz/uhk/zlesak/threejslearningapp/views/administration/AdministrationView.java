@@ -56,7 +56,7 @@ public class AdministrationView extends AbstractView {
         quizzesTab = new Tab(text("administration.tab.quizzes"));
 
         chapterListingView = new ChapterListingView(chapterService);
-        modelListingView = new ModelListingView();
+        modelListingView = new ModelListingView(modelService);
         quizListingView = new QuizListingView(quizService);
 
         navigationTabs = new TabSheet();
@@ -75,10 +75,13 @@ public class AdministrationView extends AbstractView {
             Tab selectedTab = navigationTabs.getSelectedTab();
             if (selectedTab == chaptersTab) {
                 createButton.setText(text("button.createChapter"));
+                chapterListingView.listEntities();
             } else if (selectedTab == modelsTab) {
                 createButton.setText(text("button.createModel"));
+                modelListingView.listEntities();
             } else if (selectedTab == quizzesTab) {
                 createButton.setText(text("button.createQuiz"));
+                quizListingView.listEntities();
             }
         });
 

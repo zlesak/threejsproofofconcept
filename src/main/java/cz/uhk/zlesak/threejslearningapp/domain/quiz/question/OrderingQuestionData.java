@@ -9,17 +9,14 @@ import lombok.experimental.SuperBuilder;
 import java.util.List;
 
 /**
- * Ordering question - user puts items in correct order.
+ * Ordering question.
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
 @AllArgsConstructor
 @SuperBuilder
-public class OrderingQuestionData extends QuestionData {
-    /**
-     * Items to be ordered
-     */
+public class OrderingQuestionData extends AbstractQuestionData {
     List<String> items;
 }
 

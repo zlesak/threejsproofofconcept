@@ -7,7 +7,9 @@ import com.vaadin.flow.component.UI;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.VaadinSession;
 import cz.uhk.zlesak.threejslearningapp.components.buttons.CreateModelButton;
+import cz.uhk.zlesak.threejslearningapp.domain.model.ModelEntity;
 import cz.uhk.zlesak.threejslearningapp.domain.model.QuickModelEntity;
+import cz.uhk.zlesak.threejslearningapp.domain.texture.TextureEntity;
 import cz.uhk.zlesak.threejslearningapp.events.model.ModelCreateEvent;
 import cz.uhk.zlesak.threejslearningapp.services.ModelService;
 import cz.uhk.zlesak.threejslearningapp.views.abstractViews.AbstractModelView;
@@ -77,17 +79,33 @@ public class ModelCreateView extends AbstractModelView {
             if (modelUploadForm.getMainTextureFileUpload().getUploadedFiles().isEmpty()) {
                 throw new ApplicationContextException(text("model.upload.error.emptyModelMainTexture"));
             }
-            return modelService.uploadModel(
-                    modelUploadForm.getModelName().getValue().trim(),
-                    modelUploadForm.getObjFileUpload().getUploadedFiles().getFirst(),
-                    modelUploadForm.getMainTextureFileUpload().getUploadedFiles().getFirst(),
-                    modelUploadForm.getOtherTexturesFileUpload().getUploadedFiles(),
-                    modelUploadForm.getCsvFileUpload().getUploadedFiles()
+            return modelService.create(
+                    ModelEntity.builder()
+                            .name(modelUploadForm.getModelName().getValue().trim())
+                            .inputStreamMultipartFile(modelUploadForm.getObjFileUpload().getUploadedFiles().getFirst())
+                            .fullMainTexture(
+                                TextureEntity.builder()
+                                .textureFile(
+                                    modelUploadForm.getMainTextureFileUpload().getUploadedFiles().getFirst()
+                                ).build()
+                            )
+                            .fullOtherTextures(
+                                modelUploadForm.getOtherTexturesFileUpload().getUploadedFiles()
+                                    .stream()
+                                    .map(file -> TextureEntity.builder().textureFile(file).build())
+                                    .collect(java.util.stream.Collectors.toList())
+                            )
+                            .csvFiles(modelUploadForm.getCsvFileUpload().getUploadedFiles())
+                            .isAdvanced(true)
+                            .build()
             );
         } else {
-            return modelService.uploadModel(
-                    modelUploadForm.getModelName().getValue().trim(),
-                    modelUploadForm.getObjFileUpload().getUploadedFiles().getFirst()
+            return modelService.create(
+                    ModelEntity.builder()
+                            .name(modelUploadForm.getModelName().getValue().trim())
+                            .inputStreamMultipartFile(modelUploadForm.getObjFileUpload().getUploadedFiles().getFirst())
+                            .isAdvanced(false)
+                            .build()
             );
         }
     }

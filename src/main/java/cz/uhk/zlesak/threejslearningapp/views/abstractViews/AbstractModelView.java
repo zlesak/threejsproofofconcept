@@ -44,6 +44,7 @@ public abstract class AbstractModelView extends AbstractEntityView {
     public AbstractModelView(String pageTitleKey, boolean skipBeforeLeaveDialog) {
         super(pageTitleKey, skipBeforeLeaveDialog);
         modelUploadForm = new ModelUploadForm();
+        modelUploadForm.setWidthFull();
         entityContent.add(modelUploadForm);
     }
 

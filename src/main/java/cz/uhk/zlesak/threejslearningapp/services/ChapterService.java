@@ -8,8 +8,6 @@ import cz.uhk.zlesak.threejslearningapp.components.notifications.ErrorNotificati
 import cz.uhk.zlesak.threejslearningapp.domain.chapter.ChapterEntity;
 import cz.uhk.zlesak.threejslearningapp.domain.chapter.ChapterFilter;
 import cz.uhk.zlesak.threejslearningapp.domain.chapter.SubChapterForSelect;
-import cz.uhk.zlesak.threejslearningapp.domain.common.FilterParameters;
-import cz.uhk.zlesak.threejslearningapp.domain.common.PageResult;
 import cz.uhk.zlesak.threejslearningapp.domain.model.QuickModelEntity;
 import elemental.json.Json;
 import elemental.json.JsonArray;
@@ -31,9 +29,7 @@ import java.util.*;
 @Slf4j
 @Service
 @Scope("prototype")
-public class ChapterService implements IService {
-    private final ChapterApiClient chapterApiClient;
-    private ChapterEntity chapterEntity = null;
+public class ChapterService extends AbstractService<ChapterEntity, ChapterEntity, ChapterFilter> { //TODO quick chapter entity
     private final ObjectMapper objectMapper;
     private final List<QuickModelEntity> uploadedModels = new ArrayList<>();
 
@@ -44,105 +40,8 @@ public class ChapterService implements IService {
      */
     @Autowired
     public ChapterService(ChapterApiClient chapterApiClient, ObjectMapper objectMapper) {
-        this.chapterApiClient = chapterApiClient;
+        super(chapterApiClient);
         this.objectMapper = objectMapper;
-    }
-
-    /**
-     * Creates a new chapter with the specified name and content.
-     * Validates the inputs to ensure that the chapter name and content are not empty, and that a model is uploaded.
-     * If any validation fails, an ApplicationContextException is thrown with an appropriate message.
-     * If the chapter is successfully created, it returns the created ChapterEntity.
-     *
-     * @param name    the name of the chapter
-     * @param content the content of the chapter in JSON format
-     * @return created ChapterEntity ID coming back from BE as proof of successful creation
-     * @throws Exception if there is an error during chapter creation or if validation fails
-     */
-    public String createChapter(String name, String content, Map<String, QuickModelEntity> allModels) throws Exception {
-
-        if (name == null || name.isEmpty()) {
-            throw new ApplicationContextException("Název kapitoly nesmí být prázdný.");
-        }
-        if (content == null || content.isEmpty()) {
-            throw new ApplicationContextException("Obsah kapitoly nesmí být prázdný.");
-        }
-        if (allModels == null || allModels.isEmpty()) {
-            throw new ApplicationContextException("Kapitola musí mít alespoň jeden model.");
-        }
-
-
-        try {
-            ObjectNode bodyJson = (ObjectNode) objectMapper.readTree(content);
-            ArrayNode blocks = (ArrayNode) bodyJson.get("blocks");
-
-            if (blocks.isEmpty()) {
-                throw new ApplicationContextException("Obsah kapitoly nesmí být prázdný.");
-            }
-
-            blocks.forEach(blockNode -> {
-                if (blockNode.has("id") && allModels.containsKey(blockNode.get("id").asText())) {
-                    String blockId = blockNode.get("id").asText();
-                    QuickModelEntity model = allModels.get(blockId);
-                    ObjectNode dataNode = (ObjectNode) blockNode.get("data");
-                    dataNode.put("modelId", model.getModel().getId());
-                }
-            });
-            content = objectMapper.writeValueAsString(bodyJson);
-        } catch (ApplicationContextException e) {
-            throw e;
-        } catch (Exception e) {
-            log.error("Chyba při úpravě bloků editorjs: {}", e.getMessage(), e);
-            new ErrorNotification("Chyba při úpravě bloků editorjs: " + e.getMessage(), 5000);
-        }
-
-        List<QuickModelEntity> modelsList = new ArrayList<>();
-        Set<String> addedModelIds = new HashSet<>();
-
-        allModels.forEach((key, model) -> {
-            if (!key.equals("main") && !addedModelIds.contains(model.getModel().getId())) {
-                modelsList.add(model);
-                addedModelIds.add(model.getModel().getId());
-            }
-        });
-
-        if (allModels.containsKey("main")) {
-            QuickModelEntity mainModel = allModels.get("main");
-            modelsList.addFirst(mainModel);
-            addedModelIds.add(mainModel.getModel().getId());
-        }
-
-        uploadedModels.addAll(modelsList);
-
-        ChapterEntity chapter = ChapterEntity.builder()
-                .Name(name)
-                .Created(Instant.now())
-                .Content(content)
-                .Models(uploadedModels)
-                .build();
-        try {
-            return chapterApiClient.create(chapter).getId();
-        } catch (Exception e) {
-            log.error("Chyba při vytváření kapitoly: {}", e.getMessage(), e);
-            throw e;
-        }
-    }
-
-    /**
-     * Retrieves a chapter by its ID via chapterApiClient from the BE.
-     * This method fetches the chapter details from the ChapterApiClient and stores it in the chapterEntity field.
-     * If an error occurs during the retrieval, it logs the error and throws an Exception with a message indicating the failure.
-     *
-     * @param chapterId the ID of the chapter to be retrieved
-     * @throws Exception if there is an error retrieving the chapter or if the chapter does not exist
-     */
-    private void getChapter(String chapterId) throws Exception {
-        try {
-            chapterEntity = chapterApiClient.read(chapterId);
-        } catch (Exception e) {
-            log.error("Chyba při získávání kapitoly: {}", e.getMessage(), e);
-            throw new Exception("Chyba při získávání kapitoly: " + e.getMessage());
-        }
     }
 
     /**
@@ -152,13 +51,10 @@ public class ChapterService implements IService {
      *
      * @param chapterId the ID of the chapter whose name is to be retrieved
      * @return the name of the chapter
-     * @throws Exception if there is an error retrieving the chapter or if the chapter does not exist
      */
-    public String getChapterName(String chapterId) throws Exception {
-        if (chapterEntity == null || !Objects.equals(chapterEntity.getId(), chapterId)) {
-            getChapter(chapterId);
-        }
-        return chapterEntity.getName();
+    public String getChapterName(String chapterId) {
+        read(chapterId);
+        return entity.getName();
     }
 
     /**
@@ -167,11 +63,9 @@ public class ChapterService implements IService {
      *
      * @return the content of the chapter as a JSON string
      */
-    public String getChapterContent(String chapterId) throws Exception {
-        if (chapterEntity == null || !Objects.equals(chapterEntity.getId(), chapterId)) {
-            getChapter(chapterId);
-        }
-        return chapterEntity.getContent();
+    public String getChapterContent(String chapterId) {
+        read(chapterId);
+        return entity.getContent();
     }
 
     /**
@@ -185,20 +79,18 @@ public class ChapterService implements IService {
      * @see SubChapterForSelect
      */
     public List<SubChapterForSelect> getSubChaptersNames(String chapterId) throws Exception {
-        if (chapterEntity == null || !Objects.equals(chapterEntity.getId(), chapterId)) {
-            getChapter(chapterId);
-        }
+        read(chapterId);
 
         List<SubChapterForSelect> subChapters = new ArrayList<>();
         try {
-            JsonArray blocks = Json.parse(chapterEntity.getContent()).getArray("blocks");
+            JsonArray blocks = Json.parse(entity.getContent()).getArray("blocks");
 
             for (int i = 0; i < blocks.length(); i++) {
                 JsonObject block = blocks.getObject(i);
                 if ("header".equals(block.getString("type")) && block.getObject("data").getNumber("level") == 1) {
                     String id = block.hasKey("id") ? block.getString("id") : "fallback-" + java.util.UUID.randomUUID().toString().substring(0, 7);
                     String text = block.getObject("data").getString("text");
-                    String modelId = block.getObject("data").hasKey("modelId") ? block.getObject("data").getString("modelId") : null;
+                    String modelId = block.getObject("data").hasKey("modelId") ? block.getObject("data").getString("modelId") : "";
                     subChapters.add(new SubChapterForSelect(id, text, modelId));
                 }
             }
@@ -217,12 +109,10 @@ public class ChapterService implements IService {
      * @throws Exception if there is an error retrieving the sub-chapter content or if the chapter does not exist
      */
     public JsonArray getSubChaptersContent(String chapterId) throws Exception {
-        if (chapterEntity == null || !Objects.equals(chapterEntity.getId(), chapterId)) {
-            getChapter(chapterId);
-        }
+        read(chapterId);
 
         try {
-            JsonArray blocks = Json.parse(chapterEntity.getContent()).getArray("blocks");
+            JsonArray blocks = Json.parse(entity.getContent()).getArray("blocks");
             JsonArray result = Json.createArray();
             int resultIndex = 0;
             int objectIndex = 0;
@@ -314,7 +204,7 @@ public class ChapterService implements IService {
      * @return the content of the selected sub-chapter as a JSON string
      */
     public String getSelectedSubChapterContent(String id) {
-        JsonArray blocks = Json.parse(chapterEntity.getContent()).getArray("blocks");
+        JsonArray blocks = Json.parse(entity.getContent()).getArray("blocks");
         boolean headerExists = false;
         for (int i = 0; i < blocks.length(); i++) {
             JsonObject block = blocks.getObject(i);
@@ -355,14 +245,12 @@ public class ChapterService implements IService {
      * @throws Exception if there is an error retrieving the chapter or sub-chapter models
      */
     public Map<String, QuickModelEntity> getChaptersModels(String chapterId) throws Exception {
-        if (chapterEntity == null || !Objects.equals(chapterEntity.getId(), chapterId)) {
-            getChapter(chapterId);
-        }
+        read(chapterId);
         try {
             List<SubChapterForSelect> subChaptersNames = getSubChaptersNames(chapterId);
             subChaptersNames.addFirst(new SubChapterForSelect("main", null, null));
             Map<String, QuickModelEntity> modelsMap = new HashMap<>();
-            List<QuickModelEntity> modelsList = new ArrayList<>(chapterEntity.getModels());
+            List<QuickModelEntity> modelsList = new ArrayList<>(entity.getModels());
             modelsMap.put("main", modelsList.getFirst());
 
             for (SubChapterForSelect subChapter : subChaptersNames) {
@@ -380,21 +268,85 @@ public class ChapterService implements IService {
     }
 
     /**
-     * Retrieves a list of all chapters from the backend service.
-     * This method uses the ChapterApiClient to fetch the list of chapters.
-     * If there is an error during the retrieval, it throws an Exception with details about the error.
-     * @param filterParameters the filtering parameters including page number, page size, order by, and sort direction
+     * Validates the ChapterCreateEntity before creating a new chapter.
+     * It checks that the chapter name, content, and models are not null or empty.
      *
-     * @return a list of ChapterEntity objects representing all chapters
-     * @throws RuntimeException if there is an error during the retrieval of chapters
+     * @param chapterCreateEntity the ChapterCreateEntity to validate
+     * @throws RuntimeException if any validation check fails
      */
-    public PageResult<ChapterEntity> getChapters(FilterParameters<ChapterFilter> filterParameters) throws RuntimeException {
-
-        try {
-            return chapterApiClient.readEntities(filterParameters.getPageRequest());
-        } catch (Exception e) {
-            log.error("Chyba při získávání stránkování kapitol pro page {}, limit {}, error message: {}", filterParameters.getPageRequest().getPageNumber(), filterParameters.getPageRequest().getPageSize(), e.getMessage(), e);
-            throw new RuntimeException("Chyba při získávání kapitol: " + e.getMessage(), e);
+    @Override
+    protected ChapterEntity validateCreateEntity(ChapterEntity chapterCreateEntity) throws RuntimeException {
+        if (chapterCreateEntity.getName() == null || chapterCreateEntity.getName().isEmpty()) {
+            throw new RuntimeException("Název kapitoly nesmí být prázdný.");
         }
+        if (chapterCreateEntity.getContent() == null || chapterCreateEntity.getContent().isEmpty()) {
+            throw new RuntimeException("Obsah kapitoly nesmí být prázdný.");
+        }
+        if (chapterCreateEntity.getModels() == null || chapterCreateEntity.getModels().isEmpty()) {
+            throw new RuntimeException("Kapitola musí mít alespoň jeden model.");
+        }
+        return chapterCreateEntity;
+    }
+
+    /**
+     * Creates the final ChapterEntity from the ChapterCreateEntity.
+     * It processes the content to associate models with their respective blocks and prepares the list of uploaded
+     *
+     * @param chapterCreateEntity the ChapterCreateEntity to convert
+     * @return the created ChapterEntity
+     * @throws RuntimeException if any error occurs during the creation process
+     */
+    @Override
+    protected ChapterEntity createFinalEntity(ChapterEntity chapterCreateEntity) throws RuntimeException {
+
+        String content = "";
+        try {
+            ObjectNode bodyJson = (ObjectNode) objectMapper.readTree(chapterCreateEntity.getContent());
+            ArrayNode blocks = (ArrayNode) bodyJson.get("blocks");
+
+            if (blocks.isEmpty()) {
+                throw new ApplicationContextException("Obsah kapitoly nesmí být prázdný.");
+            }
+
+            blocks.forEach(blockNode -> {
+                if (blockNode.has("id") && chapterCreateEntity.getModelHeaderMap().containsKey(blockNode.get("id").asText())) {
+                    String blockId = blockNode.get("id").asText();
+                    QuickModelEntity model = chapterCreateEntity.getModelHeaderMap().get(blockId);
+                    ObjectNode dataNode = (ObjectNode) blockNode.get("data");
+                    dataNode.put("modelId", model.getModel().getId());
+                }
+            });
+            content = objectMapper.writeValueAsString(bodyJson);
+        } catch (ApplicationContextException e) {
+            throw e;
+        } catch (Exception e) {
+            log.error("Chyba při úpravě bloků editorjs: {}", e.getMessage(), e);
+            new ErrorNotification("Chyba při úpravě bloků editorjs: " + e.getMessage(), 5000);
+        }
+
+        List<QuickModelEntity> modelsList = new ArrayList<>();
+        Set<String> addedModelIds = new HashSet<>();
+
+        chapterCreateEntity.getModelHeaderMap().forEach((key, model) -> {
+            if (!key.equals("main") && !addedModelIds.contains(model.getId())) {
+                modelsList.add(model);
+                addedModelIds.add(model.getId());
+            }
+        });
+
+        if (chapterCreateEntity.getModelHeaderMap().containsKey("main")) {
+            QuickModelEntity mainModel = chapterCreateEntity.getModelHeaderMap().get("main");
+            modelsList.addFirst(mainModel);
+            addedModelIds.add(mainModel.getId());
+        }
+
+        uploadedModels.addAll(modelsList);
+
+        return ChapterEntity.builder()
+                .name(chapterCreateEntity.getName())
+                .created(Instant.now())
+                .content(content)
+                .models(uploadedModels)
+                .build();
     }
 }

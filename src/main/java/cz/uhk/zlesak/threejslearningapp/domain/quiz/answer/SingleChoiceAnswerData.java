@@ -8,17 +8,13 @@ import lombok.experimental.SuperBuilder;
 
 /**
  * Answer data for single choice question.
- * Contains index of the correct option.
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
 @AllArgsConstructor
 @SuperBuilder
-public class SingleChoiceAnswerData extends AnswerData {
-    /**
-     * Index of the correct option
-     */
+public class SingleChoiceAnswerData extends AbstractAnswerData {
     Integer correctIndex;
 }
 

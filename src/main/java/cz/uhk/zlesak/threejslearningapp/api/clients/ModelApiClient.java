@@ -1,17 +1,15 @@
 package cz.uhk.zlesak.threejslearningapp.api.clients;
 
-import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import cz.uhk.zlesak.threejslearningapp.api.contracts.IModelApiClient;
 import cz.uhk.zlesak.threejslearningapp.common.InputStreamMultipartFile;
-import cz.uhk.zlesak.threejslearningapp.domain.common.PageResult;
 import cz.uhk.zlesak.threejslearningapp.domain.model.ModelEntity;
 import cz.uhk.zlesak.threejslearningapp.domain.model.ModelFilter;
 import cz.uhk.zlesak.threejslearningapp.domain.model.QuickModelEntity;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.List;
@@ -23,7 +21,7 @@ import java.util.List;
  * The base URL for the API is determined by the IApiClient interface.
  */
 @Component
-public class ModelApiClient extends AbstractFileApiClient<ModelEntity, QuickModelEntity, ModelFilter, ModelEntity> implements IModelApiClient {
+public class ModelApiClient extends AbstractFileApiClient<ModelEntity, QuickModelEntity, ModelFilter> implements IModelApiClient {
 
     /**
      * Constructor for ModelApiClient.
@@ -48,31 +46,13 @@ public class ModelApiClient extends AbstractFileApiClient<ModelEntity, QuickMode
      */
     @Override
     public ModelEntity read(String modelId) throws Exception { //TODO BE implementation to provide this structure directly
-
         InputStreamMultipartFile fileEntity = downloadFileEntity(modelId);
         return ModelEntity.builder()
-                .Id(modelId)
-                .Name(fileEntity.getName())
-                .MainTextureEntity(null)
-                .TextureEntities(List.of())
-                .File(fileEntity)
+                .id(modelId)
+                .name(fileEntity.getName())
+                .fullMainTexture(null)
+                .fullOtherTextures(List.of())
                 .build();
-    }
-
-    /**
-     * Gets paginated list of models with filtering.
-     *
-     * @param pageRequest PageRequest object containing pagination info
-     * @param filter      ModelFilter object containing filter criteria
-     * @return PageResult of QuickModelEntity
-     * @throws Exception if API call fails
-     */
-    @Override
-    public PageResult<QuickModelEntity> readEntitiesFiltered(PageRequest pageRequest, ModelFilter filter) throws Exception {
-        String url = pageRequestToQueryParams(pageRequest, "list-by") + filterToQueryParams(filter); //TODO make list on BE to be use the method from AbstractApiClient
-        ResponseEntity<String> response = sendGetRequestRaw(url, String.class, "Chyba při získávání seznamu modelů", null, true);
-        JavaType type = objectMapper.getTypeFactory().constructParametricType(PageResult.class, QuickModelEntity.class);
-        return parseResponse(response, type, "Chyba při získávání seznamu modelů", null);
     }
     //endregion
 
@@ -80,6 +60,7 @@ public class ModelApiClient extends AbstractFileApiClient<ModelEntity, QuickMode
 
     /**
      * Gets the class type of the entity.
+     *
      * @return Class of ModelEntity
      */
     @Override
@@ -89,11 +70,25 @@ public class ModelApiClient extends AbstractFileApiClient<ModelEntity, QuickMode
 
     /**
      * Gets the class type of the quick entity.
+     *
      * @return Class of QuickModelEntity
      */
     @Override
     protected Class<QuickModelEntity> getQuicEntityClass() {
         return QuickModelEntity.class;
+    }
+
+    /**
+     * Prepares the body for file upload.
+     * @param entity the model entity containing the file to upload
+     * @return MultiValueMap with the file data
+     */
+    @Override
+    protected MultiValueMap<String, Object> prepareFileUploadBody(ModelEntity entity) {
+        MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+        body.add("model", entity.getInputStreamMultipartFile().getResource());
+        entity.setInputStreamMultipartFile(null);
+        return body;
     }
     //endregion
 }

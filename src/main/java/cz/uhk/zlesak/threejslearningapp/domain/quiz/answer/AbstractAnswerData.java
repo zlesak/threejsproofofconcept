@@ -13,15 +13,8 @@ import lombok.experimental.SuperBuilder;
 @NoArgsConstructor
 @AllArgsConstructor
 @SuperBuilder
-public abstract class AnswerData {
-    /**
-     * Question ID this answer belongs to
-     */
+public abstract class AbstractAnswerData {
     String questionId;
-
-    /**
-     * Type of answer
-     */
     QuestionTypeEnum type;
 }
 
