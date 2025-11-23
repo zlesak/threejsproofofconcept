@@ -12,7 +12,7 @@ import cz.uhk.zlesak.threejslearningapp.domain.common.FilterParameters;
 import cz.uhk.zlesak.threejslearningapp.domain.common.PageResult;
 import cz.uhk.zlesak.threejslearningapp.services.ChapterService;
 import cz.uhk.zlesak.threejslearningapp.views.abstractViews.AbstractListingView;
-import cz.uhk.zlesak.threejslearningapp.views.quizes.AbstractQuizCreateView;
+import cz.uhk.zlesak.threejslearningapp.views.quizes.QuizCreateView;
 import jakarta.annotation.security.PermitAll;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -48,7 +48,7 @@ public class ChapterListingView extends AbstractListingView<ChapterEntity, Chapt
     /**
      * No-args constructor for a dialog window for selecting a chapter in quiz create mode
      *
-     * @see AbstractQuizCreateView
+     * @see QuizCreateView
      */
     public ChapterListingView() {
         super();
@@ -77,7 +77,7 @@ public class ChapterListingView extends AbstractListingView<ChapterEntity, Chapt
      */
     @Override
     protected PageResult<ChapterEntity> fetchPage(FilterParameters<ChapterFilter> params) {
-        return chapterService.getChapters(params);
+        return chapterService.readEntities(params);
     }
 
     /**

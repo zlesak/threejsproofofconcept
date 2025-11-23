@@ -13,25 +13,10 @@ import lombok.experimental.SuperBuilder;
 @NoArgsConstructor
 @AllArgsConstructor
 @SuperBuilder
-public abstract class QuestionData {
-    /**
-     * Unique identifier for this question within the quiz
-     */
+public abstract class AbstractQuestionData {
     String questionId;
-
-    /**
-     * Question text
-     */
     String questionText;
-
-    /**
-     * Type of question
-     */
     QuestionTypeEnum type;
-
-    /**
-     * Points for correct answer
-     */
     Integer points;
 }
 

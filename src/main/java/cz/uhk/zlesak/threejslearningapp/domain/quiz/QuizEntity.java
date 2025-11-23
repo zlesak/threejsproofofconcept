@@ -1,26 +1,20 @@
 package cz.uhk.zlesak.threejslearningapp.domain.quiz;
 
-import cz.uhk.zlesak.threejslearningapp.domain.common.Entity;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import lombok.experimental.SuperBuilder;
 
 /**
- * Quiz entity data class - holds data about quiz on frontend side or when communicating with backend API endpoints.
- * Questions and answers are stored separately to prevent cheating - only questions are sent to frontend,
- * answers are validated on backend.
+ * QuizEntity Class - Represents a quiz entity with questions, answers, and time limit.
  */
 @Data
-@EqualsAndHashCode(callSuper = true)
-@AllArgsConstructor
+@Getter
+@Setter
 @SuperBuilder
 @NoArgsConstructor
-public class QuizEntity extends Entity {
-    String Description;
-    String QuestionsJson;
-    String AnswersJson;
-    Integer TimeLimit;
-    String ChapterId;
+@AllArgsConstructor
+@EqualsAndHashCode(callSuper = true)
+public class QuizEntity extends QuickQuizEntity {
+    String questionsJson;
+    String answersJson;
+    Integer timeLimit;
 }

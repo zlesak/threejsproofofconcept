@@ -61,7 +61,7 @@ public abstract class TextureMapHelper {
      * Uses the provided textureService to generate the URLs.
      *
      * @param quickTextureEntityList the list of QuickTextureEntity objects
-     * @param textureService      the textureService used to get the texture stream endpoint URLs
+     * @param textureService         the textureService used to get the texture stream endpoint URLs
      * @return a map where the key is the texture file ID and the value is the texture stream endpoint URL
      * @throws IOException if an I/O error occurs while retrieving the texture stream endpoint URL
      */

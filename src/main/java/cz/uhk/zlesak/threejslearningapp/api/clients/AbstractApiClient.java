@@ -4,6 +4,8 @@ import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import cz.uhk.zlesak.threejslearningapp.api.contracts.IApiClient;
 import cz.uhk.zlesak.threejslearningapp.common.InputStreamMultipartFile;
+import cz.uhk.zlesak.threejslearningapp.domain.common.AbstractEntity;
+import cz.uhk.zlesak.threejslearningapp.domain.common.FilterParameters;
 import cz.uhk.zlesak.threejslearningapp.domain.common.PageResult;
 import cz.uhk.zlesak.threejslearningapp.exceptions.ApiCallException;
 import org.springframework.data.domain.PageRequest;
@@ -24,7 +26,7 @@ import java.util.List;
  * @param <Q> quick entity type
  * @param <F> filter type
  */
-public abstract class AbstractApiClient<E, Q, F> implements IApiClient<E, Q, F> {
+public abstract class AbstractApiClient<E extends Q, Q extends AbstractEntity, F> implements IApiClient<E, Q, F> {
 
     protected final RestTemplate restTemplate;
     protected final ObjectMapper objectMapper;
@@ -64,8 +66,8 @@ public abstract class AbstractApiClient<E, Q, F> implements IApiClient<E, Q, F> 
      * @throws Exception if API call fails
      */
     @Override
-    public E create(E entity) throws Exception {
-        return sendPostRequest(baseUrl + "create", entity, getEntityClass(), "Chyba při vytváření entity typu: " + getEntityClass().getSimpleName(), null, null);
+    public Q create(E entity) throws Exception {
+        return sendPostRequest(baseUrl + "create", entity, getQuicEntityClass(), "Chyba při vytváření entity typu: " + getEntityClass().getSimpleName(), null, null);
     }
 
     /**
@@ -80,26 +82,25 @@ public abstract class AbstractApiClient<E, Q, F> implements IApiClient<E, Q, F> 
     }
 
     /**
-     * Reads paginated entities without filtering.
-     * @param pageRequest PageRequest object containing pagination info
-     * @return PageResult of quick entities
+     * Reads a quick entity by ID.
+     * @param id ID of the entity to read
+     * @return quick entity
      * @throws Exception if API call fails
      */
     @Override
-    public PageResult<Q> readEntities(PageRequest pageRequest) throws Exception {
-        return readEntitiesFiltered(pageRequest, null);
+    public Q readQuick(String id) throws Exception {
+        return sendGetRequest(baseUrl + "/quick" + id, getQuicEntityClass(), "Chyba při získávání quick entity dle ID", id);
     }
 
     /**
-     * Reads paginated entities with filtering.
-     * @param pageRequest PageRequest object containing pagination info
-     * @param filter filter object containing filter criteria
+     * Reads paginated entities without filtering.
+     * @param filterParameters FilterParameters<F> object containing pagination info and filter
      * @return PageResult of quick entities
      * @throws Exception if API call fails
      */
     @Override
-    public PageResult<Q> readEntitiesFiltered(PageRequest pageRequest, F filter) throws Exception {
-        String url = pageRequestToQueryParams(pageRequest, null) + filterToQueryParams(filter);
+    public PageResult<Q> readEntities(FilterParameters<F> filterParameters) throws Exception {
+        String url = pageRequestToQueryParams(filterParameters.getPageRequest(), null);//ß + filterToQueryParams(filterParameters.getFilter());
         ResponseEntity<String> response = sendGetRequestRaw(url, String.class, "Chyba při získávání seznamu entity typu: " + getQuicEntityClass().getSimpleName(), null, true);
         JavaType type = objectMapper.getTypeFactory().constructParametricType(PageResult.class, getQuicEntityClass());
         return parseResponse(response, type, "Chyba při získávání seznamu entit typu: " + getQuicEntityClass().getSimpleName(), null);
@@ -336,6 +337,7 @@ public abstract class AbstractApiClient<E, Q, F> implements IApiClient<E, Q, F> 
     protected String filterToQueryParams(F filter) {
         if (filter == null) return "";
         StringBuilder sb = new StringBuilder();
+        sb.append("&");
         Class<?> clazz = filter.getClass();
         while (clazz != null && clazz != Object.class) {
             for (Field field : clazz.getDeclaredFields()) {
@@ -376,4 +378,5 @@ public abstract class AbstractApiClient<E, Q, F> implements IApiClient<E, Q, F> 
                 "&orderBy=" + orderBy +
                 "&sortDirection=" + sortDirection;
     }
+
 }

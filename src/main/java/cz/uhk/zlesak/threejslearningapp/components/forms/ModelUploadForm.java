@@ -125,7 +125,13 @@ public class ModelUploadForm extends Scroller implements I18nAware {
                     textureName = fileName;
                     if (modelUrl != null) {
                         ComponentUtil.fireEvent(UI.getCurrent(), new ModelUploadEvent(UI.getCurrent(), modelUrl, textureUrl, "modelId", modelFileName, textureName, true));
-                        this.quickTextureEntityMap.put("main", new QuickTextureEntity(fileName, fileName, this.csvMap.getOrDefault(fileName, null)));
+                        this.quickTextureEntityMap.put("main",
+                                QuickTextureEntity.builder()
+                                        .name(fileName)
+                                        .csvContent(this.csvMap.getOrDefault(fileName, null))
+                                        .textureFileId(fileName)
+                                        .build()
+                        );
                         ComponentUtil.fireEvent(UI.getCurrent(), new ModelTextureChangeEvent(UI.getCurrent(), this.quickTextureEntityMap));
                     }
                 }
@@ -147,7 +153,13 @@ public class ModelUploadForm extends Scroller implements I18nAware {
                     Map<String, String> otherTextures = new HashMap<>();
                     otherTextures.put(fileName, textureUrl);
                     ComponentUtil.fireEvent(UI.getCurrent(), new OtherTextureLoadedEvent(UI.getCurrent(), otherTextures));
-                    this.quickTextureEntityMap.put(fileName, new QuickTextureEntity(fileName, fileName, this.csvMap.getOrDefault(fileName, null)));
+                    this.quickTextureEntityMap.put(fileName,
+                            QuickTextureEntity.builder()
+                                    .name(fileName)
+                                    .textureFileId(fileName)
+                                    .csvContent(this.csvMap.getOrDefault(fileName, null))
+                                    .build()
+                    );
                     ComponentUtil.fireEvent(UI.getCurrent(), new ModelTextureChangeEvent(UI.getCurrent(), this.quickTextureEntityMap));
                 });
 

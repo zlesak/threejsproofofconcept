@@ -1,14 +1,22 @@
 package cz.uhk.zlesak.threejslearningapp.domain.quiz;
 
-import cz.uhk.zlesak.threejslearningapp.domain.common.Entity;
+import cz.uhk.zlesak.threejslearningapp.domain.chapter.QuickChapterEntity;
+import cz.uhk.zlesak.threejslearningapp.domain.common.AbstractEntity;
 import lombok.*;
+import lombok.experimental.SuperBuilder;
 
-@EqualsAndHashCode(callSuper = true)
+import java.util.List;
+
+/**
+ * QuickQuizEntity Class - Represents a lightweight quiz entity containing list of chapters teh quiz belongs to.
+ */
 @Data
-@AllArgsConstructor
 @Getter
 @Setter
-@Builder
-public class QuickQuizEntity extends Entity {
-    String Description;
+@SuperBuilder
+@NoArgsConstructor
+@AllArgsConstructor
+@EqualsAndHashCode(callSuper = true)
+public class QuickQuizEntity extends AbstractEntity {
+    List<QuickChapterEntity> chapters;
 }

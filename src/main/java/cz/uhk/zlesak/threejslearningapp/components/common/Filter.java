@@ -9,7 +9,7 @@ import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.select.Select;
 import cz.uhk.zlesak.threejslearningapp.components.inputs.textFields.SearchTextField;
-import cz.uhk.zlesak.threejslearningapp.domain.common.Entity;
+import cz.uhk.zlesak.threejslearningapp.domain.common.AbstractEntity;
 import cz.uhk.zlesak.threejslearningapp.events.threejs.SearchEvent;
 import cz.uhk.zlesak.threejslearningapp.i18n.I18nAware;
 import lombok.Getter;
@@ -99,7 +99,7 @@ public class Filter extends HorizontalLayout implements I18nAware {
      */
     private Select<String> getOrderBySelect() {
         Select<String> select = new Select<>();
-        List<String> fieldNames = extractFieldNames(Entity.class);
+        List<String> fieldNames = extractFieldNames(AbstractEntity.class);
         select.setItems(fieldNames);
         if (!fieldNames.isEmpty()) {
             select.setValue(fieldNames.getFirst());

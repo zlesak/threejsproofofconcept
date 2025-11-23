@@ -1,13 +1,21 @@
 package cz.uhk.zlesak.threejslearningapp.domain.chapter;
 
-import cz.uhk.zlesak.threejslearningapp.domain.common.Entity;
+import cz.uhk.zlesak.threejslearningapp.domain.common.AbstractEntity;
 import lombok.*;
+import lombok.experimental.SuperBuilder;
 
-@EqualsAndHashCode(callSuper = true)
+import java.util.List;
+
+/**
+ * QuickChapterEntity Class - Represents a lightweight chapter entity containing list of sub-chapters.
+ */
 @Data
-@AllArgsConstructor
 @Getter
 @Setter
-@Builder
-public class QuickChapterEntity extends Entity {
+@SuperBuilder
+@NoArgsConstructor
+@AllArgsConstructor
+@EqualsAndHashCode(callSuper = true)
+public class QuickChapterEntity extends AbstractEntity {
+    List<String> subChapters;
 }

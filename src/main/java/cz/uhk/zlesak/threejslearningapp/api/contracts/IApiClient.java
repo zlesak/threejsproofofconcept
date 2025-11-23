@@ -1,17 +1,17 @@
 package cz.uhk.zlesak.threejslearningapp.api.contracts;
 
+import cz.uhk.zlesak.threejslearningapp.domain.common.FilterParameters;
 import cz.uhk.zlesak.threejslearningapp.domain.common.PageResult;
-import org.springframework.data.domain.PageRequest;
 
 /**
  * Interface for generic API Client
  * Defines CRUD operations and listing for entities of type T and returns entities of type S in paginated results.
  *
- * @param <T> Entity type that this API client works with
- * @param <S> Entity type that is returned in paginated results
+ * @param <E> Entity type that this API client works with
+ * @param <Q> Entity type that is returned in paginated results
  * @param <F> Filter type used for filtered listing
  */
-public interface IApiClient <T, S, F> {
+public interface IApiClient <E, Q, F> {
     static String getBaseUrl() {
         boolean isHotswap = java.lang.management.ManagementFactory.getRuntimeMXBean()
                 .getInputArguments().stream()
@@ -33,7 +33,7 @@ public interface IApiClient <T, S, F> {
      * @return Created entity
      * @throws Exception if creation fails
      */
-    T create(T entity) throws Exception;
+    Q create(E entity) throws Exception;
 
     /**
      * Reads an entity by its ID.
@@ -42,26 +42,25 @@ public interface IApiClient <T, S, F> {
      * @return Read entity
      * @throws Exception if reading fails
      */
-    T read(String id) throws Exception;
+    E read(String id) throws Exception;
+
+    /**
+     * Reads a quick version of an entity by its ID.
+     * @param id ID of the entity to read
+     * @return Quick version of the entity
+     * @throws Exception if reading fails
+     */
+    Q readQuick(String id) throws Exception;
 
     /**
      * Reads entities in a paginated manner.
+     * Filtered by the provided FilterParameters.
      *
      * @param pageRequest PageRequest object containing pagination info
      * @return PageResult of entities of type S
      * @throws Exception if reading fails
      */
-    PageResult<S> readEntities(PageRequest pageRequest) throws Exception;
-
-    /**
-     * Reads entities in a paginated manner with filtering.
-     *
-     * @param pageRequest PageRequest object containing pagination info
-     * @param filter Filter object of type F
-     * @return PageResult of entities of type S
-     * @throws Exception if reading fails
-     */
-    PageResult<S> readEntitiesFiltered(PageRequest pageRequest, F filter) throws Exception;
+    PageResult<Q> readEntities(FilterParameters<F> pageRequest) throws Exception;
 
     /**
      * Updates an existing entity by its ID.
@@ -71,7 +70,7 @@ public interface IApiClient <T, S, F> {
      * @return Updated entity
      * @throws Exception if updating fails
      */
-    T update(String id, T entity) throws Exception;
+    E update(String id, E entity) throws Exception;
 
     /**
      * Deletes an entity by its ID.

@@ -3,7 +3,7 @@ package cz.uhk.zlesak.threejslearningapp.views.abstractViews;
 import com.vaadin.flow.component.AttachEvent;
 import com.vaadin.flow.component.ComponentUtil;
 import cz.uhk.zlesak.threejslearningapp.components.forms.ModelUploadForm;
-import cz.uhk.zlesak.threejslearningapp.domain.common.QuickFileEntity;
+import cz.uhk.zlesak.threejslearningapp.domain.model.ModelFileEntity;
 import cz.uhk.zlesak.threejslearningapp.domain.model.QuickModelEntity;
 import cz.uhk.zlesak.threejslearningapp.domain.texture.QuickTextureEntity;
 import cz.uhk.zlesak.threejslearningapp.events.model.ModelClearEvent;
@@ -28,6 +28,7 @@ public abstract class AbstractModelView extends AbstractEntityView {
 
     /**
      * Constructor for AbstractModelView.
+     *
      * @param pageTitleKey the key for the page title
      */
     public AbstractModelView(String pageTitleKey) {
@@ -36,7 +37,8 @@ public abstract class AbstractModelView extends AbstractEntityView {
 
     /**
      * Constructor for AbstractModelView.
-     * @param pageTitleKey the key for the page title
+     *
+     * @param pageTitleKey          the key for the page title
      * @param skipBeforeLeaveDialog flag to skip before-leave dialog
      */
     public AbstractModelView(String pageTitleKey, boolean skipBeforeLeaveDialog) {
@@ -61,7 +63,7 @@ public abstract class AbstractModelView extends AbstractEntityView {
                 ModelUploadEvent.class,
                 event -> {
                     quickModelEntity = Map.of(event.getModelId(), QuickModelEntity.builder()
-                            .model(QuickFileEntity.builder().id(event.getModelId()).name(event.getModelName()).build())
+                            .model(ModelFileEntity.builder().id(event.getModelId()).name(event.getModelName()).build())
                             .mainTexture(QuickTextureEntity.builder().textureFileId(event.getTextureName()).name(event.getTextureName()).build())
                             .build());
                     modelDiv.renderer.loadModel(event.getModel(), event.getTexture(), event.getModelId());

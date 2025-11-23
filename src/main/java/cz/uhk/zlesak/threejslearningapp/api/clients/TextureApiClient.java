@@ -3,15 +3,16 @@ package cz.uhk.zlesak.threejslearningapp.api.clients;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import cz.uhk.zlesak.threejslearningapp.api.contracts.ITextureApiClient;
 import cz.uhk.zlesak.threejslearningapp.common.InputStreamMultipartFile;
+import cz.uhk.zlesak.threejslearningapp.domain.common.FilterParameters;
 import cz.uhk.zlesak.threejslearningapp.domain.common.PageResult;
 import cz.uhk.zlesak.threejslearningapp.domain.texture.QuickTextureEntity;
 import cz.uhk.zlesak.threejslearningapp.domain.texture.TextureEntity;
 import cz.uhk.zlesak.threejslearningapp.domain.texture.TextureFilter;
-import cz.uhk.zlesak.threejslearningapp.domain.texture.TextureUploadEntity;
 import org.apache.commons.lang3.NotImplementedException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Component;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
 /**
@@ -21,7 +22,7 @@ import org.springframework.web.client.RestTemplate;
  * The base URL for the API is determined by the IApiClient interface.
  */
 @Component
-public class TextureApiClient extends AbstractFileApiClient<TextureEntity, QuickTextureEntity, TextureFilter, TextureUploadEntity> implements ITextureApiClient {
+public class TextureApiClient extends AbstractFileApiClient<TextureEntity, QuickTextureEntity, TextureFilter> implements ITextureApiClient {
     /**
      * Constructor for TextureApiClient.
      *
@@ -36,18 +37,6 @@ public class TextureApiClient extends AbstractFileApiClient<TextureEntity, Quick
     //region Overridden CRUD operations from IApiClient
 
     /**
-     * Creates a new texture.
-     *
-     * @param textureEntity Texture entity to create
-     * @return Created texture entity
-     * @throws Exception if API call fails
-     */
-    @Override
-    public TextureEntity create(TextureEntity textureEntity) throws Exception { //TODO BE implementation
-        throw new NotImplementedException("Vytváření textur není zatím implementováno.");
-    }
-
-    /**
      * Gets a texture by ID.
      *
      * @param textureId ID of the texture to retrieve
@@ -58,22 +47,21 @@ public class TextureApiClient extends AbstractFileApiClient<TextureEntity, Quick
     public TextureEntity read(String textureId) throws Exception {//TODO BE implementation to provide this structure directly
         InputStreamMultipartFile file = downloadFileEntity(textureId);
         return TextureEntity.builder()
-                .Id(textureId)
-                .Name(file.getName())
-                .File(file)
+                .id(textureId)
+                .name(file.getName())
+                .textureFile(file)
                 .build();
     }
 
     /**
      * Gets paginated list of textures with filtering.
      *
-     * @param pageRequest PageRequest object containing pagination info
-     * @param filter      TextureFilter object containing filter criteria
+     * @param filterParameters FilterParameters<TextureFilter> object containing pagination info and filters
      * @return PageResult of QuickTextureEntity
      * @throws Exception if API call fails
      */
     @Override
-    public PageResult<QuickTextureEntity> readEntitiesFiltered(PageRequest pageRequest, TextureFilter filter) throws Exception {
+    public PageResult<QuickTextureEntity> readEntities(FilterParameters<TextureFilter> filterParameters) throws Exception {
         throw new NotImplementedException("Filtrování textur není zatím implementováno.");
     }
 
@@ -99,6 +87,20 @@ public class TextureApiClient extends AbstractFileApiClient<TextureEntity, Quick
     @Override
     protected Class<QuickTextureEntity> getQuicEntityClass() {
         return QuickTextureEntity.class;
+    }
+
+    /**
+     * Prepares the body for file upload.
+     *
+     * @param entity the model entity containing the file to upload
+     * @return MultiValueMap with the file data
+     */
+    @Override
+    protected MultiValueMap<String, Object> prepareFileUploadBody(TextureEntity entity) {
+        MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+        body.add("texture", entity.getTextureFile().getResource());
+        entity.setTextureFile(null);
+        return body;
     }
 
     //endregion

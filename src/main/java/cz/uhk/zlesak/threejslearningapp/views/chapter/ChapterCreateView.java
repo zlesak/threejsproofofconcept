@@ -8,6 +8,7 @@ import com.vaadin.flow.router.Route;
 import cz.uhk.zlesak.threejslearningapp.common.TextureMapHelper;
 import cz.uhk.zlesak.threejslearningapp.components.forms.CreateChapterForm;
 import cz.uhk.zlesak.threejslearningapp.components.notifications.ErrorNotification;
+import cz.uhk.zlesak.threejslearningapp.domain.chapter.ChapterEntity;
 import cz.uhk.zlesak.threejslearningapp.domain.model.QuickModelEntity;
 import cz.uhk.zlesak.threejslearningapp.domain.texture.QuickTextureEntity;
 import cz.uhk.zlesak.threejslearningapp.events.chapter.CreateChapterEvent;
@@ -39,7 +40,6 @@ public class ChapterCreateView extends AbstractChapterView {
     private final TextureService textureService;
     private final ModelService modelService;
     private final ChapterService chapterService;
-    private boolean skipBeforeLeaveDialog = false;
 
     /**
      * Constructor for CreateChapterView.
@@ -243,7 +243,12 @@ public class ChapterCreateView extends AbstractChapterView {
     private void createChapterAndNavigate(String bodyData, Map<String, QuickModelEntity> allModels) {
         try {
             String chapterName = nameTextField.getValue().trim();
-            String chapterId = chapterService.createChapter(chapterName, bodyData, allModels);
+            String chapterId = chapterService.create(
+                    ChapterEntity.builder()
+                            .name(chapterName)
+                            .content(bodyData)
+                            .models(allModels.values().stream().toList())
+                            .build()).getId();
 
             skipBeforeLeaveDialog = true;
             UI.getCurrent().navigate("chapter/" + chapterId);
