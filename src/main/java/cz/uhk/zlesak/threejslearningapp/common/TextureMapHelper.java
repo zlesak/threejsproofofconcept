@@ -59,6 +59,7 @@ public abstract class TextureMapHelper {
     /**
      * Creates a map of texture file IDs to their corresponding texture stream endpoint URLs.
      * Uses the provided textureService to generate the URLs.
+     * TODO Should be removed after BE provides endpoints in the QuickTextureEntity
      *
      * @param quickTextureEntityList the list of QuickTextureEntity objects
      * @param textureService         the textureService used to get the texture stream endpoint URLs

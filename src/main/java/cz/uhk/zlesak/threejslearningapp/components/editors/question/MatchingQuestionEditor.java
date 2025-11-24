@@ -25,13 +25,10 @@ import java.util.stream.Collectors;
 /**
  * Editor for matching questions.
  */
-public class MatchingQuestionEditor extends QuestionEditorBase {
-    private final List<QuestionOption> options = new ArrayList<>();
+public class MatchingQuestionEditor extends QuestionEditorBase<QuestionOption> {
     private final List<MatchQuestionOption> answers = new ArrayList<>();
-    List<Integer> indices = new ArrayList<>();
     List<Integer> answerIndices = new ArrayList<>();
     protected final VerticalLayout answersLayout = new VerticalLayout();
-
     protected final Accordion qAaAccordion = new Accordion();
 
     /**
@@ -55,6 +52,17 @@ public class MatchingQuestionEditor extends QuestionEditorBase {
 
         add(qAaAccordion);
         updateCorrectAnswerGroup();
+    }
+
+    /**
+     * Creates a QuestionOption.
+     *
+     * @param index the index of the option
+     * @return the created QuestionOption
+     */
+    @Override
+    protected QuestionOption createOption(int index) {
+        return new QuestionOption(index, "quiz.option.label");
     }
 
     /**
@@ -83,7 +91,7 @@ public class MatchingQuestionEditor extends QuestionEditorBase {
     private void addAnswer() {
         int index = answerIndices.stream().max(Integer::compareTo).orElse(0) + 1;
         answerIndices.add(index);
-        MatchQuestionOption optionLayout = new MatchQuestionOption(index, "quiz.option.label", indices);
+        MatchQuestionOption optionLayout = new MatchQuestionOption(index, "quiz.matching.rightItem", indices);
         optionLayout.getRemoveOptionButton().addClickListener(e -> removeAnswer(optionLayout.getQuestionId()));
 
         answers.add(optionLayout);

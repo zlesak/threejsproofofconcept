@@ -1,5 +1,6 @@
 package cz.uhk.zlesak.threejslearningapp.components.forms;
 
+import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.accordion.Accordion;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
@@ -57,17 +58,15 @@ public class QuizForm extends VerticalLayout implements I18nAware {
         descriptionField.setWidthFull();
         descriptionField.setMaxLength(500);
 
-        timeLimitField = new IntegerField(text("quiz.timeLimit.label"));
-        timeLimitField.setHelperText(text("quiz.timeLimit.helper"));
+        timeLimitField = new IntegerField();
+        timeLimitField.setHelperText(text("quiz.timeLimit.label"));
         timeLimitField.setStepButtonsVisible(true);
         timeLimitField.setValue(0);
         timeLimitField.setMin(0);
         timeLimitField.setStep(1);
 
         chapterSelect = new Select<>();
-        chapterSelect.setLabel(text("quiz.chapterId.label"));
-        chapterSelect.setPlaceholder(text("quiz.chapterId.placeholder"));
-        chapterSelect.setHelperText(text("quiz.chapterId.helper"));
+        chapterSelect.setHelperText(text("quiz.chapterId.label"));
         chapterSelect.setItemLabelGenerator(ch -> ch == null ? "" : ch.getName());
         chapterSelect.setWidth("260px");
         chapterSelect.setReadOnly(true);
@@ -78,7 +77,7 @@ public class QuizForm extends VerticalLayout implements I18nAware {
         chooseChapterButton.addClickListener(e -> openChapterSelectionDialog());
 
         questionTypeSelect = new Select<>();
-        questionTypeSelect.setLabel(text("quiz.questionType.label"));
+        questionTypeSelect.setHelperText(text("quiz.questionType.label"));
         questionTypeSelect.setItems(QuestionTypeEnum.values());
         questionTypeSelect.setItemLabelGenerator(this::getQuestionTypeLabel);
         questionTypeSelect.setValue(QuestionTypeEnum.SINGLE_CHOICE);
@@ -129,6 +128,17 @@ public class QuizForm extends VerticalLayout implements I18nAware {
                 listener.accept(selectedType);
             }
         });
+    }
+
+    /**
+     * Sets the listener for when accordion panel is opened.
+     *
+     * @param listener Consumer that accepts the opened component
+     */
+    public void setAccordionOpenedChangeListener(Consumer<Component> listener) {
+        questionsContainer.addOpenedChangeListener(event ->
+                event.getOpenedPanel().flatMap(panel -> panel.getContent().findFirst()).ifPresent(listener)
+        );
     }
 
     /**

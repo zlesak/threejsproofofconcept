@@ -1,32 +1,25 @@
 package cz.uhk.zlesak.threejslearningapp.components.editors.question;
 
-import com.vaadin.flow.component.checkbox.Checkbox;
 import cz.uhk.zlesak.threejslearningapp.components.inputs.quizes.QuestionOption;
 import cz.uhk.zlesak.threejslearningapp.domain.quiz.QuestionTypeEnum;
 import cz.uhk.zlesak.threejslearningapp.domain.quiz.answer.AbstractAnswerData;
-import cz.uhk.zlesak.threejslearningapp.domain.quiz.answer.OpenTextAnswerData;
+import cz.uhk.zlesak.threejslearningapp.domain.quiz.answer.OrderingAnswerData;
 import cz.uhk.zlesak.threejslearningapp.domain.quiz.question.AbstractQuestionData;
-import cz.uhk.zlesak.threejslearningapp.domain.quiz.question.OpenTextQuestionData;
+import cz.uhk.zlesak.threejslearningapp.domain.quiz.question.OrderingQuestionData;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * Editor for open text questions.
+ * Editor for ordering questions.
  */
-public class OpenTextQuestionEditor extends QuestionEditorBase<QuestionOption> {
-    private final Checkbox exactMatchCheckbox;
+public class OrderingQuestionEditor extends QuestionEditorBase<QuestionOption> {
+    private final List<QuestionOption> options = new ArrayList<>();
+    List<Integer> indices = new ArrayList<>();
 
-    /**
-     * Constructor for OpenTextQuestionEditor.
-     */
-    public OpenTextQuestionEditor() {
-        super(QuestionTypeEnum.OPEN_TEXT);
-
-        exactMatchCheckbox = new Checkbox(text("quiz.openText.exactMatch"));
-        exactMatchCheckbox.setValue(true);
-
-        actionsLayout.addComponentAtIndex(1, exactMatchCheckbox);
+    public OrderingQuestionEditor() {
+        super(QuestionTypeEnum.ORDERING);
     }
 
     /**
@@ -54,43 +47,44 @@ public class OpenTextQuestionEditor extends QuestionEditorBase<QuestionOption> {
     }
 
     /**
-     * Gets the question data for OpenTextQuestion as OpenTextQuestionData.
-     *
-     * @return OpenTextQuestionData
+     * Gets the question data.
+     * @return the question data
      */
     @Override
     public AbstractQuestionData getQuestionData() {
-        return OpenTextQuestionData.builder()
+        List<String> items = options.stream()
+                .map(option -> option.getOptionField().getValue())
+                .collect(Collectors.toList());
+
+        return OrderingQuestionData.builder()
                 .questionId(questionId)
                 .questionText(getQuestionText())
                 .type(questionType)
                 .points(getPoints())
+                .items(items)
                 .build();
     }
 
     /**
-     * Gets the answer data for OpenTextQuestion as OpenTextAnswerData.
-     *
-     * @return OpenTextAnswerData
+     * Gets the answer data.
+     * @return the answer data
      */
     @Override
     public AbstractAnswerData getAnswerData() {
-        List<String> acceptableAnswers = options.stream()
-                .map(option -> option.getOptionField().getValue())
-                .filter(s -> s != null && !s.isEmpty())
-                .collect(Collectors.toList());
+        List<Integer> correctOrder = new ArrayList<>();
+        for (int i = 0; i < options.size(); i++) {
+            correctOrder.add(i);
+        }
 
-        return OpenTextAnswerData.builder()
+        return OrderingAnswerData.builder()
                 .questionId(questionId)
                 .type(questionType)
-                .acceptableAnswers(acceptableAnswers)
-                .exactMatch(exactMatchCheckbox.getValue())
+                .correctOrder(correctOrder)
                 .build();
     }
 
     /**
-     * Validates the question data.
-     *
+     * Validates the question.
      * @return true if valid, false otherwise
      */
     @Override
@@ -98,7 +92,7 @@ public class OpenTextQuestionEditor extends QuestionEditorBase<QuestionOption> {
         if (getQuestionText() == null || getQuestionText().isEmpty()) {
             return false;
         }
-        if (options.isEmpty()) {
+        if (options.size() < 2) {
             return false;
         }
         for (QuestionOption field : options) {

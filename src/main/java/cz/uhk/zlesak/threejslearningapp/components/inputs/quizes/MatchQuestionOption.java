@@ -22,6 +22,7 @@ public class MatchQuestionOption extends QuestionOption {
         super(index, labelTextKey);
 
         optionSelect.setItems(optionIndices);
+        optionSelect.setLabel(text("quiz.option.label"));
         optionSelect.setItemLabelGenerator(i -> text("quiz.option.label") + " " + i);
 
         addComponentAtIndex(1, optionSelect);

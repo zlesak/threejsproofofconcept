@@ -17,7 +17,7 @@ import java.util.stream.Collectors;
 /**
  * Editor for multiple choice questions.
  */
-public class MultipleChoiceQuestionEditor extends QuestionEditorBase {
+public class MultipleChoiceQuestionEditor extends QuestionEditorBase<QuestionOption> {
     private final MultiSelectComboBox<Integer> correctAnswersGroup;
 
     /**
@@ -34,6 +34,17 @@ public class MultipleChoiceQuestionEditor extends QuestionEditorBase {
         actionsLayout.addComponentAtIndex(1, correctAnswersGroup);
 
         updateCorrectAnswerGroup();
+    }
+
+    /**
+     * Creates a QuestionOption.
+     *
+     * @param index the index of the option
+     * @return the created QuestionOption
+     */
+    @Override
+    protected QuestionOption createOption(int index) {
+        return new QuestionOption(index, "quiz.option.label");
     }
 
     /**

@@ -8,27 +8,14 @@ import lombok.experimental.SuperBuilder;
 
 /**
  * Texture click question - user clicks on specific area of 3D model texture.
- * Uses ThreeJs.onColorPicked method to capture user's click.
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
 @AllArgsConstructor
 @SuperBuilder
-public class TextureClickQuestionData extends QuestionData {
-    /**
-     * ID of the model to display
-     */
+public class TextureClickQuestionData extends AbstractQuestionData {
     String modelId;
-
-    /**
-     * ID of the texture to use
-     */
     String textureId;
-
-    /**
-     * Instructions for where to click
-     */
-    String clickInstruction;
 }
 

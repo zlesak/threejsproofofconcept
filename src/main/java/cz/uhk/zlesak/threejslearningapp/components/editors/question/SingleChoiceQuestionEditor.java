@@ -15,7 +15,7 @@ import java.util.stream.Collectors;
 /**
  * Editor for single choice questions.
  */
-public class SingleChoiceQuestionEditor extends QuestionEditorBase {
+public class SingleChoiceQuestionEditor extends QuestionEditorBase<QuestionOption> {
 
     private final Select<Integer> correctAnswerGroup;
 
@@ -33,6 +33,17 @@ public class SingleChoiceQuestionEditor extends QuestionEditorBase {
         actionsLayout.addComponentAtIndex(1, correctAnswerGroup);
 
         updateCorrectAnswerGroup();
+    }
+
+    /**
+     * Creates a QuestionOption.
+     *
+     * @param index the index of the option
+     * @return the created QuestionOption
+     */
+    @Override
+    protected QuestionOption createOption(int index) {
+        return new QuestionOption(index, "quiz.option.label");
     }
 
     /**
