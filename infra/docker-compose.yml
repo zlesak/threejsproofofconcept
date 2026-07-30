@@ -103,8 +103,17 @@ services:
     expose:
       - "8081"
     healthcheck:
-      # The runtime image ships dash as /bin/sh, which has no /dev/tcp; bash does.
-      test: ["CMD", "bash", "-c", "exec 3<>/dev/tcp/127.0.0.1/8081"]
+      # Asks the application whether it is actually usable, not merely whether the port is open —
+      # a listening socket says nothing about whether MongoDB is reachable. The runtime image has
+      # neither curl nor wget, but bash has /dev/tcp (dash, its /bin/sh, does not).
+      test:
+        - CMD
+        - bash
+        - -c
+        - >
+          exec 3<>/dev/tcp/127.0.0.1/8081 &&
+          printf 'GET /actuator/health HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n' >&3 &&
+          grep -q '"status":"UP"' <&3
       interval: 10s
       timeout: 5s
       retries: 30

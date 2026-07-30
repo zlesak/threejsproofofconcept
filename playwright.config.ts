@@ -15,7 +15,13 @@ export default defineConfig({
   workers: Number(process.env.E2E_WORKERS ?? (process.env.CI ? 4 : 2)),
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,
-  reporter: [['list'], ['html', { open: 'never' }]],
+  // JUnit XML alongside the human-readable reports: it is the one format every test-management and
+  // CI tool reads, so results can be kept or imported later without touching the tests.
+  reporter: [
+    ['list'],
+    ['html', {open: 'never'}],
+    ['junit', {outputFile: 'test-results/results.xml'}],
+  ],
   timeout: 90_000,
   expect: {
     timeout: 15_000,

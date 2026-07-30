@@ -68,6 +68,10 @@ class SecurityConfig {
 
         http.authorizeHttpRequests(auth ->
                 auth.requestMatchers("/img/**", "/skybox/**", "/custom-logout").permitAll()
+                        // Health only, and only health: a container platform has to be able to ask
+                        // whether the application is up without holding a session, but nothing else
+                        // under /actuator is anyone's business from outside.
+                        .requestMatchers("/actuator/health", "/actuator/health/**").permitAll()
                         // Model and texture downloads are fetched by the 3D viewer in the browser,
                         // so they ride on the session rather than on a Vaadin request.
                         .requestMatchers("/api/**").authenticated()

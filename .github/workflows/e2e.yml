@@ -28,6 +28,21 @@ jobs:
           sed -i 's|^EXTERNAL_BASE_URL=.*|EXTERNAL_BASE_URL=https://mish|' .env
           sed -i 's|^EXTERNAL_HOSTNAME=.*|EXTERNAL_HOSTNAME=mish|' .env
 
+      # The suite must exercise the frontend and backend in this repository. They are one image, so
+      # the check is that `app` is built here rather than pulled: an override file swapping in a
+      # registry tag, or a stray `image:`, would silently test something else.
+      - name: Verify the stack builds the in-repo application
+        working-directory: infra
+        run: |
+          docker compose config --format json > /tmp/compose.json
+          python3 - <<'PY'
+          import json, sys
+          app = json.load(open('/tmp/compose.json'))['services']['app']
+          if 'build' not in app:
+              sys.exit('app is not built from this repository: %s' % app.get('image', '<no image>'))
+          print('app builds from', app['build']['context'], 'via', app['build']['dockerfile'])
+          PY
+
       - name: Start the stack
         working-directory: infra
         run: docker compose up -d --build --wait
@@ -75,6 +90,16 @@ jobs:
         with:
           name: usability-report
           path: test-results/usability-report.md
+          if-no-files-found: ignore
+
+      # Machine-readable results, kept so a run can be imported into a test-management tool later
+      # without changing anything about the tests. See docs/test-scenarios.md.
+      - name: Upload machine-readable results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: junit-results
+          path: test-results/results.xml
           if-no-files-found: ignore
 
       - name: Upload Playwright report
