@@ -51,12 +51,23 @@ jobs:
         run: npx playwright install --with-deps chromium
 
       # No file list: positional filters apply to every project, so naming the specs would leave the
-      # `setup` project matching nothing and the fixtures unseeded. The `e2e` project already
-      # excludes the setup and perf specs, and pulls `setup` in as a dependency.
+      # `setup` project matching nothing and the fixtures unseeded. Projects carry their own
+      # selection and dependencies — setup seeds, e2e runs in parallel, usability runs after it
+      # alone so its timings are not measured under load.
       - name: Run e2e tests
         env:
           E2E_BASE_URL: https://mish
-        run: npx playwright test --project=e2e --workers=1
+        run: npx playwright test --project=e2e
+
+      # Separate invocation with a single worker: the report measures how long each task takes, and
+      # that number is only meaningful when nothing else is competing for the machine. `always()`
+      # because a failing functional suite is exactly when the walkthrough is worth reading.
+      - name: Measure the usability walkthrough
+        if: always()
+        env:
+          E2E_BASE_URL: https://mish
+          E2E_WORKERS: 1
+        run: npx playwright test --project=usability
 
       - name: Upload usability report
         uses: actions/upload-artifact@v4

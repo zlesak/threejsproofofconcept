@@ -4,6 +4,9 @@ import {
   chooseAnyQuizChapter,
   createModelForE2E,
   fillByPlaceholder,
+  FIXTURE_CHAPTER,
+  FIXTURE_MODEL,
+  FIXTURE_QUIZ,
   loginAsTeacher,
   logStep,
   selectAdministrationTab,
@@ -17,10 +20,6 @@ import {
  * specs would silently depend on each other's leftovers instead of on a known starting point.
  * Both steps are skipped when the fixture is already present, so reruns stay fast.
  */
-export const FIXTURE_MODEL = 'E2E Fixture Model';
-export const FIXTURE_CHAPTER = 'E2E Fixture Kapitola';
-export const FIXTURE_QUIZ = 'E2E Fixture Kvíz';
-
 setup('seed fixture model and chapter', async ({page}) => {
   setup.setTimeout(180000);
 

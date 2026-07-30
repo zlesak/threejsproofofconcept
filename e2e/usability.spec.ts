@@ -34,6 +34,10 @@ type TaskOutcome = {
   note?: string;
 };
 
+// The two journeys share the report file and both measure elapsed time, so they run one after the
+// other rather than competing for the same CPU.
+test.describe.configure({mode: 'serial'});
+
 const outcomes: TaskOutcome[] = [];
 
 /**

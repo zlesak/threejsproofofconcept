@@ -405,6 +405,10 @@ export class ThreeJSScene {
                 modelId,
                 (obj) => this.disposalManager.disposeObject(obj)
             );
+            // This path is the user deleting the model's file, so the model must also stop being
+            // showable. Left registered with its source cached, any later display request reloaded
+            // it and the deleted model reappeared in the scene.
+            this.modelManager.forgetModel(modelId);
             this.modelLoadViewById.delete(modelId);
             this.render();
         });

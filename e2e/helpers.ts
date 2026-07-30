@@ -156,6 +156,7 @@ export async function waitForEntityPresence(page: Page, entityName: string, time
 }
 
 export async function openEntityFromCurrentListing(page: Page, entityName: string): Promise<void> {
+  await waitForEntityPresence(page, entityName);
   const card = entityCardByName(page, entityName);
   await expect(card).toBeVisible();
   const openButton = card.getByRole('button', {name: 'Otevřít'}).first();
@@ -168,6 +169,10 @@ export async function deleteEntityFromCurrentListing(
   entityName: string,
   confirmDeleteButtonName: string,
 ): Promise<void> {
+  // Searches first: the listing shows ten entities at a time sorted by name, so on an instance with
+  // more than that — or with other workers adding their own — the entity need not be on the page
+  // that happens to be rendered.
+  await waitForEntityPresence(page, entityName);
   const card = entityCardByName(page, entityName);
   await expect(card).toBeVisible();
   const deleteButton = card.getByRole('button', {name: 'Smazat'}).first();
@@ -305,18 +310,24 @@ export async function openChapterModelsTab(page: Page): Promise<void> {
   await expect(modelTab).toHaveAttribute('aria-selected', 'true');
 }
 
+/**
+ * Names of the entities seeded by fixtures.setup.ts.
+ *
+ * They live here rather than in the setup spec so both the seeder and the specs that pick a fixture
+ * name the same thing. Picking by name is what makes the suite safe to run in parallel: "whatever is
+ * first in the dialog" could be an entity another worker is about to delete.
+ */
+export const FIXTURE_MODEL = 'E2E Fixture Model';
+export const FIXTURE_CHAPTER = 'E2E Fixture Kapitola';
+export const FIXTURE_QUIZ = 'E2E Fixture Kvíz';
+
 export async function chooseAnyModelForChapter(page: Page): Promise<void> {
   await openChapterModelsTab(page);
   await page.getByRole('button', {name: 'Vybrat model'}).first().click();
   const modelSelectDialog = page.locator('vaadin-dialog-overlay').last();
   await expect(modelSelectDialog).toBeVisible();
 
-  await expect
-    .poll(async () => countVisibleButtonsByTextDeep(page, 'Vybrat'), {timeout: 60000})
-    .toBeGreaterThan(0);
-
-  const clicked = await clickVisibleButtonByTextDeep(page, 'Vybrat');
-  expect(clicked).toBe(true);
+  await selectFixtureFromDialog(page, FIXTURE_MODEL);
   await expect(modelSelectDialog).toHaveCount(0);
 }
 
@@ -324,12 +335,31 @@ export async function chooseAnyQuizChapter(page: Page): Promise<void> {
   await page.getByRole('button', {name: 'Vybrat kapitolu'}).click();
   const chapterDialog = page.locator('vaadin-dialog-overlay').last();
   await expect(chapterDialog).toBeVisible();
+
+  await selectFixtureFromDialog(page, FIXTURE_CHAPTER);
+  await expect(chapterDialog).toHaveCount(0);
+}
+
+/**
+ * Narrows an entity-picker dialog to one named entity and selects it.
+ *
+ * Falls back to selecting whatever is offered when the dialog has no usable search field or the
+ * search returns nothing — the fixture seeder itself runs before any fixture exists.
+ */
+async function selectFixtureFromDialog(page: Page, entityName: string): Promise<void> {
   await expect
     .poll(async () => countVisibleButtonsByTextDeep(page, 'Vybrat'), {timeout: 60000})
     .toBeGreaterThan(0);
+
+  const search = page.locator('vaadin-dialog-overlay input[placeholder="Hledat..."]:visible').first();
+  if (await search.isVisible().catch(() => false)) {
+    await search.fill(entityName);
+    await page.getByRole('button', {name: 'Hledat'}).last().click();
+    await page.waitForTimeout(500);
+  }
+
   const clicked = await clickVisibleButtonByTextDeep(page, 'Vybrat');
   expect(clicked).toBe(true);
-  await expect(chapterDialog).toHaveCount(0);
 }
 
 async function countVisibleButtonsByTextDeep(page: Page, label: string): Promise<number> {

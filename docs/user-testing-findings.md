@@ -8,13 +8,13 @@ plán viz [user-testing-plan.md](user-testing-plan.md). Surová data se zapisuj�
 
 | Úloha | Role | Cíl | Dokončeno | Čas (s) | Interakcí |
 |---|---|---|---|---|---|
-| T1 | vyučující | Nahrát 3D model s texturami a CSV | ano | 22,5 | 9 |
-| T2 | vyučující | Vytvořit kapitolu s modelem | ano | 7,7 | 5 |
-| T4 | vyučující | Najít výsledky studentů | ano | 0,8 | 0 |
-| T5 | vyučující | Najít kapitolu ve výpisu | ano | 1,7 | 2 |
-| S1 | student | Najít a otevřít kapitolu | ano | 1,4 | 1 |
+| T1 | vyučující | Nahrát 3D model s texturami a CSV | ano | 20,8 | 9 |
+| T2 | vyučující | Vytvořit kapitolu s modelem | ano | 6,8 | 5 |
+| T4 | vyučující | Najít výsledky studentů | ano | 0,9 | 0 |
+| T5 | vyučující | Najít kapitolu ve výpisu | ano | 2,2 | 2 |
+| S1 | student | Najít a otevřít kapitolu | ano | 2,3 | 1 |
 | S2 | student | Zobrazit 3D model kapitoly | ano | 0,2 | 0 |
-| S3 | student | Najít seznam kvízů | ano | 0,8 | 0 |
+| S3 | student | Najít seznam kvízů | ano | 0,7 | 0 |
 | S4 | student | Najít vlastní výsledky | ano | 0,7 | 0 |
 
 Všech 8 úloh dokončeno. Studentské úlohy jsou pod 1,5 s a stojí nejvýše jedno kliknutí — ta část
@@ -58,17 +58,24 @@ předem vytvoří, polovina scénářů nad prázdnou databází spadla přesně
 *Návrh:* v prázdném dialogu zobrazit vysvětlení a tlačítko „Nahrát nový model", které povede rovnou
 na formulář.
 
-### 4. Úklid 3D scény po odebrání souboru je nespolehlivý — *vážné*
+### 4. Odebraný model se občas vrátil do 3D scény — *opraveno*
 
-Ve formuláři pro model se po odebrání souboru `.obj` model občas nechá ve 3D scéně. E2e test
-`model-assets-visibility` na tomto kroku ve třech ze čtyř běhů selhal a v jednom prošel, takže nejde
-o trvalou chybu, ale o závod mezi odebráním souboru a úklidem scény (`ThreeJSScene` /
-`ModelManager`). Pro uživatele to znamená, že po odebrání modelu občas zůstane vidět starý.
+Ve formuláři pro model po odebrání souboru `.obj` model občas zůstal ve 3D scéně. E2e test
+`model-assets-visibility` na tomto kroku ve třech ze čtyř běhů selhal a v jednom prošel.
 
-*Poznámka:* chování je starší než převod backendu a s daty nesouvisí.
+Příčiny byly dvě, obě v prohlížeči:
 
-*Návrh:* úklid scény navázat na dokončení odebrání souboru místo na samostatnou událost a doplnit
-o čekání na dokončení předchozího načtení.
+1. **Model zůstal zobrazitelný.** Odebrání ze scény záměrně ponechává model zaregistrovaný — na tom
+   stojí otázky kvízu, které model schovají a zase ukážou. Při smazání souboru to ale neplatí: model
+   zůstal v registru i s načteným blobem v cache, takže ho následující požadavek na zobrazení znovu
+   načetl a smazaný model se objevil zpátky.
+2. **Závod s načítáním.** Zobrazení modelu nejdřív vyprázdní scénu, pak čeká na síť a parser a
+   teprve potom výsledek přidá. Načítání spuštěné před odebráním souboru tak stihlo svůj výsledek
+   přidat až po něm.
+
+*Oprava:* smazání souboru navíc ruší registraci modelu i jeho cache, a každý požadavek na zobrazení
+nese číslo generace — když se mezitím obsah scény změnil, dokončené načítání už nic nepřidá.
+Pokryto dvěma jednotkovými testy, které bez opravy padají.
 
 ### 5. Hledání nesahalo do obsahu, a poté vracelo všechno — *opraveno*
 

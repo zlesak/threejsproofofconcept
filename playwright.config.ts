@@ -8,7 +8,11 @@ const baseURL =
 
 export default defineConfig({
   testDir: './e2e',
+  // Specs name every entity they create with a unique suffix and pick fixtures by name, so they no
+  // longer collide when run at the same time. Files spread across workers; tests inside one file
+  // still run in order, because the CRUD specs build up state step by step.
   fullyParallel: false,
+  workers: Number(process.env.E2E_WORKERS ?? (process.env.CI ? 4 : 2)),
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,
   reporter: [['list'], ['html', { open: 'never' }]],
@@ -32,7 +36,16 @@ export default defineConfig({
     {name: 'setup', testMatch: /.*\.setup\.ts/},
     {
       name: 'e2e',
-      testIgnore: [/.*\.setup\.ts/, /perf.*\.spec\.ts/],
+      testIgnore: [/.*\.setup\.ts/, /perf.*\.spec\.ts/, /usability\.spec\.ts/],
+      dependencies: ['setup'],
+    },
+    // Invoked on its own (see the workflow), not alongside the functional suite: it reports how long
+    // each task takes, and a number measured while three other browsers compete for the same CPU is
+    // not that. It deliberately does not depend on `e2e` — a report of how the application behaves
+    // should still be produced on a run where something failed.
+    {
+      name: 'usability',
+      testMatch: /usability\.spec\.ts/,
       dependencies: ['setup'],
     },
     // Measurement runs, kept out of the functional suite: they are slow and report numbers rather
