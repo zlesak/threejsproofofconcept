@@ -1,0 +1,83 @@
+name: E2E
+
+on:
+  workflow_dispatch:
+    inputs:
+      backend-branch:
+        description: 'Backend branch to deploy (default: main)'
+        required: false
+  schedule:
+    - cron: '0 3 * * *'
+
+permissions:
+  contents: read
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/checkout@v4
+        with:
+          repository: zlesak/MISH_SCRIPTS
+          path: mish-scripts
+
+      - name: Map gateway hostname
+        run: echo "127.0.0.1 mish" | sudo tee -a /etc/hosts
+
+      - name: Start full stack
+        working-directory: mish-scripts
+        run: |
+          BE_BRANCH="${{ inputs.backend-branch }}"
+          ./start_all.sh --dev \
+            --branch-frontend="${GITHUB_HEAD_REF:-${GITHUB_REF_NAME}}" \
+            ${BE_BRANCH:+--branch-backend=$BE_BRANCH}
+
+      - name: Wait for gateway
+        run: timeout 300 bash -c 'until curl -ksf https://mish >/dev/null; do sleep 5; done'
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Run e2e tests
+        env:
+          E2E_BASE_URL: https://mish
+        run: >
+          npx playwright test --workers=1
+          e2e/auth-role-guard.spec.ts
+          e2e/chapter-import.spec.ts
+          e2e/chapter-crud.spec.ts
+          e2e/model-crud.spec.ts
+          e2e/quiz-crud-execute.spec.ts
+          e2e/student-access.spec.ts
+          e2e/student-no-teacher-routes.spec.ts
+          e2e/model-assets-visibility.spec.ts
+          e2e/public-routes.spec.ts
+
+      - name: Upload Playwright report
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: playwright-report
+
+      - name: Dump stack state on failure
+        if: failure()
+        run: |
+          docker ps -a
+          for c in $(docker ps -aq); do
+            echo "===== $(docker inspect --format '{{.Name}}' $c) ====="
+            docker logs --tail 100 "$c" 2>&1 || true
+          done
