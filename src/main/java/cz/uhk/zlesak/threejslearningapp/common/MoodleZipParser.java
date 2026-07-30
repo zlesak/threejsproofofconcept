@@ -194,9 +194,38 @@ public class MoodleZipParser {
 
         String bodyContent = html.substring(bodyStart, bodyEnd).trim();
 
-        bodyContent = bodyContent.replaceFirst("(?i)<h1[^>]*id=['\"]header['\"][^>]*>.*?</h1>\\s*", "");
+        return removeHeaderH1(bodyContent);
+    }
 
-        return bodyContent;
+    /**
+     * Remove the first H1 element with id="header" including trailing whitespace.
+     * Implemented with index scanning instead of a regex, since the HTML comes
+     * from an uploaded ZIP and an ambiguous regex would be vulnerable to ReDoS.
+     */
+    private static String removeHeaderH1(String bodyContent) {
+        String lower = bodyContent.toLowerCase();
+        int searchFrom = 0;
+
+        while (true) {
+            int h1Start = lower.indexOf("<h1", searchFrom);
+            if (h1Start == -1) return bodyContent;
+
+            int tagEnd = lower.indexOf('>', h1Start);
+            if (tagEnd == -1) return bodyContent;
+
+            String attributes = lower.substring(h1Start, tagEnd);
+            if (attributes.contains("id=\"header\"") || attributes.contains("id='header'")) {
+                int h1End = lower.indexOf("</h1>", tagEnd);
+                if (h1End == -1) return bodyContent;
+
+                int afterEnd = h1End + "</h1>".length();
+                while (afterEnd < bodyContent.length() && Character.isWhitespace(bodyContent.charAt(afterEnd))) {
+                    afterEnd++;
+                }
+                return bodyContent.substring(0, h1Start) + bodyContent.substring(afterEnd);
+            }
+            searchFrom = tagEnd + 1;
+        }
     }
 
     /**

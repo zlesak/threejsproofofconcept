@@ -66,7 +66,7 @@
     "ts-node": "^1.7.1",
     "tsx": "^4.20.6",
     "typescript": "5.9.3",
-    "vite": "7.3.1",
+    "vite": "7.3.6",
     "vite-plugin-checker": "0.12.0",
     "vitest": "^4.0.18",
     "workbox-build": "7.4.0"
@@ -229,6 +229,6 @@
       "vite-plugin-checker": "0.12.0",
       "workbox-build": "7.4.0"
     },
-    "hash": "fdc0ecc583a6472365bb033bea1ba1d5fa1b5a142a66ca59c6cd4d3f9c3f6f99"
+    "hash": "4ac5c3b0e39e4b8e4e0311643078fc685894b4c9018015bdf52cccd873e721e7"
   }
 }
