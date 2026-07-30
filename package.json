@@ -32,7 +32,7 @@
     "editorjs-text-color-plugin": "^2.0.4",
     "editorjs-undo": "^2.0.28",
     "lit": "3.3.2",
-    "mermaid": "^11.12.3",
+    "mermaid": "^11.16.0",
     "progressbar.js": "^1.1.1",
     "react": "19.2.3",
     "react-dom": "19.2.3",
@@ -54,8 +54,8 @@
     "@types/react-dom": "19.2.3",
     "@types/three": "^0.182.0",
     "@vitejs/plugin-react": "5.1.2",
-    "@vitest/coverage-v8": "^4.0.18",
-    "@vitest/ui": "^4.0.18",
+    "@vitest/coverage-v8": "^4.1.10",
+    "@vitest/ui": "^4.1.10",
     "jsdom": "^25.0.1",
     "magic-string": "0.30.21",
     "msw": "^2.12.10",
@@ -66,9 +66,9 @@
     "ts-node": "^1.7.1",
     "tsx": "^4.20.6",
     "typescript": "5.9.3",
-    "vite": "7.3.6",
+    "vite": "7.3.1",
     "vite-plugin-checker": "0.12.0",
-    "vitest": "^4.0.18",
+    "vitest": "^4.1.10",
     "workbox-build": "7.4.0"
   },
   "type": "module",
@@ -229,6 +229,6 @@
       "vite-plugin-checker": "0.12.0",
       "workbox-build": "7.4.0"
     },
-    "hash": "4ac5c3b0e39e4b8e4e0311643078fc685894b4c9018015bdf52cccd873e721e7"
+    "hash": "aaba5722f93c2a7358d246c1daa5869618347921b216d361ff76a48646de9fb0"
   }
 }
