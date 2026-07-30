@@ -64,7 +64,9 @@ class ChapterListItemKaribuTest {
 
         List<String> texts = findAll(item, Span.class).stream().map(Span::getText).toList();
         assertTrue(texts.contains("Kapitola anatomie"));
+        // The author's name, never the Keycloak subject behind it.
         assertTrue(texts.contains("teacher"));
+        assertTrue(texts.stream().noneMatch(t -> t.contains("2f1c9e0a")));
         assertTrue(texts.contains("Lebka 3D"));
 
         button(item, "Otevřít").click();
@@ -295,7 +297,8 @@ class ChapterListItemKaribuTest {
     }
 
     private ChapterEntity chapter(QuickModelEntity model) {
-        return ChapterEntity.builder().id("chapter-1").name("Kapitola anatomie").creatorId("teacher")
+        return ChapterEntity.builder().id("chapter-1").name("Kapitola anatomie")
+                .creatorId("2f1c9e0a-0b52-4a1b-9a1e-7c0d2f3b4a5d").creatorName("teacher")
                 .created(Instant.parse("2025-01-12T10:15:00Z")).updated(Instant.parse("2025-02-05T08:30:00Z"))
                 .models(List.of(model)).build();
     }

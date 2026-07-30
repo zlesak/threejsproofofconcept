@@ -11,6 +11,7 @@ import cz.uhk.zlesak.threejslearningapp.domain.model.InputFileDesc;
 import cz.uhk.zlesak.threejslearningapp.domain.model.ModelFileEntity;
 import cz.uhk.zlesak.threejslearningapp.domain.model.ModelFilter;
 import cz.uhk.zlesak.threejslearningapp.domain.model.QuickModelEntity;
+import cz.uhk.zlesak.threejslearningapp.common.logging.AuditLog;
 import cz.uhk.zlesak.threejslearningapp.domain.texture.QuickTextureEntity;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -39,6 +40,7 @@ public class ModelBackendService {
     private final FileStorageService fileStorageService;
     private final ListingQueries listingQueries;
     private final CurrentUserProvider currentUserProvider;
+    private final AuditLog auditLog;
     /** Chapters reference models and deleting a model has to check them; the lazy lookup breaks the cycle. */
     private final ObjectProvider<ChapterBackendService> chapterLookup;
 
@@ -60,9 +62,10 @@ public class ModelBackendService {
         ModelFileEntity root = fileStorageService.store(index(files), metadata);
 
         Instant now = Instant.now();
-        return modelRepository.save(QuickModelEntity.builder()
+        QuickModelEntity saved = modelRepository.save(QuickModelEntity.builder()
                 .name(root.getName())
                 .creatorId(currentUserProvider.requireUserId())
+                .creatorName(currentUserProvider.currentUserName())
                 .description(description)
                 .model(root)
                 .isAdvanced(advanced)
@@ -71,6 +74,8 @@ public class ModelBackendService {
                 .created(now)
                 .updated(now)
                 .build());
+        auditLog.success(AuditLog.Action.CREATE, "model", saved.getId(), saved.getName());
+        return saved;
     }
 
     /**
@@ -107,6 +112,7 @@ public class ModelBackendService {
 
         QuickModelEntity updated = modelRepository.save(existing);
         fileStorageService.deleteTree(obsolete);
+        auditLog.success(AuditLog.Action.UPDATE, "model", updated.getId(), updated.getName());
         return updated;
     }
 
@@ -164,6 +170,7 @@ public class ModelBackendService {
 
         fileStorageService.deleteTree(model.getModel());
         modelRepository.deleteById(modelId);
+        auditLog.success(AuditLog.Action.DELETE, "model", modelId, model.getName());
     }
 
     /**

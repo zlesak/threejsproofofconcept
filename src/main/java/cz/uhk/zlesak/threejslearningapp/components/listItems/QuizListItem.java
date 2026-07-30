@@ -41,11 +41,11 @@ public class QuizListItem extends AbstractListItem {
             Icon clockIcon = VaadinIcon.CLOCK.create();
             clockIcon.addClassNames(LumoUtility.IconSize.SMALL, LumoUtility.TextColor.SECONDARY);
 
-            Span label = new Span("Časový limit:");
+            Span label = new Span(text("quiz.timeLimit.label") + ":");
             label.addClassNames(LumoUtility.TextColor.SECONDARY, LumoUtility.FontSize.SMALL);
-            String timeText = "Bez limitu";
+            String timeText = text("quiz.timeLimit.none");
             if (quiz.getTimeLimit() > 0){
-                timeText = quiz.getTimeLimit() + " " + (quiz.getTimeLimit() == 1 ? "minuta" : quiz.getTimeLimit() < 5 ? "minuty" : "minut");
+                timeText = quiz.getTimeLimit() + " " + text(minutesKey(quiz.getTimeLimit()));
             }
             Span value = new Span(timeText);
             value.addClassNames(LumoUtility.FontSize.SMALL, LumoUtility.FontWeight.SEMIBOLD);
@@ -54,20 +54,26 @@ public class QuizListItem extends AbstractListItem {
             details.add(timeLimitRow);
         }
 
-        if (quiz.getChapterId() != null && !quiz.getChapterId().isBlank()) {
+        // The chapter's name, not a fragment of its id: eight hex characters told the reader nothing
+        // and looked like a defect. Quizzes stored before the name was recorded omit the row.
+        if (quiz.getChapterName() != null && !quiz.getChapterName().isBlank()) {
             HorizontalLayout chapterRow = new HorizontalLayout();
             chapterRow.addClassNames(LumoUtility.Gap.XSMALL, LumoUtility.AlignItems.CENTER);
 
             Icon bookIcon = VaadinIcon.BOOK.create();
             bookIcon.addClassNames(LumoUtility.IconSize.SMALL, LumoUtility.TextColor.SECONDARY);
 
-            Span label = new Span("Kapitola:");
+            Span label = new Span(text("quiz.chapter.label") + ":");
             label.addClassNames(LumoUtility.TextColor.SECONDARY, LumoUtility.FontSize.SMALL);
 
-            Span value = new Span(quiz.getChapterId().substring(0, Math.min(8, quiz.getChapterId().length())));
+            Span value = new Span(quiz.getChapterName());
             value.addClassNames(LumoUtility.FontSize.SMALL);
+            applyEllipsis(value);
+            value.getElement().setProperty("title", quiz.getChapterName());
 
+            chapterRow.setWidthFull();
             chapterRow.add(bookIcon, label, value);
+            chapterRow.expand(value);
             details.add(chapterRow);
         }
 
@@ -118,5 +124,19 @@ public class QuizListItem extends AbstractListItem {
 
     private boolean isUiInActive(UI ui) {
         return ui == null || ui.getSession() == null || !ui.isAttached() || ui.isClosing();
+    }
+
+    /**
+     * Picks the Czech plural form for a number of minutes: one minuta, two to four minuty, otherwise
+     * minut.
+     *
+     * @param minutes number of minutes, greater than zero.
+     * @return translation key of the matching form.
+     */
+    private static String minutesKey(int minutes) {
+        if (minutes == 1) {
+            return "quiz.timeLimit.minutes.one";
+        }
+        return minutes < 5 ? "quiz.timeLimit.minutes.few" : "quiz.timeLimit.minutes.many";
     }
 }

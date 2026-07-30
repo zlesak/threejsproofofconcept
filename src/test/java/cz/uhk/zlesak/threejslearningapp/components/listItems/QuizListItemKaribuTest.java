@@ -40,13 +40,15 @@ class QuizListItemKaribuTest {
     @AfterEach void tearDown() { KaribuSpringTestSupport.tearDown(); }
 
     @Test
-    void shouldRenderTimeLimitAndChapterSnippet() {
+    void shouldRenderTimeLimitAndChapterName() {
         QuizListItem item = new QuizListItem(quiz(), true);
         UI.getCurrent().add(item);
         List<String> texts = findAll(item, Span.class).stream().map(Span::getText).toList();
         assertTrue(texts.contains("Procviceni kosti"));
         assertTrue(texts.contains("3 minuty"));
-        assertTrue(texts.contains("chapter-"));
+        // The chapter's name, never its id: a fragment of an ObjectId told the reader nothing.
+        assertTrue(texts.contains("Kostra"));
+        assertTrue(texts.stream().noneMatch(t -> t.contains("chapter-123456789")));
     }
 
     @Test
@@ -204,7 +206,8 @@ class QuizListItemKaribuTest {
     }
 
     private QuickQuizEntity quiz() {
-        return QuickQuizEntity.builder().id("quiz-1").name("Procviceni kosti").timeLimit(3).chapterId("chapter-123456789").build();
+        return QuickQuizEntity.builder().id("quiz-1").name("Procviceni kosti").timeLimit(3)
+                .chapterId("chapter-123456789").chapterName("Kostra").build();
     }
 }
 

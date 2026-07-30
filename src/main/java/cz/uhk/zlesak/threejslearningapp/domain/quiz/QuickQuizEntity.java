@@ -21,6 +21,12 @@ public class QuickQuizEntity extends AbstractEntity {
 
     String chapterId;
 
+    /**
+     * Name of {@link #chapterId} at the time of writing, so a listing can say which chapter a quiz
+     * belongs to without reading every chapter — and without falling back to showing the id.
+     */
+    String chapterName;
+
     /** Minutes available for the quiz; zero means no limit. */
     Integer timeLimit;
 }

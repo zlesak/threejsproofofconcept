@@ -5,6 +5,7 @@ import cz.uhk.zlesak.threejslearningapp.backend.persistence.ChapterRepository;
 import cz.uhk.zlesak.threejslearningapp.backend.persistence.FullTextDocument;
 import cz.uhk.zlesak.threejslearningapp.backend.persistence.ListingQueries;
 import cz.uhk.zlesak.threejslearningapp.backend.persistence.MongoCollections;
+import cz.uhk.zlesak.threejslearningapp.common.logging.AuditLog;
 import cz.uhk.zlesak.threejslearningapp.domain.chapter.ChapterEntity;
 import cz.uhk.zlesak.threejslearningapp.domain.chapter.ChapterFilter;
 import cz.uhk.zlesak.threejslearningapp.domain.chapter.QuickChapterEntity;
@@ -41,6 +42,7 @@ public class ChapterBackendService {
     private final ListingQueries listingQueries;
     private final CurrentUserProvider currentUserProvider;
     private final MongoTemplate mongoTemplate;
+    private final AuditLog auditLog;
     /** Quizzes reference chapters and chapters list their quizzes; the lazy lookup breaks the cycle. */
     private final ObjectProvider<QuizBackendService> quizLookup;
 
@@ -54,12 +56,16 @@ public class ChapterBackendService {
     public ChapterEntity create(ChapterEntity chapter) {
         validate(chapter);
         chapter.setId(null);
+        // Audit is written after the save, once there is an id to record.
         chapter.setCreatorId(currentUserProvider.requireUserId());
+        chapter.setCreatorName(currentUserProvider.currentUserName());
         Instant now = Instant.now();
         chapter.setCreated(chapter.getCreated() != null ? chapter.getCreated() : now);
         chapter.setUpdated(now);
 
-        return afterWrite(chapterRepository.save(chapter));
+        ChapterEntity saved = afterWrite(chapterRepository.save(chapter));
+        auditLog.success(AuditLog.Action.CREATE, "chapter", saved.getId(), saved.getName());
+        return saved;
     }
 
     /**
@@ -83,10 +89,15 @@ public class ChapterBackendService {
         }
 
         chapter.setCreatorId(existing.getCreatorId() != null ? existing.getCreatorId() : editorId);
+        chapter.setCreatorName(existing.getCreatorName() != null
+                ? existing.getCreatorName()
+                : currentUserProvider.currentUserName());
         chapter.setCreated(existing.getCreated());
         chapter.setUpdated(Instant.now());
 
-        return afterWrite(chapterRepository.save(chapter));
+        ChapterEntity saved = afterWrite(chapterRepository.save(chapter));
+        auditLog.success(AuditLog.Action.UPDATE, "chapter", saved.getId(), saved.getName());
+        return saved;
     }
 
     /**
@@ -114,6 +125,7 @@ public class ChapterBackendService {
         quizLookup.getObject().detachFromChapter(chapter.getId());
         chapterRepository.deleteById(chapter.getId());
         fullTextSearchService.remove(chapter.getId());
+        auditLog.success(AuditLog.Action.DELETE, "chapter", chapter.getId(), chapter.getName());
     }
 
     /**

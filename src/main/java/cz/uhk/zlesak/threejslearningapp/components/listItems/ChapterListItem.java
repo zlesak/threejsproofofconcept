@@ -44,7 +44,11 @@ public class ChapterListItem extends AbstractListItem {
 
         titleSpan.setText(chapter.getName());
 
-        if (chapter.getCreatorId() != null && !chapter.getCreatorId().isBlank()) {
+        // The author's name, never their id: the id is a Keycloak subject, which means nothing to a
+        // reader and gives away who else uses the system. Chapters written before names were
+        // recorded simply omit the row.
+        String creator = chapter.displayCreator();
+        if (creator != null) {
             HorizontalLayout creatorRow = new HorizontalLayout();
             creatorRow.addClassNames(LumoUtility.Gap.XSMALL, LumoUtility.AlignItems.CENTER);
 
@@ -54,7 +58,7 @@ public class ChapterListItem extends AbstractListItem {
             Span label = new Span(text("chapter.creator") + ":");
             label.addClassNames(LumoUtility.TextColor.SECONDARY, LumoUtility.FontSize.SMALL);
 
-            Span value = new Span(chapter.getCreatorId());
+            Span value = new Span(creator);
             value.addClassNames(LumoUtility.FontSize.SMALL);
 
             creatorRow.setWidthFull();

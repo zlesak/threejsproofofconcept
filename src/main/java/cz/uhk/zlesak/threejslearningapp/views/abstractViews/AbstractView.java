@@ -13,11 +13,13 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import com.vaadin.flow.shared.Registration;
 import com.vaadin.flow.theme.lumo.LumoUtility;
 import cz.uhk.zlesak.threejslearningapp.common.SpringContextUtils;
+import cz.uhk.zlesak.threejslearningapp.common.logging.LogContext;
 import cz.uhk.zlesak.threejslearningapp.components.notifications.ErrorNotification;
 import cz.uhk.zlesak.threejslearningapp.components.notifications.SuccessNotification;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
@@ -191,6 +193,9 @@ public abstract class AbstractView<S> extends Composite<VerticalLayout> implemen
         // Přihlášeného uživatele je nutné přenést explicitně: worker vlákno nemá vazbu na Vaadin
         // session, ze které se přihlášení jinak odvozuje, a backend z něj čte autora změn.
         SecurityContext capturedSecurityContext = SecurityContextHolder.getContext();
+        // Stejný důvod pro logovací kontext: bez něj by řádky z workeru neměly korelační ID
+        // a nešlo by je spojit s požadavkem, který je vyvolal.
+        Map<String, String> capturedLogContext = LogContext.capture();
 
         onAsyncWorkStarted(ui);
 
@@ -200,7 +205,7 @@ public abstract class AbstractView<S> extends Composite<VerticalLayout> implemen
                         SecurityContext previous = SecurityContextHolder.getContext();
                         SecurityContextHolder.setContext(capturedSecurityContext);
                         try {
-                            return supplier.get();
+                            return LogContext.with(capturedLogContext, supplier);
                         } catch (Throwable t) {
                             throw new CompletionException(t);
                         } finally {

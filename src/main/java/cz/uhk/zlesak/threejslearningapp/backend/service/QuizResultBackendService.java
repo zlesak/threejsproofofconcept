@@ -4,6 +4,7 @@ import cz.uhk.zlesak.threejslearningapp.backend.BackendException;
 import cz.uhk.zlesak.threejslearningapp.backend.persistence.ListingQueries;
 import cz.uhk.zlesak.threejslearningapp.backend.persistence.MongoCollections;
 import cz.uhk.zlesak.threejslearningapp.backend.persistence.QuizResultRepository;
+import cz.uhk.zlesak.threejslearningapp.common.logging.AuditLog;
 import cz.uhk.zlesak.threejslearningapp.domain.common.FilterParameters;
 import cz.uhk.zlesak.threejslearningapp.domain.common.PageResult;
 import cz.uhk.zlesak.threejslearningapp.domain.quiz.QuickQuizResult;
@@ -35,6 +36,7 @@ public class QuizResultBackendService {
     private final QuizGradingService quizGradingService;
     private final ListingQueries listingQueries;
     private final CurrentUserProvider currentUserProvider;
+    private final AuditLog auditLog;
 
     /**
      * Grades and stores a submitted quiz.
@@ -53,7 +55,7 @@ public class QuizResultBackendService {
         QuizEntity quiz = quizBackendService.load(submission.getQuizId(), true);
         QuizGradingService.Graded graded = quizGradingService.grade(quiz, submission.getAnswers());
 
-        return quizResultRepository.save(QuizValidationResult.builder()
+        QuizValidationResult stored = quizResultRepository.save(QuizValidationResult.builder()
                 .userId(userId)
                 .quizId(quiz.getId())
                 .name(quiz.getName())
@@ -64,6 +66,8 @@ public class QuizResultBackendService {
                 .questionResults(graded.results())
                 .created(Instant.now())
                 .build());
+        auditLog.success(AuditLog.Action.SUBMIT, "quizResult", stored.getId(), quiz.getName());
+        return stored;
     }
 
     /**

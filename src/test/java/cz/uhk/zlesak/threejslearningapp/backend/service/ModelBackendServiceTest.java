@@ -1,6 +1,7 @@
 package cz.uhk.zlesak.threejslearningapp.backend.service;
 
 import cz.uhk.zlesak.threejslearningapp.backend.BackendException;
+import cz.uhk.zlesak.threejslearningapp.common.logging.AuditLog;
 import cz.uhk.zlesak.threejslearningapp.backend.persistence.ListingQueries;
 import cz.uhk.zlesak.threejslearningapp.backend.persistence.ModelRepository;
 import cz.uhk.zlesak.threejslearningapp.domain.chapter.ChapterEntity;
@@ -42,7 +43,8 @@ class ModelBackendServiceTest {
         Mockito.when(chapterLookup.getObject()).thenReturn(chapterBackendService);
 
         modelBackendService = new ModelBackendService(modelRepository, fileStorageService,
-                Mockito.mock(ListingQueries.class), currentUserProvider, chapterLookup);
+                Mockito.mock(ListingQueries.class), currentUserProvider,
+                Mockito.mock(AuditLog.class), chapterLookup);
 
         Mockito.when(modelRepository.save(Mockito.any())).thenAnswer(call -> call.getArgument(0));
     }

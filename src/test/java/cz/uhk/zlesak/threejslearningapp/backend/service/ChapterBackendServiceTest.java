@@ -1,6 +1,7 @@
 package cz.uhk.zlesak.threejslearningapp.backend.service;
 
 import cz.uhk.zlesak.threejslearningapp.backend.BackendException;
+import cz.uhk.zlesak.threejslearningapp.common.logging.AuditLog;
 import cz.uhk.zlesak.threejslearningapp.backend.persistence.ChapterRepository;
 import cz.uhk.zlesak.threejslearningapp.backend.persistence.FullTextDocument;
 import cz.uhk.zlesak.threejslearningapp.backend.persistence.ListingQueries;
@@ -48,7 +49,7 @@ class ChapterBackendServiceTest {
 
         chapterBackendService = new ChapterBackendService(chapterRepository, modelBackendService,
                 fullTextSearchService, Mockito.mock(ListingQueries.class), currentUserProvider,
-                Mockito.mock(MongoTemplate.class), quizLookup);
+                Mockito.mock(MongoTemplate.class), Mockito.mock(AuditLog.class), quizLookup);
     }
 
     @Test

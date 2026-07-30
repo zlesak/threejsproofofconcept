@@ -50,6 +50,39 @@ public class CurrentUserProvider {
     }
 
     /**
+     * Resolves the name to record on things the current user creates.
+     * Prefers the username over the {@code sub} claim, because the id is meaningless to anyone
+     * reading a listing.
+     *
+     * @return the current user's username, or {@code null} when the request is anonymous.
+     */
+    public String currentUserName() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated() || currentUserId() == null) {
+            return null;
+        }
+
+        Object principal = authentication.getPrincipal();
+        if (principal instanceof OidcUser oidcUser) {
+            return firstNonBlank(oidcUser.getPreferredUsername(), oidcUser.getFullName(), authentication.getName());
+        }
+        if (principal instanceof Jwt jwt) {
+            return firstNonBlank(jwt.getClaimAsString("preferred_username"), jwt.getClaimAsString("name"),
+                    authentication.getName());
+        }
+        return authentication.getName();
+    }
+
+    private static String firstNonBlank(String... candidates) {
+        for (String candidate : candidates) {
+            if (candidate != null && !candidate.isBlank()) {
+                return candidate;
+            }
+        }
+        return null;
+    }
+
+    /**
      * @param role role name without the {@code ROLE_} prefix.
      * @return whether the current user holds the role.
      */

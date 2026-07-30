@@ -1,6 +1,7 @@
 package cz.uhk.zlesak.threejslearningapp.backend.service;
 
 import cz.uhk.zlesak.threejslearningapp.backend.BackendException;
+import cz.uhk.zlesak.threejslearningapp.common.logging.AuditLog;
 import cz.uhk.zlesak.threejslearningapp.backend.persistence.ListingQueries;
 import cz.uhk.zlesak.threejslearningapp.backend.persistence.MongoCollections;
 import cz.uhk.zlesak.threejslearningapp.backend.persistence.QuizRepository;
@@ -36,7 +37,8 @@ class QuizBackendServiceTest {
                 Mockito.mock(QuizAuthoringValidator.class),
                 Mockito.mock(ChapterBackendService.class),
                 Mockito.mock(ListingQueries.class),
-                Mockito.mock(CurrentUserProvider.class));
+                Mockito.mock(CurrentUserProvider.class),
+                Mockito.mock(AuditLog.class));
 
         Mockito.when(mongoTemplate.findOne(Mockito.any(), Mockito.eq(QuizEntity.class), Mockito.anyString()))
                 .thenReturn(QuizEntity.builder().name("Kvíz").build());

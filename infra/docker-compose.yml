@@ -94,6 +94,9 @@ services:
       KEYCLOAK_CLIENT_SECRET: ${KEYCLOAK_CLIENT_SECRET:?set KEYCLOAK_CLIENT_SECRET in .env}
       EXTERNAL_GATEWAY_URL: ${EXTERNAL_BASE_URL}
       EXTERNAL_REDIRECT_URI: ${EXTERNAL_BASE_URL}/login/oauth2/code/keycloak
+      # One JSON object per line in Elastic Common Schema, so `docker logs` can be shipped straight
+      # into Loki or Elasticsearch and queried by field instead of by grep.
+      LOGGING_STRUCTURED_FORMAT_CONSOLE: ${LOG_FORMAT:-ecs}
     depends_on:
       mongo:
         condition: service_healthy

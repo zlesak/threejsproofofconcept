@@ -4,6 +4,7 @@ import cz.uhk.zlesak.threejslearningapp.backend.BackendException;
 import cz.uhk.zlesak.threejslearningapp.backend.persistence.ListingQueries;
 import cz.uhk.zlesak.threejslearningapp.backend.persistence.MongoCollections;
 import cz.uhk.zlesak.threejslearningapp.backend.persistence.QuizRepository;
+import cz.uhk.zlesak.threejslearningapp.common.logging.AuditLog;
 import cz.uhk.zlesak.threejslearningapp.domain.common.FilterParameters;
 import cz.uhk.zlesak.threejslearningapp.domain.common.PageResult;
 import cz.uhk.zlesak.threejslearningapp.domain.quiz.QuickQuizEntity;
@@ -34,6 +35,7 @@ public class QuizBackendService {
     private final ChapterBackendService chapterBackendService;
     private final ListingQueries listingQueries;
     private final CurrentUserProvider currentUserProvider;
+    private final AuditLog auditLog;
 
     /**
      * Stores a new quiz.
@@ -46,10 +48,13 @@ public class QuizBackendService {
         validate(quiz);
         quiz.setId(null);
         quiz.setCreatorId(currentUserProvider.requireUserId());
+        quiz.setCreatorName(currentUserProvider.currentUserName());
         Instant now = Instant.now();
         quiz.setCreated(quiz.getCreated() != null ? quiz.getCreated() : now);
         quiz.setUpdated(now);
-        return quizRepository.save(quiz);
+        QuizEntity saved = quizRepository.save(quiz);
+        auditLog.success(AuditLog.Action.CREATE, "quiz", saved.getId(), saved.getName());
+        return saved;
     }
 
     /**
@@ -67,9 +72,14 @@ public class QuizBackendService {
         validate(quiz);
 
         quiz.setCreatorId(existing.getCreatorId() != null ? existing.getCreatorId() : currentUserProvider.requireUserId());
+        quiz.setCreatorName(existing.getCreatorName() != null
+                ? existing.getCreatorName()
+                : currentUserProvider.currentUserName());
         quiz.setCreated(existing.getCreated());
         quiz.setUpdated(Instant.now());
-        return quizRepository.save(quiz);
+        QuizEntity saved = quizRepository.save(quiz);
+        auditLog.success(AuditLog.Action.UPDATE, "quiz", saved.getId(), saved.getName());
+        return saved;
     }
 
     /**
@@ -132,6 +142,7 @@ public class QuizBackendService {
     @PreAuthorize("hasRole('CREATE_QUIZ')")
     public void delete(String quizId) {
         quizRepository.deleteById(quizId);
+        auditLog.success(AuditLog.Action.DELETE, "quiz", quizId, null);
     }
 
     /**
@@ -184,7 +195,11 @@ public class QuizBackendService {
             throw new BackendException.Validation("Časový limit kvízu nesmí být záporný.");
         }
         if (quiz.getChapterId() != null && !quiz.getChapterId().isBlank()) {
-            chapterBackendService.require(quiz.getChapterId());
+            // Recorded while the chapter is being checked anyway, so listings can name the chapter
+            // instead of showing a fragment of its id.
+            quiz.setChapterName(chapterBackendService.require(quiz.getChapterId()).getName());
+        } else {
+            quiz.setChapterName(null);
         }
         authoringValidator.validate(quiz.getQuestions(), quiz.getAnswers());
     }
