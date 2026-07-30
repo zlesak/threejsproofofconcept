@@ -16,7 +16,7 @@ import com.vaadin.flow.component.textfield.TextField;
 import cz.uhk.zlesak.threejslearningapp.components.buttons.CreateQuizButton;
 import cz.uhk.zlesak.threejslearningapp.components.dialogs.listDialogs.ChapterListDialog;
 import cz.uhk.zlesak.threejslearningapp.components.editors.question.QuestionEditorBase;
-import cz.uhk.zlesak.threejslearningapp.domain.chapter.ChapterEntity;
+import cz.uhk.zlesak.threejslearningapp.domain.chapter.QuickChapterEntity;
 import cz.uhk.zlesak.threejslearningapp.domain.quiz.QuestionTypeEnum;
 import cz.uhk.zlesak.threejslearningapp.i18n.I18nAware;
 import cz.uhk.zlesak.threejslearningapp.views.chapter.ChapterListingView;
@@ -34,7 +34,7 @@ public class CreateQuizForm extends VerticalLayout implements I18nAware {
     private final TextField nameField;
     private final TextArea descriptionField;
     private final IntegerField timeLimitField;
-    private final Select<ChapterEntity> chapterSelect;
+    private final Select<QuickChapterEntity> chapterSelect;
     private final Button chooseChapterButton;
     private final Button addQuestionButton;
     private final Select<QuestionTypeEnum> questionTypeSelect;
@@ -217,7 +217,7 @@ public class CreateQuizForm extends VerticalLayout implements I18nAware {
      * @param timeLimit   existing time limit in minutes
      * @param chapter     the chapter currently linked to the quiz
      */
-    public void setQuizData(String name, String description, Integer timeLimit, ChapterEntity chapter) {
+    public void setQuizData(String name, String description, Integer timeLimit, QuickChapterEntity chapter) {
         nameField.setValue(name != null ? name : "");
         descriptionField.setValue(description != null ? description : "");
         timeLimitField.setValue(timeLimit != null ? timeLimit : 0);

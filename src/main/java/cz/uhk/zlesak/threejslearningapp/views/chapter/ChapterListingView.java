@@ -7,6 +7,7 @@ import cz.uhk.zlesak.threejslearningapp.components.listItems.AbstractListItem;
 import cz.uhk.zlesak.threejslearningapp.components.listItems.ChapterListItem;
 import cz.uhk.zlesak.threejslearningapp.domain.chapter.ChapterEntity;
 import cz.uhk.zlesak.threejslearningapp.domain.chapter.ChapterFilter;
+import cz.uhk.zlesak.threejslearningapp.domain.chapter.QuickChapterEntity;
 import cz.uhk.zlesak.threejslearningapp.services.ChapterService;
 import cz.uhk.zlesak.threejslearningapp.views.abstractViews.AbstractListingView;
 import cz.uhk.zlesak.threejslearningapp.views.quizes.QuizCreateView;
@@ -24,7 +25,7 @@ import org.springframework.context.annotation.Scope;
 @Scope("prototype")
 @Tag("chapters-listing")
 @PermitAll
-public class ChapterListingView extends AbstractListingView<ChapterEntity, ChapterFilter, ChapterEntity, ChapterService> {
+public class ChapterListingView extends AbstractListingView<QuickChapterEntity, ChapterFilter, ChapterEntity, ChapterService> {
 
     /**
      * Constructor for ChapterListingView.
@@ -53,7 +54,7 @@ public class ChapterListingView extends AbstractListingView<ChapterEntity, Chapt
      * @return a ChapterListItem component representing the chapter
      */
     @Override
-    protected AbstractListItem createListItem(ChapterEntity chapter) {
+    protected AbstractListItem createListItem(QuickChapterEntity chapter) {
         return new ChapterListItem(chapter, listView, administrationView);
     }
 

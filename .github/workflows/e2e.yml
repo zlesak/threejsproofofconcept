@@ -2,20 +2,13 @@ name: E2E
 
 on:
   workflow_dispatch:
-    inputs:
-      backend-branch:
-        description: 'Backend branch to deploy (default: main)'
-        required: false
-      frontend-image:
-        description: 'Frontend image to test'
-        required: false
-        default: 'ghcr.io/zlesak/mishappfrontend:latest'
   schedule:
     - cron: '0 3 * * *'
+  pull_request:
+    branches: [ main, monolith ]
 
 permissions:
   contents: read
-  packages: read
 
 jobs:
   e2e:
@@ -25,32 +18,25 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/checkout@v4
-        with:
-          repository: zlesak/MISH_SCRIPTS
-          path: mish-scripts
-
       - name: Map gateway hostname
         run: echo "127.0.0.1 mish" | sudo tee -a /etc/hosts
 
-      - name: Log in to GHCR
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Start full stack
-        working-directory: mish-scripts
+      - name: Configure the stack
+        working-directory: infra
         run: |
-          BE_BRANCH="${{ inputs.backend-branch }}"
-          FE_IMAGE="${{ inputs.frontend-image }}"
-          ./start_all.sh --dev \
-            --image-frontend="${FE_IMAGE:-ghcr.io/zlesak/mishappfrontend:latest}" \
-            ${BE_BRANCH:+--branch-backend=$BE_BRANCH}
+          cp .env.example .env
+          sed -i 's|^EXTERNAL_BASE_URL=.*|EXTERNAL_BASE_URL=https://mish|' .env
+          sed -i 's|^EXTERNAL_HOSTNAME=.*|EXTERNAL_HOSTNAME=mish|' .env
 
-      - name: Wait for gateway
+      - name: Start the stack
+        working-directory: infra
+        run: docker compose up -d --build --wait
+
+      - name: Wait for the gateway
         run: timeout 300 bash -c 'until curl -ksf https://mish >/dev/null; do sleep 5; done'
+
+      - name: Wait for Keycloak
+        run: timeout 300 bash -c 'until curl -ksf https://mish/auth/realms/mock-realm >/dev/null; do sleep 5; done'
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -78,6 +64,15 @@ jobs:
           e2e/student-no-teacher-routes.spec.ts
           e2e/model-assets-visibility.spec.ts
           e2e/public-routes.spec.ts
+          e2e/usability.spec.ts
+
+      - name: Upload usability report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: usability-report
+          path: test-results/usability-report.md
+          if-no-files-found: ignore
 
       - name: Upload Playwright report
         uses: actions/upload-artifact@v4
@@ -88,9 +83,7 @@ jobs:
 
       - name: Dump stack state on failure
         if: failure()
+        working-directory: infra
         run: |
-          docker ps -a
-          for c in $(docker ps -aq); do
-            echo "===== $(docker inspect --format '{{.Name}}' $c) ====="
-            docker logs --tail 100 "$c" 2>&1 || true
-          done
+          docker compose ps
+          docker compose logs --tail 200

@@ -24,4 +24,9 @@ export default defineConfig({
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
   },
+  projects: [
+    // Seeds the model and chapter the CRUD specs pick from, so the suite runs on an empty database.
+    {name: 'setup', testMatch: /.*\.setup\.ts/},
+    {name: 'e2e', testIgnore: /.*\.setup\.ts/, dependencies: ['setup']},
+  ],
 });

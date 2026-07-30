@@ -130,7 +130,6 @@ class AdministrationViewKaribuTest {
 
     private QuickModelEntity model() {
         return QuickModelEntity.builder()
-                .metadataId("model-1")
                 .model(ModelFileEntity.builder().id("file-1").name("Lebka").build())
                 .build();
     }

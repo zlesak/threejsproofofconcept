@@ -2,7 +2,7 @@ package cz.uhk.zlesak.threejslearningapp.services;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import cz.uhk.zlesak.threejslearningapp.api.clients.ChapterApiClient;
+import cz.uhk.zlesak.threejslearningapp.api.contracts.IChapterApiClient;
 import cz.uhk.zlesak.threejslearningapp.domain.chapter.ChapterEntity;
 import cz.uhk.zlesak.threejslearningapp.domain.model.QuickModelEntity;
 import cz.uhk.zlesak.threejslearningapp.testsupport.TestFixtures;
@@ -19,13 +19,13 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 class ChapterServiceTest {
-    private ChapterApiClient chapterApiClient;
+    private IChapterApiClient chapterApiClient;
     private ChapterService chapterService;
     private ObjectMapper objectMapper;
 
     @BeforeEach
     void setUp() {
-        chapterApiClient = mock(ChapterApiClient.class);
+        chapterApiClient = mock(IChapterApiClient.class);
         objectMapper = new ObjectMapper();
         chapterService = new ChapterService(chapterApiClient, objectMapper);
     }

@@ -182,8 +182,8 @@ public abstract class AbstractChapterView extends AbstractEntityView<ChapterServ
                 continue;
             }
             try {
-                if (quickModelEntity.getMetadataId() != null && !quickModelEntity.getMetadataId().isBlank()) {
-                    resolved.put(entry.getKey(), modelService.read(quickModelEntity.getMetadataId()));
+                if (quickModelEntity.getId() != null && !quickModelEntity.getId().isBlank()) {
+                    resolved.put(entry.getKey(), modelService.read(quickModelEntity.getId()));
                 } else {
                     resolved.put(entry.getKey(), quickModelEntity);
                 }

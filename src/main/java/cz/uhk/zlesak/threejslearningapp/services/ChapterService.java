@@ -4,9 +4,10 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import cz.uhk.zlesak.threejslearningapp.api.clients.ChapterApiClient;
+import cz.uhk.zlesak.threejslearningapp.api.contracts.IChapterApiClient;
 import cz.uhk.zlesak.threejslearningapp.domain.chapter.ChapterEntity;
 import cz.uhk.zlesak.threejslearningapp.domain.chapter.ChapterFilter;
+import cz.uhk.zlesak.threejslearningapp.domain.chapter.QuickChapterEntity;
 import cz.uhk.zlesak.threejslearningapp.domain.chapter.SubChapterForSelect;
 import cz.uhk.zlesak.threejslearningapp.domain.model.QuickModelEntity;
 import lombok.extern.slf4j.Slf4j;
@@ -28,7 +29,7 @@ import java.util.*;
 @Slf4j
 @Service
 @Scope("prototype")
-public class ChapterService extends AbstractService<ChapterEntity, ChapterEntity, ChapterFilter> {
+public class ChapterService extends AbstractService<ChapterEntity, QuickChapterEntity, ChapterFilter> {
     private final ObjectMapper objectMapper;
 
     /**
@@ -37,7 +38,7 @@ public class ChapterService extends AbstractService<ChapterEntity, ChapterEntity
      * @param chapterApiClient The API client used to interact with chapter-related operations.
      */
     @Autowired
-    public ChapterService(ChapterApiClient chapterApiClient, ObjectMapper objectMapper) {
+    public ChapterService(IChapterApiClient chapterApiClient, ObjectMapper objectMapper) {
         super(chapterApiClient);
         this.objectMapper = objectMapper;
     }
@@ -272,6 +273,7 @@ public class ChapterService extends AbstractService<ChapterEntity, ChapterEntity
                 .description("")
                 .content(content)
                 .models(modelsList)
+                .modelIds(modelsList.stream().map(QuickModelEntity::getId).filter(Objects::nonNull).toList())
                 .build();
     }
 

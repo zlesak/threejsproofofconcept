@@ -5,7 +5,6 @@ import com.vaadin.flow.component.html.H3;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.theme.lumo.LumoUtility;
-import cz.uhk.zlesak.threejslearningapp.api.contracts.ApiTokenContext;
 import cz.uhk.zlesak.threejslearningapp.common.SpringContextUtils;
 import cz.uhk.zlesak.threejslearningapp.components.commonComponents.NoItemInfoComponent;
 import cz.uhk.zlesak.threejslearningapp.components.commonComponents.PaginationComponent;
@@ -15,7 +14,8 @@ import cz.uhk.zlesak.threejslearningapp.domain.common.PageResult;
 import cz.uhk.zlesak.threejslearningapp.domain.quiz.QuickQuizResult;
 import cz.uhk.zlesak.threejslearningapp.domain.quiz.QuizResultFilter;
 import cz.uhk.zlesak.threejslearningapp.i18n.I18nAware;
-import cz.uhk.zlesak.threejslearningapp.security.AccessTokenProvider;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
 import cz.uhk.zlesak.threejslearningapp.services.QuizResultService;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -72,21 +72,17 @@ public class QuizResultsHistoryPanel extends VerticalLayout implements I18nAware
         paginationLayout.removeAll();
         itemsLayout.add(new NoItemInfoComponent("page.info.loading"));
 
-        String capturedAccessToken = null;
-        try {
-            capturedAccessToken = SpringContextUtils.getBean(AccessTokenProvider.class).getValidAccessToken();
-        } catch (Exception ignored) {
-            // ignored
-        }
-        final String tokenForAsync = capturedAccessToken;
+        // Worker vlákno nemá vazbu na Vaadin session, přihlášení je proto nutné přenést ručně.
+        SecurityContext capturedSecurityContext = SecurityContextHolder.getContext();
 
         CompletableFuture
                 .supplyAsync(() -> {
-                    ApiTokenContext.set(tokenForAsync);
+                    SecurityContext previous = SecurityContextHolder.getContext();
+                    SecurityContextHolder.setContext(capturedSecurityContext);
                     try {
                         return quizResultService.readEntities(buildFilter(currentPage));
                     } finally {
-                        ApiTokenContext.clear();
+                        SecurityContextHolder.setContext(previous);
                     }
                 }, ioExecutor)
                 .whenComplete((result, error) -> {

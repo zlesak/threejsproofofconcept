@@ -6,7 +6,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const repoRoot = path.resolve(__dirname, '..');
 
-export const chapterZip = path.resolve(repoRoot, 'src/test/resources/Koncový mozek - telencephalon.zip');
+export const chapterZip = path.resolve(repoRoot, 'src/test/resources/Koncový mozek - telencephalon.zip');
 export const simpleModel = path.resolve(repoRoot, 'src/test/resources/simple_model.glb');
 export const advancedObjModel = path.resolve(repoRoot, 'src/test/resources/advanced_model/femur.obj');
 export const mainTextureJpg = path.resolve(repoRoot, 'src/test/resources/advanced_model/femur.1001.jpg');
@@ -244,7 +244,7 @@ export async function waitForModelSave(page: Page, modelName?: string, timeoutMs
   }
 }
 
-async function waitUntilNotLoadingOverlay(page: Page, timeoutMs = 10000): Promise<void> {
+export async function waitUntilNotLoadingOverlay(page: Page, timeoutMs = 10000): Promise<void> {
   try {
     await expect
       .poll(async () => page.getByText('Načítám...').isVisible().catch(() => false), {timeout: timeoutMs})
@@ -257,13 +257,13 @@ export async function createModelForE2E(page: Page, modelName: string): Promise<
   await page.goto('/createModel');
   await fillByPlaceholder(page, 'Zadejte název modelu', modelName);
   await uploadWithChooser(page, 'Nahrát soubor (.glb, .obj)', advancedObjModel);
-  await expect(page.getByText('femur.obj')).toBeVisible();
+  await expect(page.getByText('femur.obj').first()).toBeVisible();
   await uploadWithChooserByIndex(page, 'Nahrát soubor (.jpg)', 0, mainTextureJpg);
-  await expect(page.getByText('femur.1001.jpg')).toBeVisible();
+  await expect(page.getByText('femur.1001.jpg').first()).toBeVisible();
   await uploadWithChooserByIndex(page, 'Nahrát soubor (.jpg)', 1, otherTextureJpg);
-  await expect(page.getByText('femur.1001-parts1.jpg')).toBeVisible();
+  await expect(page.getByText('femur.1001-parts1.jpg').first()).toBeVisible();
   await uploadWithChooser(page, 'Nahrát soubor (.csv)', textureMapCsv);
-  await expect(page.getByText('femur.1001-parts1.csv')).toBeVisible();
+  await expect(page.getByText('femur.1001-parts1.csv').first()).toBeVisible();
 
   await waitUntilNotLoadingOverlay(page);
   const createButton = page.getByRole('button', {name: 'Vytvořit model'});

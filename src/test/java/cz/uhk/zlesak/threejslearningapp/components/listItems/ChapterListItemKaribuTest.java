@@ -97,7 +97,7 @@ class ChapterListItemKaribuTest {
 
     @Test
     void chapter_withDuplicateModels_shouldDeduplicateModelBadges() {
-        QuickModelEntity dup = QuickModelEntity.builder().metadataId("meta-dup")
+        QuickModelEntity dup = QuickModelEntity.builder().id("meta-dup")
                 .model(ModelFileEntity.builder().id("model-1").name("Lebka 3D").build()).build();
         ChapterEntity chapter = ChapterEntity.builder().id("ch-dup").name("Dup").models(List.of(model(), dup)).build();
         ChapterListItem item = new ChapterListItem(chapter, true, false);
@@ -107,7 +107,7 @@ class ChapterListItemKaribuTest {
 
     @Test
     void chapter_withModelHavingNullName_shouldSkipModelBadge() {
-        QuickModelEntity nullName = QuickModelEntity.builder().metadataId("meta-nn")
+        QuickModelEntity nullName = QuickModelEntity.builder().id("meta-nn")
                 .model(ModelFileEntity.builder().id("model-nn").name(null).build()).build();
         ChapterEntity chapter = ChapterEntity.builder().id("ch-nn").name("NN").models(List.of(nullName)).build();
         ChapterListItem item = new ChapterListItem(chapter, true, false);
@@ -246,9 +246,9 @@ class ChapterListItemKaribuTest {
 
     @Test
     void chapter_withTwoDistinctModels_shouldRenderTwoBadges() {
-        QuickModelEntity m1 = QuickModelEntity.builder().metadataId("meta-1")
+        QuickModelEntity m1 = QuickModelEntity.builder().id("meta-1")
                 .model(ModelFileEntity.builder().id("model-1").name("Model One").build()).build();
-        QuickModelEntity m2 = QuickModelEntity.builder().metadataId("meta-2")
+        QuickModelEntity m2 = QuickModelEntity.builder().id("meta-2")
                 .model(ModelFileEntity.builder().id("model-2").name("Model Two").build()).build();
         ChapterEntity c = ChapterEntity.builder().id("c-multi").name("Multi").models(List.of(m1, m2)).build();
         ChapterListItem item = new ChapterListItem(c, true, false);
@@ -271,7 +271,7 @@ class ChapterListItemKaribuTest {
 
     @Test
     void chapter_withBlankMetadataId_shouldStillRenderBadgeUsingModelId() {
-        QuickModelEntity m = QuickModelEntity.builder().metadataId("")
+        QuickModelEntity m = QuickModelEntity.builder().id("")
                 .model(ModelFileEntity.builder().id("model-fallback").name("Fallback Model").build()).build();
         ChapterEntity c = ChapterEntity.builder().id("c-fb").name("Fallback").models(List.of(m)).build();
         ChapterListItem item = new ChapterListItem(c, true, false);
@@ -301,7 +301,7 @@ class ChapterListItemKaribuTest {
     }
 
     private QuickModelEntity model() {
-        return QuickModelEntity.builder().metadataId("metadata-model-1")
+        return QuickModelEntity.builder().id("metadata-model-1")
                 .model(ModelFileEntity.builder().id("model-1").name("Lebka 3D").build()).build();
     }
 }

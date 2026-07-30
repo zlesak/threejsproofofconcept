@@ -1,7 +1,7 @@
 package cz.uhk.zlesak.threejslearningapp.services;
 
-import cz.uhk.zlesak.threejslearningapp.api.clients.QuizApiClient;
-import cz.uhk.zlesak.threejslearningapp.api.clients.QuizResultApiClient;
+import cz.uhk.zlesak.threejslearningapp.api.contracts.IQuizApiClient;
+import cz.uhk.zlesak.threejslearningapp.api.contracts.IQuizResultApiClient;
 import cz.uhk.zlesak.threejslearningapp.domain.quiz.*;
 import cz.uhk.zlesak.threejslearningapp.domain.quiz.answer.AbstractAnswerData;
 import cz.uhk.zlesak.threejslearningapp.domain.quiz.question.AbstractQuestionData;
@@ -24,8 +24,8 @@ import java.util.List;
 @Service
 @Scope("prototype")
 public class QuizService extends AbstractService<QuizEntity, QuickQuizEntity, QuizFilter> {
-    private final QuizApiClient quizApiClient;
-    private final QuizResultApiClient quizResultApiClient;
+    private final IQuizApiClient quizApiClient;
+    private final IQuizResultApiClient quizResultApiClient;
     private final List<AbstractQuestionData> questions = new ArrayList<>();
     private final List<AbstractAnswerData> answers = new ArrayList<>();
 
@@ -36,7 +36,7 @@ public class QuizService extends AbstractService<QuizEntity, QuickQuizEntity, Qu
      * @param quizResultApiClient API client for quiz result operations.
      */
     @Autowired
-    public QuizService(QuizApiClient quizApiClient, QuizResultApiClient quizResultApiClient) {
+    public QuizService(IQuizApiClient quizApiClient, IQuizResultApiClient quizResultApiClient) {
         super(quizApiClient);
         this.quizApiClient = quizApiClient;
         this.quizResultApiClient = quizResultApiClient;

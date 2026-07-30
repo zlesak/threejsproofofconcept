@@ -14,7 +14,6 @@ import cz.uhk.zlesak.threejslearningapp.events.threejs.ThreeJsActionEvent;
 import cz.uhk.zlesak.threejslearningapp.events.threejs.ThreeJsDoingActions;
 import cz.uhk.zlesak.threejslearningapp.events.threejs.ThreeJsFinishedActions;
 import cz.uhk.zlesak.threejslearningapp.events.threejs.ThreeJsLoadingProgress;
-import cz.uhk.zlesak.threejslearningapp.security.AccessTokenProvider;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Scope;
 
@@ -583,17 +582,6 @@ public class ThreeJsComponent extends Component {
         lastProgressPercent = percent;
         lastProgressDescription = description;
         ComponentUtil.fireEvent(UI.getCurrent(), new ThreeJsLoadingProgress(this, percent, description));
-    }
-
-    /**
-     * This method is called from the JavaScript side to retrieve a valid access token for authentication.
-     * Token is provided dynamicaly not saved in JS for security reasons
-     *
-     * @return a valid access token as a String.
-     */
-    @ClientCallable
-    public String getToken() {
-        return SpringContextUtils.getBean(AccessTokenProvider.class).getValidAccessToken();
     }
 
     @Override

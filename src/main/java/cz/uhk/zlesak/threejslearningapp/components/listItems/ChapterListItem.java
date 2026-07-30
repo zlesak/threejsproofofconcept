@@ -16,7 +16,7 @@ import cz.uhk.zlesak.threejslearningapp.common.SpringContextUtils;
 import cz.uhk.zlesak.threejslearningapp.components.dialogs.ConfirmDialog;
 import cz.uhk.zlesak.threejslearningapp.components.notifications.ErrorNotification;
 import cz.uhk.zlesak.threejslearningapp.components.notifications.SuccessNotification;
-import cz.uhk.zlesak.threejslearningapp.domain.chapter.ChapterEntity;
+import cz.uhk.zlesak.threejslearningapp.domain.chapter.QuickChapterEntity;
 import cz.uhk.zlesak.threejslearningapp.domain.model.QuickModelEntity;
 import cz.uhk.zlesak.threejslearningapp.services.ChapterService;
 import cz.uhk.zlesak.threejslearningapp.views.chapter.ChapterCreateView;
@@ -39,7 +39,7 @@ public class ChapterListItem extends AbstractListItem {
      * @param listView          whether to render in list (read) mode
      * @param administrationView whether to show edit and delete controls
      */
-    public ChapterListItem(ChapterEntity chapter, boolean listView, boolean administrationView) {
+    public ChapterListItem(QuickChapterEntity chapter, boolean listView, boolean administrationView) {
         super(listView, administrationView, VaadinIcon.OPEN_BOOK);
 
         titleSpan.setText(chapter.getName());
@@ -186,8 +186,8 @@ public class ChapterListItem extends AbstractListItem {
                     }
                     addedModels.put(model.getModel().getId(), model);
                     String modelName = model.getModel().getName();
-                    String routeModelId = model.getMetadataId() != null && !model.getMetadataId().isBlank()
-                            ? model.getMetadataId()
+                    String routeModelId = model.getId() != null && !model.getId().isBlank()
+                            ? model.getId()
                             : model.getModel().getId();
                     if (modelName == null || modelName.isBlank() || routeModelId == null || routeModelId.isBlank()) {
                         continue;
@@ -247,8 +247,8 @@ public class ChapterListItem extends AbstractListItem {
                     continue;
                 }
                 String modelName = model.getModel().getName();
-                String routeModelId = model.getMetadataId() != null && !model.getMetadataId().isBlank()
-                        ? model.getMetadataId()
+                String routeModelId = model.getId() != null && !model.getId().isBlank()
+                        ? model.getId()
                         : model.getModel().getId();
                 if (modelName == null || modelName.isBlank() || routeModelId == null || routeModelId.isBlank()) {
                     continue;

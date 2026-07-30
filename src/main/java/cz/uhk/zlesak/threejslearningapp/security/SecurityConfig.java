@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientManager;
@@ -34,6 +35,7 @@ import java.util.Map;
  */
 @Slf4j
 @EnableWebSecurity
+@EnableMethodSecurity
 @Configuration
 class SecurityConfig {
 
@@ -66,6 +68,9 @@ class SecurityConfig {
 
         http.authorizeHttpRequests(auth ->
                 auth.requestMatchers("/img/**", "/skybox/**", "/custom-logout").permitAll()
+                        // Model and texture downloads are fetched by the 3D viewer in the browser,
+                        // so they ride on the session rather than on a Vaadin request.
+                        .requestMatchers("/api/**").authenticated()
         );
 
         http.csrf(csrf -> csrf.ignoringRequestMatchers("/custom-logout"));

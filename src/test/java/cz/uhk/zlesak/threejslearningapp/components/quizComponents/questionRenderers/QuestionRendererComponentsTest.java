@@ -135,7 +135,7 @@ class QuestionRendererComponentsTest {
 
         assertNotNull(modelLoadEvent.get());
         assertEquals("q-texture", modelLoadEvent.get().getQuestionId());
-        assertEquals("model-1", modelLoadEvent.get().getQuickModelEntity().getMetadataId());
+        assertEquals("model-1", modelLoadEvent.get().getQuickModelEntity().getId());
         assertEquals("texture-1", modelLoadEvent.get().getQuickModelEntity().getOtherTextures().getFirst().getId());
 
         ComponentUtil.fireEvent(

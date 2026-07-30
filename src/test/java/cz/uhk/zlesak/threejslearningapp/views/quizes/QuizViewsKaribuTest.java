@@ -567,14 +567,13 @@ class QuizViewsKaribuTest {
 
     private QuickModelEntity quickModel() {
         return QuickModelEntity.builder()
-                .metadataId("model-meta-1")
+                .id("model-meta-1")
                 .model(ModelFileEntity.builder().id("file-1").name("Lebka").related(List.of()).build())
                 .build();
     }
 
     private ModelEntity modelEntity() {
         return ModelEntity.builder()
-                .metadataId("model-meta-1")
                 .model(ModelFileEntity.builder().id("file-1").name("Lebka").related(List.of()).build())
                 .otherTextures(List.of())
                 .build();

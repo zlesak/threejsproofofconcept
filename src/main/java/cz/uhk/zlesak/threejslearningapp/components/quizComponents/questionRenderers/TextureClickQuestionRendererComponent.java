@@ -39,7 +39,7 @@ public class TextureClickQuestionRendererComponent extends AbstractQuestionRende
         selectColorButton.addClickListener(e -> {
 
                     var quickModelEntity = QuickModelEntity.builder()
-                            .metadataId(question.getModelId())
+                            .id(question.getModelId())
                             .model(ModelFileEntity.builder()
                                     .id(question.getModelId())
                                     .related(List.of(

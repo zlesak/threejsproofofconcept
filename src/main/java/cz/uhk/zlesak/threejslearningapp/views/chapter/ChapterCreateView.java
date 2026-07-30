@@ -267,8 +267,8 @@ public class ChapterCreateView extends AbstractChapterView {
                 event -> runAsync(() -> {
                             QuickModelEntity selectedModel = event.getSelectedModel();
                             QuickModelEntity fullModel = selectedModel;
-                            if (selectedModel != null && selectedModel.getMetadataId() != null && !selectedModel.getMetadataId().isBlank()) {
-                                fullModel = modelService.read(selectedModel.getMetadataId());
+                            if (selectedModel != null && selectedModel.getId() != null && !selectedModel.getId().isBlank()) {
+                                fullModel = modelService.read(selectedModel.getId());
                             }
                             if (fullModel == null || fullModel.getModel() == null || fullModel.getModel().getId() == null) {
                                 throw new ApplicationContextException(text("error.modelLoadFailed"));

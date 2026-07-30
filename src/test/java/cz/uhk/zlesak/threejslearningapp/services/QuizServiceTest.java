@@ -1,7 +1,7 @@
 package cz.uhk.zlesak.threejslearningapp.services;
 
-import cz.uhk.zlesak.threejslearningapp.api.clients.QuizApiClient;
-import cz.uhk.zlesak.threejslearningapp.api.clients.QuizResultApiClient;
+import cz.uhk.zlesak.threejslearningapp.api.contracts.IQuizApiClient;
+import cz.uhk.zlesak.threejslearningapp.api.contracts.IQuizResultApiClient;
 import cz.uhk.zlesak.threejslearningapp.domain.quiz.QuestionTypeEnum;
 import cz.uhk.zlesak.threejslearningapp.domain.quiz.QuizEntity;
 import cz.uhk.zlesak.threejslearningapp.domain.quiz.QuizSubmissionRequest;
@@ -23,14 +23,14 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 class QuizServiceTest {
-    private QuizApiClient quizApiClient;
-    private QuizResultApiClient quizResultApiClient;
+    private IQuizApiClient quizApiClient;
+    private IQuizResultApiClient quizResultApiClient;
     private QuizService quizService;
 
     @BeforeEach
     void setUp() {
-        quizApiClient = mock(QuizApiClient.class);
-        quizResultApiClient = mock(QuizResultApiClient.class);
+        quizApiClient = mock(IQuizApiClient.class);
+        quizResultApiClient = mock(IQuizResultApiClient.class);
         quizService = new QuizService(quizApiClient, quizResultApiClient);
     }
 
