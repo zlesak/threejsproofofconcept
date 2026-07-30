@@ -120,11 +120,29 @@ class ChapterBackendServiceTest {
     }
 
     @Test
-    void dropsTheSearchEntryWhenAChapterIsDeleted() {
+    void dropsTheSearchEntryAndDetachesTheQuizzesWhenAChapterIsDeleted() {
+        ChapterEntity stored = chapter("Mozek", "obsah", List.of("model-1"));
+        stored.setId("ch-1");
+        Mockito.when(chapterRepository.findById("ch-1")).thenReturn(Optional.of(stored));
+
         chapterBackendService.delete("ch-1");
 
         Mockito.verify(chapterRepository).deleteById("ch-1");
         Mockito.verify(fullTextSearchService).remove("ch-1");
+        // Left attached, a quiz would resolve a chapter that no longer exists and could then be
+        // neither opened for editing nor saved.
+        Mockito.verify(quizBackendService).detachFromChapter("ch-1");
+    }
+
+    @Test
+    void refusesToDeleteAChapterThatDoesNotExist() {
+        Mockito.when(chapterRepository.findById("gone")).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> chapterBackendService.delete("gone"))
+                .isInstanceOf(BackendException.NotFound.class);
+
+        Mockito.verify(chapterRepository, Mockito.never()).deleteById(Mockito.anyString());
+        Mockito.verify(quizBackendService, Mockito.never()).detachFromChapter(Mockito.any());
     }
 
     @Test

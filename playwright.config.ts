@@ -24,9 +24,19 @@ export default defineConfig({
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
   },
+  // Selection lives here rather than in a list of files on the command line. Positional filters
+  // apply to every project, so naming the specs explicitly would leave `setup` matching nothing and
+  // its dependency satisfied by an empty run — the fixtures would silently never be seeded.
   projects: [
     // Seeds the model and chapter the CRUD specs pick from, so the suite runs on an empty database.
     {name: 'setup', testMatch: /.*\.setup\.ts/},
-    {name: 'e2e', testIgnore: /.*\.setup\.ts/, dependencies: ['setup']},
+    {
+      name: 'e2e',
+      testIgnore: [/.*\.setup\.ts/, /perf.*\.spec\.ts/],
+      dependencies: ['setup'],
+    },
+    // Measurement runs, kept out of the functional suite: they are slow and report numbers rather
+    // than pass or fail.
+    {name: 'perf', testMatch: /perf.*\.spec\.ts/},
   ],
 });

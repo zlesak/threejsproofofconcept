@@ -50,21 +50,13 @@ jobs:
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
 
+      # No file list: positional filters apply to every project, so naming the specs would leave the
+      # `setup` project matching nothing and the fixtures unseeded. The `e2e` project already
+      # excludes the setup and perf specs, and pulls `setup` in as a dependency.
       - name: Run e2e tests
         env:
           E2E_BASE_URL: https://mish
-        run: >
-          npx playwright test --workers=1
-          e2e/auth-role-guard.spec.ts
-          e2e/chapter-import.spec.ts
-          e2e/chapter-crud.spec.ts
-          e2e/model-crud.spec.ts
-          e2e/quiz-crud-execute.spec.ts
-          e2e/student-access.spec.ts
-          e2e/student-no-teacher-routes.spec.ts
-          e2e/model-assets-visibility.spec.ts
-          e2e/public-routes.spec.ts
-          e2e/usability.spec.ts
+        run: npx playwright test --project=e2e --workers=1
 
       - name: Upload usability report
         uses: actions/upload-artifact@v4

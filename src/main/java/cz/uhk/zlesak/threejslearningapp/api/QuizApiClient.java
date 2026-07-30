@@ -32,12 +32,12 @@ public class QuizApiClient implements IQuizApiClient {
      */
     @Override
     public QuizEntity read(String id) {
-        return quizBackendService.require(id, false);
+        return quizBackendService.require(id);
     }
 
     @Override
     public QuickQuizEntity readQuick(String id) {
-        return quizBackendService.require(id, false);
+        return quizBackendService.require(id);
     }
 
     @Override
@@ -59,13 +59,13 @@ public class QuizApiClient implements IQuizApiClient {
 
     @Override
     public QuizEntity readQuizStudent(String quizId) {
-        QuizEntity quiz = quizBackendService.require(quizId, false);
+        QuizEntity quiz = quizBackendService.require(quizId);
         quizAttemptService.start(quizId, quiz.getTimeLimit() == null ? 0 : quiz.getTimeLimit());
         return quiz;
     }
 
     @Override
     public QuizEntity readAll(String quizId) {
-        return quizBackendService.require(quizId, true);
+        return quizBackendService.requireWithAnswers(quizId);
     }
 }

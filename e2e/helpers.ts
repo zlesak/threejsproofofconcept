@@ -135,14 +135,22 @@ export async function entityExistsInCurrentListing(page: Page, query: string): P
   return entityCardByName(page, query).isVisible().catch(() => false);
 }
 
+/**
+ * Searches the listing once, then waits for the card to appear.
+ *
+ * The search runs a single time on purpose: repeating it on every poll would count as an
+ * interaction each round, and usability.spec.ts reads those counts as what a user would spend.
+ */
 export async function waitForEntityPresence(page: Page, entityName: string, timeoutMs = 20000): Promise<boolean> {
   const end = Date.now() + timeoutMs;
+  if (await entityExistsInCurrentListing(page, entityName)) {
+    return true;
+  }
   while (Date.now() < end) {
-    const exists = await entityExistsInCurrentListing(page, entityName);
-    if (exists) {
+    await page.waitForTimeout(1000);
+    if (await entityCardByName(page, entityName).isVisible().catch(() => false)) {
       return true;
     }
-    await page.waitForTimeout(1000);
   }
   return false;
 }

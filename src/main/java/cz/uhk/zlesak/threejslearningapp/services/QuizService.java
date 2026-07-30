@@ -95,13 +95,38 @@ public class QuizService extends AbstractService<QuizEntity, QuickQuizEntity, Qu
     }
 
     /**
+     * Gets quiz data for display without starting an attempt.
+     * Only {@link #getQuizForStudent(String)} starts one; calling it anywhere but the player would
+     * reset the deadline of a quiz the student currently has open.
+     *
+     * @param quizId Quiz ID
+     * @return Quiz entity without correct answers
+     */
+    public QuizEntity getQuiz(String quizId) {
+        return read(quizId);
+    }
+
+    /**
      * Calculates the possible maximum score for a fully and correctly filled quiz.
      * @param quizId Quiz ID
      * @return Possible maximum score
      */
     public int calculatePossibleScore(String quizId){
-        QuizEntity quiz = getQuizForStudent(quizId);
-        return quiz.getQuestions().stream().mapToInt(AbstractQuestionData::getPoints).sum();
+        return maxScoreOf(getQuiz(quizId));
+    }
+
+    /**
+     * @param quiz quiz to score, may be {@code null}.
+     * @return points obtainable when every question is answered correctly.
+     */
+    public static int maxScoreOf(QuizEntity quiz) {
+        if (quiz == null || quiz.getQuestions() == null) {
+            return 0;
+        }
+        return quiz.getQuestions().stream()
+                .filter(question -> question != null && question.getPoints() != null)
+                .mapToInt(AbstractQuestionData::getPoints)
+                .sum();
     }
 
     /**

@@ -7,8 +7,8 @@ import com.vaadin.flow.router.Route;
 import com.vaadin.flow.router.RouteParameters;
 import cz.uhk.zlesak.threejslearningapp.domain.quiz.QuizEntity;
 import cz.uhk.zlesak.threejslearningapp.domain.quiz.QuizValidationResult;
-import cz.uhk.zlesak.threejslearningapp.domain.quiz.question.AbstractQuestionData;
 import cz.uhk.zlesak.threejslearningapp.services.QuizResultService;
+import cz.uhk.zlesak.threejslearningapp.services.QuizService;
 import cz.uhk.zlesak.threejslearningapp.views.abstractViews.AbstractQuizView;
 import jakarta.annotation.security.PermitAll;
 import lombok.extern.slf4j.Slf4j;
@@ -52,9 +52,10 @@ public class QuizResultView extends AbstractQuizView {
                 () -> {
                     QuizValidationResult result = quizResultService.read(quizId);
                     String targetQuizId = redirect == null ? quizId : redirect;
-                    QuizEntity quiz = service.getQuizForStudent(targetQuizId);
-                    int possibleScore = quiz.getQuestions().stream().mapToInt(AbstractQuestionData::getPoints).sum();
-                    return new QuizResultViewData(result, quiz, possibleScore);
+                    // Deliberately not getQuizForStudent: that one starts an attempt, and opening a
+                    // past result would then reset the timer of a quiz the student has open.
+                    QuizEntity quiz = service.getQuiz(targetQuizId);
+                    return new QuizResultViewData(result, quiz, QuizService.maxScoreOf(quiz));
                 },
                 data -> displayQuizResultDetails(data.result(), data.quiz(), data.possibleScore()),
                 error -> {

@@ -131,8 +131,7 @@ class QuizViewsKaribuTest {
     @Test
     void quizResultViewShouldRenderResultSummaryAndDetails() {
         when(quizResultService.read("result-1")).thenReturn(validationResult());
-        when(quizService.getQuizForStudent("quiz-1")).thenReturn(quizEntity());
-        when(quizService.calculatePossibleScore("quiz-1")).thenReturn(10);
+        when(quizService.getQuiz("quiz-1")).thenReturn(quizEntity());
 
         QuizResultView view = new QuizResultView(quizResultService);
         UI.getCurrent().add(view);
@@ -140,7 +139,10 @@ class QuizViewsKaribuTest {
         view.afterNavigation(null);
         flushUi();
         verify(quizResultService, timeout(1000)).read("result-1");
-        verify(quizService, timeout(1000)).getQuizForStudent("quiz-1");
+        verify(quizService, timeout(1000)).getQuiz("quiz-1");
+        // Looking at a past result must not start an attempt: doing so would reset the deadline of
+        // the same quiz if the student has it open, and mint a marker for one they never opened.
+        verify(quizService, never()).getQuizForStudent(any());
     }
 
     @Test

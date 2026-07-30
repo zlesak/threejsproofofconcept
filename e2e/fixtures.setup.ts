@@ -8,7 +8,7 @@ import {
   logStep,
   selectAdministrationTab,
   waitForChapterSave,
-  waitForEntityCardVisible,
+  waitForEntityPresence,
 } from './helpers';
 
 /**
@@ -30,7 +30,7 @@ setup('seed fixture model and chapter', async ({page}) => {
 
   await logStep('Ensure fixture model exists', async () => {
     await selectAdministrationTab(page, 'Modely');
-    if (await waitForEntityCardVisible(page, FIXTURE_MODEL, 5000)) {
+    if (await waitForEntityPresence(page, FIXTURE_MODEL, 5000)) {
       return;
     }
     await createModelForE2E(page, FIXTURE_MODEL);
@@ -38,7 +38,7 @@ setup('seed fixture model and chapter', async ({page}) => {
 
   await logStep('Ensure fixture chapter exists', async () => {
     await selectAdministrationTab(page, 'Kapitoly');
-    if (await waitForEntityCardVisible(page, FIXTURE_CHAPTER, 5000)) {
+    if (await waitForEntityPresence(page, FIXTURE_CHAPTER, 5000)) {
       return;
     }
 
@@ -57,7 +57,7 @@ setup('seed fixture model and chapter', async ({page}) => {
 
   await logStep('Ensure fixture quiz exists', async () => {
     await selectAdministrationTab(page, 'Kvízy');
-    if (await waitForEntityCardVisible(page, FIXTURE_QUIZ, 5000)) {
+    if (await waitForEntityPresence(page, FIXTURE_QUIZ, 5000)) {
       return;
     }
 
@@ -75,6 +75,6 @@ setup('seed fixture model and chapter', async ({page}) => {
     await page.waitForURL('**/quizes');
 
     await selectAdministrationTab(page, 'Kvízy');
-    expect(await waitForEntityCardVisible(page, FIXTURE_QUIZ, 60000)).toBe(true);
+    expect(await waitForEntityPresence(page, FIXTURE_QUIZ, 60000)).toBe(true);
   });
 });

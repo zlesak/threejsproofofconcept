@@ -8,17 +8,21 @@ plán viz [user-testing-plan.md](user-testing-plan.md). Surová data se zapisuj�
 
 | Úloha | Role | Cíl | Dokončeno | Čas (s) | Interakcí |
 |---|---|---|---|---|---|
-| T1 | vyučující | Nahrát 3D model s texturami a CSV | ano | 21,3 | 9 |
-| T2 | vyučující | Vytvořit kapitolu s modelem | ano | 6,1 | 5 |
+| T1 | vyučující | Nahrát 3D model s texturami a CSV | ano | 22,5 | 9 |
+| T2 | vyučující | Vytvořit kapitolu s modelem | ano | 7,7 | 5 |
 | T4 | vyučující | Najít výsledky studentů | ano | 0,8 | 0 |
-| T5 | vyučující | Najít kapitolu ve výpisu | ano | 0,7 | 1 |
+| T5 | vyučující | Najít kapitolu ve výpisu | ano | 1,7 | 2 |
 | S1 | student | Najít a otevřít kapitolu | ano | 1,4 | 1 |
 | S2 | student | Zobrazit 3D model kapitoly | ano | 0,2 | 0 |
-| S3 | student | Najít seznam kvízů | ano | 0,6 | 0 |
+| S3 | student | Najít seznam kvízů | ano | 0,8 | 0 |
 | S4 | student | Najít vlastní výsledky | ano | 0,7 | 0 |
 
 Všech 8 úloh dokončeno. Studentské úlohy jsou pod 1,5 s a stojí nejvýše jedno kliknutí — ta část
 aplikace je rychlá a přímočará. Veškerá zátěž je na straně vyučujícího.
+
+Čas se měří až po instalaci počítadla kliknutí, takže první úloha neplatí navíc jedno načtení
+stránky; a počet interakcí se zapisuje i u úlohy, která se nedokončí, aby se selhání nedalo splést
+s „nevyžadovalo žádné kliknutí".
 
 ## Nálezy
 
@@ -66,11 +70,19 @@ o trvalou chybu, ale o závod mezi odebráním souboru a úklidem scény (`Three
 *Návrh:* úklid scény navázat na dokončení odebrání souboru místo na samostatnou událost a doplnit
 o čekání na dokončení předchozího načtení.
 
-### 5. Hledání dříve nesahalo do obsahu — *opraveno*
+### 5. Hledání nesahalo do obsahu, a poté vracelo všechno — *opraveno*
 
-Vyhledávací pole u výpisu kapitol porovnávalo pouze název, takže „najdi kapitolu o mozku" fungovalo
-jen tehdy, když uživatel trefil název. Nyní se dotaz vyhodnocuje i proti fulltextovému indexu obsahu
-a obojí se sjednotí.
+Vyhledávací pole u výpisu kapitol původně porovnávalo pouze název, takže „najdi kapitolu o mozku"
+fungovalo jen tehdy, když uživatel trefil název. Rozšíření na obsah ale přineslo opačný problém:
+dotaz šel do Mongo přes `$text`, který matchuje **kteroukoli** shodu slova z dotazu. Stačilo, aby se
+v dotazu objevilo běžné slovo („kapitola"), a výsledkem byl celý seznam. Slučovací větev navíc při
+nálezu v obsahu přestavovala dotaz od nuly, čímž zahodila i filtr na název.
+
+Projevilo se to až na databázi s víc než jednou stránkou kapitol — T5 kvůli tomu v jednom běhu
+nedokončilo (61 s místo 1,7 s), protože hledání konkrétní kapitoly vrátilo úplně všechny.
+
+*Oprava:* dotaz se vyhodnocuje jako „všechna zadaná slova musí být přítomna", zadaný text se bere
+doslova (ne jako regulární výraz) a ostatní filtry — autor, časové rozmezí — zůstávají v platnosti.
 
 ### 6. Smazání modelu tiše rozbíjelo kapitoly — *opraveno*
 

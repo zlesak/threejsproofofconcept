@@ -43,6 +43,21 @@ public class ListingQueries {
      * @return query carrying the matching criteria.
      */
     public Query baseQuery(FilterBase filter) {
+        return baseQuery(filter, true);
+    }
+
+    /**
+     * Builds the shared criteria without the name match, for callers that widen the search to more
+     * than the name and supply their own criterion for it.
+     *
+     * @param filter filter supplied by the UI, may be {@code null}.
+     * @return query carrying every criterion except the name.
+     */
+    public Query baseQueryWithoutName(FilterBase filter) {
+        return baseQuery(filter, false);
+    }
+
+    private Query baseQuery(FilterBase filter, boolean includeName) {
         Query query = new Query();
         if (filter == null) {
             return query;
@@ -53,7 +68,7 @@ public class ListingQueries {
         }
 
         String nameSearch = firstNonBlank(filter.getName(), searchTextOf(filter));
-        if (nameSearch != null) {
+        if (includeName && nameSearch != null) {
             query.addCriteria(Criteria.where("name").regex(Pattern.quote(nameSearch), "i"));
         }
 

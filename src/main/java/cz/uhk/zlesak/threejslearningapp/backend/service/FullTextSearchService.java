@@ -3,23 +3,21 @@ package cz.uhk.zlesak.threejslearningapp.backend.service;
 import cz.uhk.zlesak.threejslearningapp.backend.persistence.FullTextDocument;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.context.event.ApplicationReadyEvent;
-import org.springframework.context.event.EventListener;
 import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.index.TextIndexDefinition;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
-import org.springframework.data.mongodb.core.query.TextCriteria;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Service;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+import java.util.regex.Pattern;
 
 /**
  * Keeps a searchable text projection of chapters and answers keyword queries against it.
- * The index is created with language {@code none}, so Czech text is matched literally instead of
- * being stemmed by English rules.
+ * Matching is literal and case-insensitive rather than stemmed, which is what makes it behave the
+ * same for Czech as for English.
  */
 @Slf4j
 @Service
@@ -27,22 +25,6 @@ import java.util.Objects;
 public class FullTextSearchService {
 
     private final MongoTemplate mongoTemplate;
-
-    /**
-     * Creates the text index once the application is up. A failure here degrades search but must not
-     * stop the application from starting.
-     */
-    @EventListener(ApplicationReadyEvent.class)
-    public void ensureIndex() {
-        try {
-            mongoTemplate.indexOps(FullTextDocument.class).createIndex(TextIndexDefinition.builder()
-                    .onField("text")
-                    .withDefaultLanguage("none")
-                    .build());
-        } catch (RuntimeException e) {
-            log.warn("Fulltextový index se nepodařilo vytvořit, vyhledávání nemusí fungovat: {}", e.getMessage());
-        }
-    }
 
     /**
      * Indexes an entity, replacing any previous entry for it.
@@ -76,6 +58,13 @@ public class FullTextSearchService {
     }
 
     /**
+     * Finds entities whose indexed text contains <em>every</em> word the user typed.
+     *
+     * <p>Deliberately not a Mongo {@code $text} query: that one matches any single word of the
+     * phrase, so searching for "Kapitola o mozku" would return every chapter with "kapitola"
+     * anywhere in it — which, without relevance ranking, is the whole collection. Requiring all
+     * words is what makes the search narrow the listing instead of widening it.
+     *
      * @param keyword text typed by the user.
      * @param type    kind of entity to search.
      * @return ids of the matching entities.
@@ -85,7 +74,15 @@ public class FullTextSearchService {
             return List.of();
         }
 
-        Query query = new Query(TextCriteria.forDefaultLanguage().matching(keyword));
+        Criteria[] words = Arrays.stream(keyword.trim().split("\\s+"))
+                .filter(word -> !word.isBlank())
+                .map(word -> Criteria.where("text").regex(Pattern.quote(word), "i"))
+                .toArray(Criteria[]::new);
+        if (words.length == 0) {
+            return List.of();
+        }
+
+        Query query = new Query(new Criteria().andOperator(words));
         query.addCriteria(Criteria.where("type").is(type));
 
         return mongoTemplate.find(query, FullTextDocument.class).stream()

@@ -50,7 +50,7 @@ public class QuizResultBackendService {
         String userId = currentUserProvider.requireUserId();
         quizAttemptService.consume(submission.getQuizId());
 
-        QuizEntity quiz = quizBackendService.require(submission.getQuizId(), true);
+        QuizEntity quiz = quizBackendService.load(submission.getQuizId(), true);
         QuizGradingService.Graded graded = quizGradingService.grade(quiz, submission.getAnswers());
 
         return quizResultRepository.save(QuizValidationResult.builder()

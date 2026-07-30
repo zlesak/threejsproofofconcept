@@ -13,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
@@ -62,7 +63,7 @@ public class QuizBackendService {
         if (quiz.getId() == null || quiz.getId().isBlank()) {
             throw new BackendException.Validation("Kvíz nelze aktualizovat bez ID.");
         }
-        QuizEntity existing = require(quiz.getId(), true);
+        QuizEntity existing = load(quiz.getId(), true);
         validate(quiz);
 
         quiz.setCreatorId(existing.getCreatorId() != null ? existing.getCreatorId() : currentUserProvider.requireUserId());
@@ -72,12 +73,43 @@ public class QuizBackendService {
     }
 
     /**
+     * Reads a quiz without its correct answers. This is the only read the UI performs on behalf of
+     * a student.
+     *
+     * @param quizId id of the quiz.
+     * @return the quiz, with {@code answers} left out.
+     * @throws BackendException.NotFound when no such quiz exists.
+     */
+    public QuizEntity require(String quizId) {
+        return load(quizId, false);
+    }
+
+    /**
+     * Reads a quiz together with its answer key, for authoring.
+     * Guarded here and not only by the view's route annotation: the answer key is the one piece of
+     * quiz data that must never reach a student, so the UI is not the layer that decides it.
+     *
+     * @param quizId id of the quiz.
+     * @return the quiz, including {@code answers}.
+     * @throws BackendException.NotFound when no such quiz exists.
+     */
+    @PreAuthorize("hasRole('CREATE_QUIZ')")
+    public QuizEntity requireWithAnswers(String quizId) {
+        return load(quizId, true);
+    }
+
+    /**
+     * Reads a quiz, optionally with its answer key.
+     * Package-private and unguarded on purpose: grading needs the answers while running as the
+     * student who submitted, so the check cannot live here. Every caller outside this package goes
+     * through {@link #require(String)} or {@link #requireWithAnswers(String)}.
+     *
      * @param quizId      id of the quiz.
      * @param showAnswers whether the correct answers should be included.
      * @return the quiz.
      * @throws BackendException.NotFound when no such quiz exists.
      */
-    public QuizEntity require(String quizId, boolean showAnswers) {
+    QuizEntity load(String quizId, boolean showAnswers) {
         if (quizId == null || quizId.isBlank()) {
             throw new BackendException.Validation("ID kvízu nesmí být prázdné.");
         }
@@ -111,6 +143,26 @@ public class QuizBackendService {
         query.fields().exclude("questions").exclude("answers");
         return listingQueries.page(query, filterParameters.getPageRequest(), QuickQuizEntity.class,
                 MongoCollections.QUIZ);
+    }
+
+    /**
+     * Clears the chapter reference of every quiz that belonged to a chapter being removed.
+     * A quiz without a chapter is valid and stays editable; one still pointing at a deleted chapter
+     * could neither be opened for editing nor saved, because both paths resolve the chapter first.
+     *
+     * @param chapterId id of the chapter being removed.
+     * @return how many quizzes were detached.
+     */
+    @PreAuthorize("hasRole('CREATE_CHAPTER')")
+    public long detachFromChapter(String chapterId) {
+        if (chapterId == null || chapterId.isBlank()) {
+            return 0;
+        }
+        return mongoTemplate.updateMulti(
+                new Query(Criteria.where("chapterId").is(chapterId)),
+                new Update().unset("chapterId"),
+                QuizEntity.class,
+                MongoCollections.QUIZ).getModifiedCount();
     }
 
     /**

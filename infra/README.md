@@ -43,6 +43,20 @@ rather than falling back to a default. The application does the same: it has no 
 URL or client secret, so a misconfigured deployment fails at start-up instead of silently running
 against the wrong database.
 
+`KEYCLOAK_COMMAND` works the same way and is the one variable that is not a credential:
+
+| Environment | Value                                                | Why                                                                                     |
+|-------------|------------------------------------------------------|-----------------------------------------------------------------------------------------|
+| development | `start-dev --import-realm --http-relative-path=/auth` | Dev mode, and the demo realms in `keycloak/realms` are imported on first start           |
+| production  | `start --http-enabled=true --http-relative-path=/auth` | Keeps the checks dev mode turns off, and without `--import-realm` the demo users stay out |
+
+Keycloak is told its public URL explicitly (`KC_HOSTNAME_URL`) and runs with both hostname-strict
+settings on, so the issuer, the login redirect and the token endpoint it advertises cannot be
+steered by a forged `Host` header. TLS is terminated at the gateway, which is why Keycloak itself
+serves plain HTTP on the internal network.
+
+The application container runs as an unprivileged user (`mish`, uid 1001), not as root.
+
 Generate secrets with:
 
 ```bash

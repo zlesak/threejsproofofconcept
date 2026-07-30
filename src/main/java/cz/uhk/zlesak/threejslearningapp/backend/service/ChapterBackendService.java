@@ -101,14 +101,19 @@ public class ChapterBackendService {
     }
 
     /**
-     * Removes a chapter and its search index entry.
+     * Removes a chapter, its search index entry and the chapter reference of its quizzes.
+     * Detaching the quizzes is what keeps them usable: a quiz still pointing at a deleted chapter
+     * could neither be opened for editing nor saved again.
      *
      * @param chapterId id of the chapter.
+     * @throws BackendException.NotFound when no such chapter exists.
      */
     @PreAuthorize("hasRole('CREATE_CHAPTER')")
     public void delete(String chapterId) {
-        chapterRepository.deleteById(chapterId);
-        fullTextSearchService.remove(chapterId);
+        ChapterEntity chapter = load(chapterId);
+        quizLookup.getObject().detachFromChapter(chapter.getId());
+        chapterRepository.deleteById(chapter.getId());
+        fullTextSearchService.remove(chapter.getId());
     }
 
     /**
@@ -116,22 +121,25 @@ public class ChapterBackendService {
      * @return one page of chapters, without their content.
      */
     public PageResult<QuickChapterEntity> list(FilterParameters<ChapterFilter> filterParameters) {
-        Query query = listingQueries.baseQuery(filterParameters.getFilter());
-        query.fields().exclude("content");
+        ChapterFilter filter = filterParameters.getFilter();
+        String term = listingQueries.searchTerm(filter);
 
-        // A chapter's text is what users remember, so the listing search looks inside the content
-        // as well as at the name; the two sets of hits are merged.
-        String term = listingQueries.searchTerm(filterParameters.getFilter());
-        if (term != null) {
+        Query query;
+        if (term == null) {
+            query = listingQueries.baseQuery(filter);
+        } else {
+            // A chapter's text is what users remember, so the search looks inside the content as
+            // well as at the name. The name criterion is added here rather than by baseQuery so the
+            // two can be OR-ed, while every other filter — author, date range — still has to hold.
+            query = listingQueries.baseQueryWithoutName(filter);
+            Criteria byName = Criteria.where("name").regex(java.util.regex.Pattern.quote(term), "i");
             List<String> contentMatches = fullTextSearchService.search(term, FullTextDocument.FullTextType.CHAPTER);
-            if (!contentMatches.isEmpty()) {
-                query = listingQueries.baseQuery(null);
-                query.fields().exclude("content");
-                query.addCriteria(new Criteria().orOperator(
-                        Criteria.where("name").regex(java.util.regex.Pattern.quote(term), "i"),
-                        Criteria.where("_id").in(contentMatches)));
-            }
+            query.addCriteria(contentMatches.isEmpty()
+                    ? byName
+                    : new Criteria().orOperator(byName, Criteria.where("_id").in(contentMatches)));
         }
+
+        query.fields().exclude("content");
         PageResult<QuickChapterEntity> page = listingQueries.page(query, filterParameters.getPageRequest(),
                 QuickChapterEntity.class, MongoCollections.CHAPTER);
         resolveModels(page.elements());

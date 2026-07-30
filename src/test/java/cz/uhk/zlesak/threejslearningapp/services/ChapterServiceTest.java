@@ -65,8 +65,10 @@ class ChapterServiceTest {
         ChapterEntity created = captor.getValue();
 
         JsonNode blocks = objectMapper.readTree(created.getContent()).get("blocks");
-        assertEquals("model-sub", blocks.get(0).get("data").get("modelId").asText());
-        assertEquals("model-sub", blocks.get(1).get("data").get("modelId").asText());
+        // The document id, not the file id: file ids are reassigned whenever the model is
+        // re-uploaded, and a heading that stored one would stop finding its model after an edit.
+        assertEquals("sub", blocks.get(0).get("data").get("modelId").asText());
+        assertEquals("sub", blocks.get(1).get("data").get("modelId").asText());
         assertEquals(2, created.getModels().size());
         assertEquals("model-main", created.getModels().getFirst().getModel().getId());
     }
@@ -94,7 +96,34 @@ class ChapterServiceTest {
         assertTrue(result.getFirst().id().startsWith("fallback-"));
         assertEquals("", result.getFirst().modelId());
         assertEquals("h3", result.get(1).id());
+        // No model matches "model-3", so the stored value is passed through: chapters written
+        // before headings referenced the document already hold a file id.
         assertEquals("model-3", result.get(1).modelId());
+    }
+
+    @Test
+    void getSubChaptersNames_shouldResolveHeaderModelToItsCurrentFileId() throws Exception {
+        // The model was re-uploaded after the chapter was written, so its file id is now
+        // "model-femur-v2" while the heading still stores the document id it was saved with.
+        var model = TestFixtures.model("femur", "model-femur-v2", "Femur", null, List.of());
+        ChapterEntity loaded = ChapterEntity.builder()
+                .id("chapter-1")
+                .name("Chapter")
+                .content("""
+                        {"blocks":[
+                          {"id":"h1","type":"header","data":{"level":1,"text":"Stehenní kost","modelId":"femur"}}
+                        ]}
+                        """)
+                .models(List.of(model))
+                .build();
+
+        when(chapterApiClient.read("chapter-1")).thenReturn(loaded);
+
+        var result = chapterService.getSubChaptersNames("chapter-1");
+
+        assertEquals(1, result.size());
+        // The 3D scene addresses models by file id, so the heading has to hand it the current one.
+        assertEquals("model-femur-v2", result.getFirst().modelId());
     }
 
     @Test

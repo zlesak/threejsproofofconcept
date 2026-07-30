@@ -11,7 +11,7 @@ import {
   selectAdministrationTab,
   uniqueName,
   waitForChapterSave,
-  waitForEntityCardVisible,
+  waitForEntityPresence,
   waitUntilNotLoadingOverlay,
 } from './helpers';
 
@@ -65,13 +65,6 @@ async function installClickCounter(page: Page): Promise<{count: number}> {
   return tally;
 }
 
-async function countingInteractions<T>(page: Page, run: () => Promise<T>): Promise<[T, number]> {
-  const tally = await installClickCounter(page);
-  const before = tally.count;
-  const result = await run();
-  return [result, tally.count - before];
-}
-
 async function task(
   page: Page,
   id: string,
@@ -79,18 +72,25 @@ async function task(
   goal: string,
   run: () => Promise<void>
 ): Promise<void> {
+  // Installed before the clock starts: the first call reloads the page to inject the listener, and
+  // charging that reload to whichever task happens to run first would inflate it against the rest.
+  const tally = await installClickCounter(page);
+  const clicksBefore = tally.count;
+
   const started = Date.now();
   let completed = true;
   let note: string | undefined;
-  let interactions = 0;
 
   try {
-    const [, clicks] = await countingInteractions(page, run);
-    interactions = clicks;
+    await run();
   } catch (error) {
     completed = false;
     note = error instanceof Error ? error.message.split('\n')[0] : String(error);
   }
+
+  // Read outside the try, so a task that fails half way still reports the clicks it did cost
+  // instead of a zero that reads as "needed no interaction".
+  const interactions = tally.count - clicksBefore;
 
   const seconds = Math.round((Date.now() - started) / 100) / 10;
   outcomes.push({id, persona, goal, completed, seconds, interactions, note});
@@ -152,7 +152,10 @@ test('vyučující: cesta od modelu ke kvízu', async ({page}) => {
 
   await task(page, 'T5', 'vyučující', 'Najít kapitolu ve výpisu', async () => {
     await selectAdministrationTab(page, 'Kapitoly');
-    expect(await waitForEntityCardVisible(page, chapterName, 60000)).toBe(true);
+    // Searches rather than scanning the rendered page: the listing shows ten chapters at a time
+    // sorted by name, so on an instance with more than that the answer would depend on where the
+    // chapter happens to sort. The extra interaction is what a user would really spend too.
+    expect(await waitForEntityPresence(page, chapterName, 60000)).toBe(true);
   });
 });
 

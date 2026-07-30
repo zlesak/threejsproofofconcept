@@ -38,10 +38,14 @@ services:
 
   # Identity provider. Realms (roles, the client and the users) are imported on first start only;
   # afterwards Keycloak's own database is the source of truth.
+  #
+  # The start command comes from .env and has no default. Development uses `start-dev` together with
+  # --import-realm; production must use `start`, which keeps the hostname and health checks that
+  # start-dev switches off, and which leaves the demo realms unimported.
   keycloak:
     image: quay.io/keycloak/keycloak:21.1.1
     restart: unless-stopped
-    command: ["start-dev", "--import-realm", "--http-relative-path=/auth"]
+    command: ${KEYCLOAK_COMMAND:?set KEYCLOAK_COMMAND in .env}
     environment:
       KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN_USER:?set KEYCLOAK_ADMIN_USER in .env}
       KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:?set KEYCLOAK_ADMIN_PASSWORD in .env}
@@ -53,8 +57,14 @@ services:
       KC_PROXY: edge
       KC_HOSTNAME_URL: ${EXTERNAL_BASE_URL:?set EXTERNAL_BASE_URL in .env}/auth
       KC_HOSTNAME_ADMIN_URL: ${EXTERNAL_BASE_URL}/auth
-      KC_HOSTNAME_STRICT: "false"
-      KC_HOSTNAME_STRICT_BACKCHANNEL: "false"
+      # The public URL above is fixed, so refuse to derive any advertised URL from request headers:
+      # a forged Host header must not steer the issuer, the login redirect or — via the discovery
+      # document — the endpoint a client posts its authorization code and secret to.
+      # Both settings only govern the URLs Keycloak advertises. The application does not read the
+      # discovery document; it is configured to reach Keycloak in-network on http://keycloak:8080,
+      # and that keeps working.
+      KC_HOSTNAME_STRICT: "true"
+      KC_HOSTNAME_STRICT_BACKCHANNEL: "true"
     volumes:
       - ./keycloak/realms:/opt/keycloak/data/import:ro
     depends_on:

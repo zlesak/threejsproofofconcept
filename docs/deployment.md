@@ -119,6 +119,7 @@ v lokální síti (`https://mish.local`), nebo veřejnou doménu.
 | Věc | Poznámka |
 |---|---|
 | **Paměť** | JVM si vezme, co může. Přidejte `JAVA_TOOL_OPTIONS: "-XX:MaxRAMPercentage=50"` do prostředí služby `app`. |
+| **Uživatel v kontejneru** | Aplikace běží jako `mish` (uid 1001), ne jako root. Pokud do kontejneru přimountujete adresář z hostitele, musí být pro toto uid zapisovatelný. |
 | **První build** | Sestavení Vaadin frontendu na Pi trvá 20–40 minut. Rychlejší je sestavit image v Actions pro `linux/arm64` a jen jej stáhnout. |
 | **Certifikát** | `cert-init` vyrobí self-signed certifikát, u kterého bude prohlížeč varovat. Pro reálný provoz použijte Let's Encrypt (viz níže). |
 | **Porty** | Pokud Pi visí na veřejné IP, propusťte jen 80 a 443. Mongo ani Keycloak se ven nepublikují. |
@@ -141,8 +142,11 @@ tehdy, když žádný neexistuje.
 ## Kontrolní seznam před ostrým během
 
 - [ ] `.env` vychází z `.env.production.example` a nemá jedinou prázdnou hodnotu
-- [ ] `infra/keycloak/realms/*.json` odstraněny (jinak by se do čerstvého Keycloaku naimportovali
-      demo uživatelé `alice` a `bart` se známými hesly)
+- [ ] `KEYCLOAK_COMMAND` začíná na `start`, nikoli `start-dev` — dev režim vypíná kontroly, které
+      produkce potřebuje, a Keycloak jej pro ostrý provoz nepodporuje
+- [ ] `KEYCLOAK_COMMAND` neobsahuje `--import-realm`, jinak by se do čerstvého Keycloaku naimportovali
+      demo uživatelé `alice` a `bart` se známými hesly (odstranit `infra/keycloak/realms/*.json`
+      z nasazení nic nestojí a je to druhá pojistka)
 - [ ] V Keycloaku vytvořen vlastní realm a *confidential* klient, jeho secret vyplněn v `.env`
 - [ ] Brána má důvěryhodný certifikát
 - [ ] Nastavené zálohování volume `mongo-data`

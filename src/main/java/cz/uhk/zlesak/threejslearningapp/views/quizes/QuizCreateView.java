@@ -395,7 +395,7 @@ public class QuizCreateView extends AbstractQuizView {
                         QuickChapterEntity chapterEntity = null;
                         Map<String, QuickModelEntity> chapterModels = Map.of();
                         Map<String, QuickModelEntity> fullModelsByModelId = new HashMap<>();
-                        if (quiz.getChapterId() != null) {
+                        if (quiz.getChapterId() != null && !quiz.getChapterId().isBlank()) {
                             chapterEntity = chapterService.read(quiz.getChapterId());
                             chapterModels = chapterService.getChaptersModels(quiz.getChapterId());
                             for (QuickModelEntity model : chapterModels.values()) {
