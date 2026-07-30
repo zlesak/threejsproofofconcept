@@ -54,13 +54,17 @@ předem vytvoří, polovina scénářů nad prázdnou databází spadla přesně
 *Návrh:* v prázdném dialogu zobrazit vysvětlení a tlačítko „Nahrát nový model", které povede rovnou
 na formulář.
 
-### 4. Model zůstane ve scéně i po odebrání souboru — *vážná chyba*
+### 4. Úklid 3D scény po odebrání souboru je nespolehlivý — *vážné*
 
-Ve formuláři pro model platí, že po odebrání souboru `.obj` zůstává model vykreslený ve 3D scéně.
-Reprodukuje to e2e test `model-assets-visibility`, který na tomto kroku selhává. Jde o úklid scény
-na straně prohlížeče (`ThreeJSScene` / `ModelManager`), ne o data.
+Ve formuláři pro model se po odebrání souboru `.obj` model občas nechá ve 3D scéně. E2e test
+`model-assets-visibility` na tomto kroku ve třech ze čtyř běhů selhal a v jednom prošel, takže nejde
+o trvalou chybu, ale o závod mezi odebráním souboru a úklidem scény (`ThreeJSScene` /
+`ModelManager`). Pro uživatele to znamená, že po odebrání modelu občas zůstane vidět starý.
 
-*Poznámka:* chyba je starší než převod backendu — selhává stejně před ním i po něm.
+*Poznámka:* chování je starší než převod backendu a s daty nesouvisí.
+
+*Návrh:* úklid scény navázat na dokončení odebrání souboru místo na samostatnou událost a doplnit
+o čekání na dokončení předchozího načtení.
 
 ### 5. Hledání dříve nesahalo do obsahu — *opraveno*
 

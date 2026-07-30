@@ -122,12 +122,12 @@ Oprávnění se nově vynucují i v backendu (`@PreAuthorize`), ne pouze v UI.
 | Co | Jak | Stav |
 |---|---|---|
 | Jednotkové a integrační testy | `./mvnw test` | 859 testů, prochází |
-| End-to-end scénáře | `npx playwright test` proti běžícímu stacku | 9 z 10 prochází |
+| End-to-end scénáře | `npx playwright test` proti běžícímu stacku | prochází, kromě nestabilního `model-assets-visibility` |
 | Uživatelské úlohy | `npx playwright test e2e/usability.spec.ts` | 8 z 8 úloh dokončeno |
 
-Neprocházející e2e test je `model-assets-visibility`: po odebrání souboru modelu zůstává model ve
-3D scéně. Jde o úklid scény v prohlížeči, chyba je starší než tento převod a selhává stejně před ním
-i po něm. Podrobnosti v [user-testing-findings.md](user-testing-findings.md), nález 4.
+Test `model-assets-visibility` je nestabilní: po odebrání souboru modelu občas zůstane model ve 3D
+scéně. Ve čtyřech bězích třikrát selhal a jednou prošel. Jde o úklid scény v prohlížeči, chování je
+starší než tento převod. Podrobnosti v [user-testing-findings.md](user-testing-findings.md), nález 4.
 
 Testovací sada si potřebná data vytváří sama (`e2e/fixtures.setup.ts`), takže běží i nad prázdnou
 databází.
