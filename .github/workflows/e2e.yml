@@ -16,6 +16,10 @@ jobs:
   e2e:
     runs-on: ubuntu-latest
     timeout-minutes: 60
+    env:
+      # MISH_SCRIPTS common.sh calls tput, which dies under set -e
+      # when the runner has no TERM set
+      TERM: xterm
 
     steps:
       - uses: actions/checkout@v4
