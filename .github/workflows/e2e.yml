@@ -6,11 +6,16 @@ on:
       backend-branch:
         description: 'Backend branch to deploy (default: main)'
         required: false
+      frontend-image:
+        description: 'Frontend image to test'
+        required: false
+        default: 'ghcr.io/zlesak/mishappfrontend:latest'
   schedule:
     - cron: '0 3 * * *'
 
 permissions:
   contents: read
+  packages: read
 
 jobs:
   e2e:
@@ -28,12 +33,20 @@ jobs:
       - name: Map gateway hostname
         run: echo "127.0.0.1 mish" | sudo tee -a /etc/hosts
 
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Start full stack
         working-directory: mish-scripts
         run: |
           BE_BRANCH="${{ inputs.backend-branch }}"
+          FE_IMAGE="${{ inputs.frontend-image }}"
           ./start_all.sh --dev \
-            --branch-frontend="${GITHUB_HEAD_REF:-${GITHUB_REF_NAME}}" \
+            --image-frontend="${FE_IMAGE:-ghcr.io/zlesak/mishappfrontend:latest}" \
             ${BE_BRANCH:+--branch-backend=$BE_BRANCH}
 
       - name: Wait for gateway
