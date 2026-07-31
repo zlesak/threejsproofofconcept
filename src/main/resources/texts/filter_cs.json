@@ -1,5 +1,6 @@
 {
   "filter.search.placeholder" : "Hledat...",
+  "filter.search.label": "Hledat výraz",
   "filter.sort.direction.asc": "Vzestupně",
   "filter.sort.direction.desc": "Sestupně",
   "filter.orderBy.label": "Řadit podle",
