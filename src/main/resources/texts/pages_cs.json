@@ -1,4 +1,7 @@
 {
+  "skip.toContent": "Přeskočit na hlavní obsah",
+  "nav.main.label": "Hlavní navigace",
+  "nav.menu.label": "Navigace",
   "page.title.modelView" : "MISH - Model",
   "page.title.createChapterView" : "MISH - Vytvořit kapitolu",
   "page.title.chapterView" : "MISH - Kapitola",

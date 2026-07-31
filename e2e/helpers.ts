@@ -43,7 +43,7 @@ export async function logStep(label: string, action: () => Promise<void>): Promi
 }
 
 export async function acceptCookiesIfVisible(page: Page): Promise<void> {
-  const button = page.getByRole('button', {name: 'Rozumím'});
+  const button = page.getByRole('button', {name: 'Přijmout'});
   if (await button.isVisible().catch(() => false)) {
     await button.click();
     await expect(button).toHaveCount(0);

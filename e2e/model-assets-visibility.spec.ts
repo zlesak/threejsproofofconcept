@@ -128,9 +128,10 @@ async function expectModelNotRenderedInScene(page: Page): Promise<void> {
 }
 
 test('model remains visible when textures/CSV are removed, and disappears only after model file removal', async ({page}) => {
-  // Four uploads, four removals and four re-uploads of multi-megabyte assets. Sixty seconds was
-  // enough when the suite ran one test at a time; with workers in parallel it is not.
-  test.setTimeout(150000);
+  // Twelve transfers of multi-megabyte assets, each waiting for the 3D scene to settle. Sixty
+  // seconds was enough when the suite ran one test at a time; sharing the machine with three other
+  // workers roughly triples it.
+  test.setTimeout(300000);
 
   await loginAsTeacher(page);
   await page.goto('/createModel');
