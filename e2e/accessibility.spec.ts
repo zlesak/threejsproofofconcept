@@ -1,5 +1,5 @@
 import {expect, test} from '@playwright/test';
-import {loginAsTeacher} from './helpers';
+import {acceptCookiesIfVisible, loginAsTeacher} from './helpers';
 
 /**
  * Checks the structural accessibility properties that group G of the implementation brief
@@ -74,6 +74,29 @@ test('the skip link comes first and moves the user to the content', async ({page
 
   await skipLink.press('Enter');
   await expect(page).toHaveURL(/#obsah$/);
+});
+
+test('the showcase animations start stopped and can be stopped again', async ({page}) => {
+  await page.goto('/');
+  await acceptCookiesIfVisible(page);
+
+  const playButtons = page.getByRole('button', {name: 'Přehrát ukázku'});
+  await expect(playButtons).toHaveCount(3);
+
+  const firstAnimation = page.locator('img[data-gif-src]').first();
+  // WCAG 2.2.2: the three GIFs used to loop from the moment the section scrolled into view, for far
+  // longer than five seconds, with nothing to stop them. Nothing runs until asked.
+  await expect(firstAnimation).toHaveAttribute('src', /^data:image\/gif;base64,/);
+
+  const firstPlay = playButtons.first();
+  await firstPlay.click();
+  await expect(firstAnimation).toHaveAttribute('src', /modelgif\.gif$/);
+
+  const stop = page.getByRole('button', {name: 'Zastavit ukázku'}).first();
+  await expect(stop).toBeVisible();
+  await stop.click();
+  // Back to a still picture: either the frozen frame or the blank pixel, never the running GIF.
+  await expect(firstAnimation).not.toHaveAttribute('src', /modelgif\.gif$/);
 });
 
 test('the cookie bar offers refusing as plainly as agreeing', async ({page}) => {
