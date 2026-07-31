@@ -33,24 +33,59 @@ class QuizTimerComponentTest {
         UI.getCurrent().add(withoutLimit, withLimit);
 
         assertFalse(withoutLimit.getTimerContainer().isVisible());
-        assertEquals("00:59", getTimerDisplay(withLimit).getText());
+        assertEquals("méně než minuta", getTimerDisplay(withLimit).getText());
 
         withLimit.stopTimer();
     }
 
     @Test
+    void theCountdownIsMeasuredInMinutesNotSeconds() throws Exception {
+        // The display used to change every second inside what is now a live region, which makes a
+        // screen reader read the clock aloud without pausing and drowns out the question.
+        QuizTimerComponent timer = new QuizTimerComponent(20);
+        UI.getCurrent().add(timer);
+        Span display = getTimerDisplay(timer);
+
+        assertEquals("20 min", display.getText());
+
+        // A second passing inside the same minute leaves the text exactly as it was.
+        setField(timer, "remainingTimeSeconds", 1198);
+        invoke(timer, "updateTimerDisplay");
+        assertEquals("20 min", display.getText());
+
+        setField(timer, "remainingTimeSeconds", 1080);
+        invoke(timer, "updateTimerDisplay");
+        assertEquals("18 min", display.getText());
+
+        timer.stopTimer();
+    }
+
+    @Test
+    void theTimerAnnouncesItselfAsOne() {
+        QuizTimerComponent timer = new QuizTimerComponent(10);
+        UI.getCurrent().add(timer);
+
+        assertEquals("timer", timer.getTimerContainer().getElement().getAttribute("role"));
+        assertEquals("Zbývající čas:", timer.getTimerContainer().getElement().getAttribute("aria-label"));
+
+        timer.stopTimer();
+    }
+
+    @Test
     void timerShouldUpdateDisplayWarnAndExpire() throws Exception {
-        QuizTimerComponent timer = new QuizTimerComponent(1);
+        QuizTimerComponent timer = new QuizTimerComponent(2);
         UI.getCurrent().add(timer);
         AtomicBoolean expired = new AtomicBoolean(false);
         timer.setOnTimeExpired(() -> expired.set(true));
-        setField(timer, "remainingTimeSeconds", 5);
+        setField(timer, "remainingTimeSeconds", 45);
 
         invoke(timer, "updateTimerDisplay");
         Span display = getTimerDisplay(timer);
-        assertEquals("00:05", display.getText());
+        assertEquals("méně než minuta", display.getText());
 
-        invoke(timer, "showAutoSubmitWarning");
+        // Warned a minute out rather than five seconds out: five seconds is not enough time to do
+        // anything about it.
+        invoke(timer, "showExpiryWarning");
         setField(timer, "remainingTimeSeconds", 1);
         invoke(timer, "handleTimeExpired");
 

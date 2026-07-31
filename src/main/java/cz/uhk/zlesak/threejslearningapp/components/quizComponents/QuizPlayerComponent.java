@@ -2,13 +2,24 @@ package cz.uhk.zlesak.threejslearningapp.components.quizComponents;
 
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
+import com.vaadin.flow.component.html.Anchor;
 import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.html.H2;
+import com.vaadin.flow.component.html.ListItem;
+import com.vaadin.flow.component.html.Span;
+import com.vaadin.flow.component.html.UnorderedList;
+import com.vaadin.flow.component.orderedlayout.FlexComponent;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.progressbar.ProgressBar;
+import com.vaadin.flow.theme.lumo.LumoUtility;
+import cz.uhk.zlesak.threejslearningapp.components.commonComponents.StatusBadge;
 import cz.uhk.zlesak.threejslearningapp.domain.quiz.question.AbstractQuestionData;
 import cz.uhk.zlesak.threejslearningapp.domain.quiz.submission.AbstractSubmissionData;
 import cz.uhk.zlesak.threejslearningapp.i18n.I18nAware;
 import lombok.Getter;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
@@ -23,7 +34,14 @@ public class QuizPlayerComponent extends VerticalLayout implements I18nAware {
     private final VerticalLayout questionsContainer;
     private final Button submitButton;
     private final QuizTimerComponent timerComponent;
+    private final ProgressBar progressBar = new ProgressBar();
+    private final Span progressLabel = new Span();
+    private final Div unansweredSummary = new Div();
+    /** The header holding the timer and the progress. Placed by the view, statically, above the questions. */
+    @Getter
+    private final Div quizHeader = new Div();
     private Runnable onSubmit;
+    private boolean submitConfirmed = false;
     @Getter
     private HashMap<String, AbstractSubmissionData> answers = new HashMap<>();
 
@@ -36,12 +54,12 @@ public class QuizPlayerComponent extends VerticalLayout implements I18nAware {
     public QuizPlayerComponent(List<AbstractQuestionData> questions, Integer timeLimitMinutes) {
         super();
         this.questions = questions;
-        
+
         setSpacing(true);
         setPadding(true);
 
         timerComponent = new QuizTimerComponent(timeLimitMinutes);
-        
+
         questionsContainer = new VerticalLayout();
         questionsContainer.setSpacing(true);
         questionsContainer.setPadding(false);
@@ -49,17 +67,67 @@ public class QuizPlayerComponent extends VerticalLayout implements I18nAware {
 
         submitButton = new Button(text("quiz.submit"));
         submitButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY, ButtonVariant.LUMO_LARGE);
-        submitButton.addClickListener(e -> {
-            if (onSubmit != null) {
-                onSubmit.run();
-            }
-        });
+        submitButton.addClickListener(e -> requestSubmit());
 
-        add(questionsContainer, submitButton);
+        buildHeader();
+        buildUnansweredSummary();
+
+        add(quizHeader, questionsContainer, unansweredSummary, submitButton);
         renderQuestions();
+        updateProgress();
         setWidthFull();
 
-        timerComponent.setOnTimeExpired(() -> submitButton.getElement().callJsFunction("click"));
+        // Time is up: submit whatever is there, without stopping to summarise what is missing.
+        timerComponent.setOnTimeExpired(() -> {
+            submitConfirmed = true;
+            submitButton.getElement().callJsFunction("click");
+        });
+    }
+
+    /**
+     * Builds the quiz header: the countdown and how far through the quiz the user is.
+     *
+     * <p>Both used to be absent or floating. The timer was positioned with {@code float: right} and
+     * {@code position: sticky} over the content, which at 400 % zoom covers the element the user is
+     * working in — the one place they need to be able to see.
+     */
+    private void buildHeader() {
+        quizHeader.addClassName("quiz-header");
+        quizHeader.getStyle()
+                .set("display", "flex")
+                .set("flex-wrap", "wrap")
+                .set("align-items", "center")
+                .set("justify-content", "space-between")
+                .set("gap", "var(--lumo-space-m)")
+                .set("width", "100%")
+                .set("padding", "var(--lumo-space-s) 0")
+                .set("border-bottom", "1px solid var(--lumo-contrast-10pct)");
+
+        progressBar.setMin(0);
+        progressBar.setWidth("14rem");
+
+        progressLabel.addClassNames(LumoUtility.FontSize.SMALL, LumoUtility.TextColor.SECONDARY);
+        progressLabel.setId("quiz-progress-label");
+        progressBar.getElement().setAttribute("aria-labelledby", progressLabel.getId().orElseThrow());
+
+        HorizontalLayout progress = new HorizontalLayout(progressLabel, progressBar);
+        progress.setAlignItems(FlexComponent.Alignment.CENTER);
+        progress.setSpacing(true);
+        progress.setPadding(false);
+
+        quizHeader.add(timerComponent.getTimerContainer(), progress);
+    }
+
+    private void buildUnansweredSummary() {
+        unansweredSummary.addClassName("quiz-unanswered");
+        unansweredSummary.setVisible(false);
+        unansweredSummary.getElement().setAttribute("role", "status");
+        unansweredSummary.getElement().setAttribute("tabindex", "-1");
+        unansweredSummary.getStyle()
+                .set("width", "100%")
+                .set("padding", "var(--lumo-space-m)")
+                .set("border", "2px solid var(--lumo-error-color)")
+                .set("border-radius", "var(--lumo-border-radius-m)");
     }
 
     /**
@@ -69,8 +137,20 @@ public class QuizPlayerComponent extends VerticalLayout implements I18nAware {
     private void renderQuestions() {
         questionsContainer.removeAll();
         for (int i = 0; i < questions.size(); i++) {
-            questionsContainer.add(new QuestionCardDivComponent(questions.get(i), i + 1, answers));
+            questionsContainer.add(new QuestionCardDivComponent(
+                    questions.get(i), i + 1, questions.size(), answers, this::updateProgress));
         }
+    }
+
+    /**
+     * Restates how many questions are answered. Read from the progress bar's own label, so it is
+     * available to someone who cannot see how full the bar is.
+     */
+    private void updateProgress() {
+        int answered = answers.size();
+        progressBar.setMax(Math.max(1, questions.size()));
+        progressBar.setValue(Math.min(answered, questions.size()));
+        progressLabel.setText(text("quiz.progress.answered", answered, questions.size()));
     }
 
     /**
@@ -83,12 +163,71 @@ public class QuizPlayerComponent extends VerticalLayout implements I18nAware {
     }
 
     /**
+     * Handles a submission request.
+     *
+     * <p>With questions still unanswered the first request lists them instead of submitting, each as a
+     * link that puts the caret in the question. Pressing submit again goes ahead: leaving a question
+     * blank is a legitimate choice, and blocking submission outright would trap someone who cannot
+     * answer one at all.
+     */
+    private void requestSubmit() {
+        if (!submitConfirmed && !isComplete()) {
+            showUnansweredSummary();
+            submitConfirmed = true;
+            return;
+        }
+        unansweredSummary.setVisible(false);
+        if (onSubmit != null) {
+            onSubmit.run();
+        }
+    }
+
+    private void showUnansweredSummary() {
+        unansweredSummary.removeAll();
+
+        H2 heading = new H2(text("quiz.submit.unanswered.heading"));
+        heading.addClassNames(LumoUtility.FontSize.MEDIUM, LumoUtility.Margin.NONE);
+
+        UnorderedList list = new UnorderedList();
+        list.getStyle().set("margin", "var(--lumo-space-s) 0 0").set("padding-left", "1.2em");
+
+        for (int i = 0; i < questions.size(); i++) {
+            if (answers.containsKey(questions.get(i).getQuestionId())) {
+                continue;
+            }
+            int number = i + 1;
+            Anchor link = new Anchor("#" + QuestionCardDivComponent.QUESTION_ID_PREFIX + number,
+                    text("quiz.question.number") + " " + number);
+            list.add(new ListItem(link));
+        }
+
+        unansweredSummary.add(heading, new StatusBadge(text("quiz.submit.unanswered.badge"), StatusBadge.Tone.WARNING), list);
+        unansweredSummary.setVisible(true);
+        unansweredSummary.getElement().callJsFunction("focus");
+
+        submitButton.setText(text("quiz.submit.anyway"));
+    }
+
+    /**
      * Checks if all questions are answered.
      *
      * @return true if all answered, false otherwise
      */
     public boolean isComplete() {
         return answers.size() == questions.size();
+    }
+
+    /**
+     * @return numbers of the questions still without an answer, counted from one.
+     */
+    public List<Integer> getUnansweredQuestionNumbers() {
+        List<Integer> unanswered = new ArrayList<>();
+        for (int i = 0; i < questions.size(); i++) {
+            if (!answers.containsKey(questions.get(i).getQuestionId())) {
+                unanswered.add(i + 1);
+            }
+        }
+        return unanswered;
     }
 
     /**

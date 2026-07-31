@@ -1,7 +1,9 @@
 package cz.uhk.zlesak.threejslearningapp.components.containers;
 
 import com.vaadin.flow.component.UI;
-import com.vaadin.flow.component.html.H3;
+import com.vaadin.flow.component.html.H2;
+import com.vaadin.flow.component.html.ListItem;
+import com.vaadin.flow.component.html.UnorderedList;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.theme.lumo.LumoUtility;
@@ -33,7 +35,8 @@ public class QuizResultsHistoryPanel extends VerticalLayout implements I18nAware
     private final QuizResultService quizResultService;
     private final Executor ioExecutor;
     private final String quizId;
-    private final VerticalLayout itemsLayout = new VerticalLayout();
+    /** The attempts, as a list: a run of attempts is a list, and a screen reader can then say how many. */
+    private final UnorderedList itemsLayout = new UnorderedList();
     private final VerticalLayout paginationLayout = new VerticalLayout();
     private int currentPage = 0;
 
@@ -48,13 +51,17 @@ public class QuizResultsHistoryPanel extends VerticalLayout implements I18nAware
         setSpacing(false);
         addClassNames(LumoUtility.Gap.SMALL);
 
-        H3 heading = new H3(text("page.info.quizResultsInfo"));
+        // An H2, one level under the route's H1. It was an H3 on a page that had neither, so the
+        // heading outline started at level three and read as part of a document that was not there.
+        H2 heading = new H2(text("page.info.quizResultsInfo"));
         heading.addClassName(LumoUtility.Margin.NONE);
 
         itemsLayout.setWidthFull();
-        itemsLayout.setPadding(false);
-        itemsLayout.setSpacing(true);
         itemsLayout.addClassName("quiz-results-history-items");
+        itemsLayout.getStyle()
+                .set("list-style", "none")
+                .set("margin", "0")
+                .set("padding", "0");
 
         paginationLayout.setWidthFull();
         paginationLayout.setPadding(false);
@@ -123,7 +130,9 @@ public class QuizResultsHistoryPanel extends VerticalLayout implements I18nAware
         }
 
         for (QuickQuizResult result : results) {
-            itemsLayout.add(new QuizResultListItem(result, false, quizId));
+            ListItem item = new ListItem(new QuizResultListItem(result, false, quizId));
+            item.getStyle().set("width", "100%");
+            itemsLayout.add(item);
         }
 
         PaginationComponent pagination = new PaginationComponent(currentPage, PAGE_SIZE, pageResult.total(), this::loadPage);

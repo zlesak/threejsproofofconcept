@@ -72,35 +72,13 @@ public class QuizPlayerView extends AbstractQuizView {
         Scroller scroller = new Scroller(playerComponent, Scroller.ScrollDirection.VERTICAL);
         scroller.setSizeFull();
 
-        if (quiz.getTimeLimit() != null && quiz.getTimeLimit() > 0) {
-            addTimerToTopRight(scroller);
-        }
+        // The header sits above the scroller rather than inside it, so the countdown and the progress
+        // stay visible without ever covering the question. The old timer floated over the content with
+        // position: sticky, which at 400 % zoom hides whichever element the user is filling in.
+        Div header = playerComponent.getQuizHeader();
+        header.addClassNames(LumoUtility.Padding.Horizontal.MEDIUM, LumoUtility.Background.BASE);
 
-        entityContent.add(scroller);
-    }
-
-    /**
-     * Adds the timer to the top-right corner that stays sticky within the scroller.
-     */
-    private void addTimerToTopRight(Scroller scroller) {
-        Div timerContainer = playerComponent.getTimerContainer();
-
-        timerContainer.getStyle()
-                .set("float", "right");
-        timerContainer.addClassNames(
-                LumoUtility.Position.STICKY,
-                LumoUtility.Position.Top.MEDIUM,
-                LumoUtility.Margin.Right.LARGE,
-                LumoUtility.Margin.Bottom.MEDIUM,
-                LumoUtility.ZIndex.LARGE,
-                LumoUtility.Background.BASE,
-                LumoUtility.Padding.MEDIUM,
-                LumoUtility.BorderRadius.MEDIUM,
-                LumoUtility.BoxShadow.SMALL,
-                LumoUtility.Border.ALL,
-                LumoUtility.Width.AUTO
-        );
-        scroller.getContent().getElement().insertChild(0, timerContainer.getElement());
+        entityContent.add(header, scroller);
     }
 
     /**
