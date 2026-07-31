@@ -116,11 +116,14 @@ export async function selectAdministrationTab(page: Page, tabName: 'Kapitoly' | 
   await expect(tab).toHaveAttribute('aria-selected', 'true');
 }
 
-export function entityCardByName(page: Page, entityName: string) {
+/**
+ * The listing row for one entity. The name is the row's heading, which is what makes the row
+ * identifiable at all — before the redesign it was a styled span inside a card.
+ */
+export function entityRowByName(page: Page, entityName: string) {
   return page
-    .locator('vaadin-vertical-layout, div')
-    .filter({has: page.getByText(entityName, {exact: true})})
-    .filter({has: page.getByRole('button', {name: 'Otevřít'})})
+    .locator('.entity-row')
+    .filter({has: page.getByRole('heading', {name: entityName, exact: true})})
     .first();
 }
 
@@ -132,7 +135,7 @@ export async function entityExistsInCurrentListing(page: Page, query: string): P
     await fillByPlaceholder(page, 'Hledat...', query);
     await page.getByRole('button', {name: 'Hledat'}).click();
   }
-  return entityCardByName(page, query).isVisible().catch(() => false);
+  return entityRowByName(page, query).isVisible().catch(() => false);
 }
 
 /**
@@ -148,7 +151,7 @@ export async function waitForEntityPresence(page: Page, entityName: string, time
   }
   while (Date.now() < end) {
     await page.waitForTimeout(1000);
-    if (await entityCardByName(page, entityName).isVisible().catch(() => false)) {
+    if (await entityRowByName(page, entityName).isVisible().catch(() => false)) {
       return true;
     }
   }
@@ -157,7 +160,7 @@ export async function waitForEntityPresence(page: Page, entityName: string, time
 
 export async function openEntityFromCurrentListing(page: Page, entityName: string): Promise<void> {
   await waitForEntityPresence(page, entityName);
-  const card = entityCardByName(page, entityName);
+  const card = entityRowByName(page, entityName);
   await expect(card).toBeVisible();
   const openButton = card.getByRole('button', {name: 'Otevřít'}).first();
   await expect(openButton).toBeVisible();
@@ -173,7 +176,7 @@ export async function deleteEntityFromCurrentListing(
   // more than that — or with other workers adding their own — the entity need not be on the page
   // that happens to be rendered.
   await waitForEntityPresence(page, entityName);
-  const card = entityCardByName(page, entityName);
+  const card = entityRowByName(page, entityName);
   await expect(card).toBeVisible();
   const deleteButton = card.getByRole('button', {name: 'Smazat'}).first();
   await expect(deleteButton).toBeVisible();
@@ -184,7 +187,7 @@ export async function deleteEntityFromCurrentListing(
 export async function waitForEntityCardVisible(page: Page, entityName: string, timeoutMs = 30000): Promise<boolean> {
   const end = Date.now() + timeoutMs;
   while (Date.now() < end) {
-    const visible = await entityCardByName(page, entityName).isVisible().catch(() => false);
+    const visible = await entityRowByName(page, entityName).isVisible().catch(() => false);
     if (visible) {
       return true;
     }
@@ -196,7 +199,7 @@ export async function waitForEntityCardVisible(page: Page, entityName: string, t
 export async function waitForEntityCardAbsent(page: Page, entityName: string, timeoutMs = 30000): Promise<boolean> {
   const end = Date.now() + timeoutMs;
   while (Date.now() < end) {
-    const visible = await entityCardByName(page, entityName).isVisible().catch(() => false);
+    const visible = await entityRowByName(page, entityName).isVisible().catch(() => false);
     if (!visible) {
       return true;
     }

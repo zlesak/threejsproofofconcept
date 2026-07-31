@@ -27,7 +27,7 @@ import static org.junit.jupiter.api.Assertions.*;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
 @ActiveProfiles("test")
 @Import(OAuthTestConfig.class)
-class AbstractListItemKaribuTest {
+class EntityRowKaribuTest {
     @Autowired private ApplicationContext applicationContext;
 
     @BeforeEach void setUp() { KaribuSpringTestSupport.setUp(applicationContext); }
@@ -35,7 +35,7 @@ class AbstractListItemKaribuTest {
 
     @Test
     void listViewMode_shouldOnlyExposeOpenAction() {
-        AbstractListItem item = new AbstractListItem(true, false, VaadinIcon.BOOK);
+        EntityRow item = new EntityRow(true, false, VaadinIcon.BOOK);
         UI.getCurrent().add(item);
         assertTrue(btn(item, "Otevřít").isVisible());
         assertFalse(btn(item, "Vybrat").isVisible());
@@ -45,7 +45,7 @@ class AbstractListItemKaribuTest {
 
     @Test
     void selectAndAdminModes_shouldTriggerRegisteredListeners() {
-        AbstractListItem item = new AbstractListItem(false, true, VaadinIcon.BOOK);
+        EntityRow item = new EntityRow(false, true, VaadinIcon.BOOK);
         UI.getCurrent().add(item);
         AtomicInteger cnt = new AtomicInteger();
         item.setSelectButtonClickListener(e -> cnt.incrementAndGet());
@@ -61,7 +61,7 @@ class AbstractListItemKaribuTest {
 
     @Test
     void runBackendCallWithOverlay_whenUiIsNull_shouldCallOnError() {
-        TestListItem item = new TestListItem();
+        TestRow item = new TestRow();
         UI.setCurrent(null);
         AtomicReference<Throwable> err = new AtomicReference<>();
         item.call(() -> "v", v -> {}, err::set);
@@ -72,7 +72,7 @@ class AbstractListItemKaribuTest {
 
     @Test
     void runBackendCallWithOverlay_whenSupplierSucceeds_shouldCallOnSuccess() {
-        TestListItem item = new TestListItem();
+        TestRow item = new TestRow();
         UI.getCurrent().add(item);
         AtomicReference<String> result = new AtomicReference<>();
         item.call(() -> "success-value", result::set, e -> {});
@@ -82,7 +82,7 @@ class AbstractListItemKaribuTest {
 
     @Test
     void runBackendCallWithOverlay_whenSupplierThrows_shouldCallOnError() {
-        TestListItem item = new TestListItem();
+        TestRow item = new TestRow();
         UI.getCurrent().add(item);
         AtomicReference<Throwable> err = new AtomicReference<>();
         item.call(() -> { throw new RuntimeException("supplier failure"); }, v -> {}, err::set);
@@ -93,7 +93,7 @@ class AbstractListItemKaribuTest {
 
     @Test
     void runBackendCallWithOverlay_whenUiClosingDuringSupplier_shouldSkipCallback() {
-        TestListItem item = new TestListItem();
+        TestRow item = new TestRow();
         UI ui = UI.getCurrent();
         ui.add(item);
         AtomicBoolean called = new AtomicBoolean();
@@ -101,12 +101,12 @@ class AbstractListItemKaribuTest {
         assertFalse(called.get());
     }
 
-    private Button btn(AbstractListItem item, String text) {
+    private Button btn(EntityRow item, String text) {
         return findAll(item, Button.class).stream().filter(c -> text.equals(c.getText())).findFirst().orElseThrow();
     }
 
-    private static final class TestListItem extends AbstractListItem {
-        TestListItem() { super(true, false, VaadinIcon.BOOK); }
+    private static final class TestRow extends EntityRow {
+        TestRow() { super(true, false, VaadinIcon.BOOK); }
         <T> void call(Supplier<T> s, Consumer<T> ok, Consumer<Throwable> err) {
             runBackendCallWithOverlay(s, ok, err);
         }

@@ -16,6 +16,21 @@
   "page.title.quizListView" : "MISH - Kvízy",
   "page.title.administrationView" : "MISH - Administrační centrum",
   "page.title.documentation" : "MISH - Dokumentace",
+  "page.title.quizResultsListView" : "MISH - Výsledky kvízů",
+
+  "page.heading.chapterListView": "Kapitoly",
+  "page.heading.modelListView": "Modely",
+  "page.heading.quizListView": "Kvízy",
+  "page.heading.quizResultsListView": "Výsledky kvízů",
+  "page.heading.administrationView": "Administrační centrum",
+
+  "listing.meta.shown": "Zobrazeno {0} z {1}",
+  "listing.meta.empty": "Nenalezena žádná položka",
+  "pagination.label": "Stránkování",
+  "pagination.previous": "Předchozí stránka",
+  "pagination.next": "Následující stránka",
+  "pagination.page": "Stránka {0}",
+  "pagination.current": "Stránka {0}, aktuální",
 
   "page.info.noItemsFound" : "Nebyly nalezeny žádné položky.",
   "page.info.quizResultsInfo" : "Výsledky předchozích pokusů.",

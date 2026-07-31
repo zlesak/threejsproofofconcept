@@ -3,9 +3,11 @@ package cz.uhk.zlesak.threejslearningapp.components.commonComponents;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.html.Nav;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import cz.uhk.zlesak.threejslearningapp.i18n.I18nAware;
 import lombok.Getter;
 
 import java.util.function.Consumer;
@@ -14,7 +16,11 @@ import java.util.function.Consumer;
  * Pagination component for navigating between pages of a result set.
  * Renders previous/next buttons and numbered page buttons with ellipsis for large page counts.
  */
-public class PaginationComponent extends Div {
+public class PaginationComponent extends Nav implements I18nAware {
+
+    /** WCAG 2.5.8 asks for at least 24 × 24 CSS px; touch guidance asks for more. */
+    private static final String MIN_TARGET = "44px";
+
     private int currentPage;
     @Getter
     private int totalPages;
@@ -33,12 +39,21 @@ public class PaginationComponent extends Div {
      * @param onPageChange callback invoked with the new zero-based page index on navigation
      */
     public PaginationComponent(int page, int limit, long totalItems, Consumer<Integer> onPageChange) {
-        this.currentPage = page+1;
+        this.currentPage = page + 1;
         this.onPageChange = onPageChange;
         this.totalPages = (int) Math.ceil((double) totalItems / limit);
 
+        // A run of numbered links is a navigation region; without a name a screen reader lists it as
+        // one anonymous "navigation" among the others.
+        getElement().setAttribute("aria-label", text("pagination.label"));
+
         layout.setSpacing(true);
         layout.setPadding(false);
+
+        prevButton.setAriaLabel(text("pagination.previous"));
+        nextButton.setAriaLabel(text("pagination.next"));
+        sizeTarget(prevButton);
+        sizeTarget(nextButton);
 
         prevButton.addClickListener(e -> goToPage(currentPage - 1));
         nextButton.addClickListener(e -> goToPage(currentPage + 1));
@@ -82,21 +97,36 @@ public class PaginationComponent extends Div {
         ellipsis.setText("...");
         ellipsis.getStyle().set("padding", "0 8px");
         ellipsis.getStyle().set("color", "var(--lumo-secondary-text-color)");
+        // Three dots read aloud as "dot dot dot" tell the listener nothing.
+        ellipsis.getElement().setAttribute("aria-hidden", "true");
         return ellipsis;
     }
 
     private Button createPageButton(int pageNum) {
         Button btn = new Button(String.valueOf(pageNum));
         btn.addClickListener(e -> goToPage(pageNum));
+        sizeTarget(btn);
         if (pageNum == currentPage) {
             btn.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+            // Marked as current rather than disabled. Disabling drops the button out of the tab order,
+            // so a keyboard user tabbing through the pager skips over the page they are on and loses
+            // their place in the sequence.
+            btn.getElement().setAttribute("aria-current", "page");
+            btn.setAriaLabel(text("pagination.current", pageNum));
+        } else {
+            btn.setAriaLabel(text("pagination.page", pageNum));
         }
-        btn.setEnabled(pageNum != currentPage);
         return btn;
     }
 
+    private void sizeTarget(Button button) {
+        button.getStyle()
+                .set("min-width", MIN_TARGET)
+                .set("min-height", MIN_TARGET);
+    }
+
     private void goToPage(int page) {
-        if (page < 1 || page > totalPages) return;
+        if (page < 1 || page > totalPages || page == currentPage) return;
         this.currentPage = page;
         updateButtons();
         updatePageNumbers();

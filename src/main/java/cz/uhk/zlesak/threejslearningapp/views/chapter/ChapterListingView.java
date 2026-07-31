@@ -3,7 +3,7 @@ package cz.uhk.zlesak.threejslearningapp.views.chapter;
 import com.vaadin.flow.component.Tag;
 import com.vaadin.flow.router.Route;
 import cz.uhk.zlesak.threejslearningapp.common.SpringContextUtils;
-import cz.uhk.zlesak.threejslearningapp.components.listItems.AbstractListItem;
+import cz.uhk.zlesak.threejslearningapp.components.listItems.EntityRow;
 import cz.uhk.zlesak.threejslearningapp.components.listItems.ChapterListItem;
 import cz.uhk.zlesak.threejslearningapp.domain.chapter.ChapterEntity;
 import cz.uhk.zlesak.threejslearningapp.domain.chapter.ChapterFilter;
@@ -54,7 +54,7 @@ public class ChapterListingView extends AbstractListingView<QuickChapterEntity, 
      * @return a ChapterListItem component representing the chapter
      */
     @Override
-    protected AbstractListItem createListItem(QuickChapterEntity chapter) {
+    protected EntityRow createListItem(QuickChapterEntity chapter) {
         return new ChapterListItem(chapter, listView, administrationView);
     }
 

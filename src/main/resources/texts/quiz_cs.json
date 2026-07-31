@@ -117,6 +117,8 @@
   "quiz.result.totalScore.label":  "Celkové skóre",
   "quiz.result.percentage.label": "Procentuální hodnocení",
   "quiz.result.unfilled" : "Nevyplněno",
+  "quiz.result.attempt.heading": "Pokus z {0}",
+  "quiz.result.attempt.unknownDate": "Pokus bez data",
   "quiz.create.success" : "Kvíz byl úspěšně vytvořen",
   "quiz.choose.color" : "Vybrat barvu"
 }

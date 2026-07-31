@@ -117,31 +117,28 @@ body {
   padding: var(--lumo-space-s) var(--lumo-space-m) 0;
 }
 
-.entity-card {
-  min-width: 0;
-  overflow: hidden;
-}
-
-.entity-card-header,
-.entity-card-details,
-.entity-card-actions {
+.page-header,
+.page-header-text {
   min-width: 0;
 }
 
-.entity-card-actions {
-  flex-wrap: wrap;
-}
-
-.chapter-model-badge {
+.entity-row {
   min-width: 0;
-  max-width: 100%;
-  text-align: left;
 }
 
-.chapter-model-overflow {
-  flex: 0 0 auto !important;
-  min-width: fit-content !important;
-  text-align: center;
+.entity-row:last-of-type {
+  border-bottom: none;
+}
+
+.entity-row-body,
+.entity-row-meta,
+.entity-row-actions {
+  min-width: 0;
+}
+
+.listing-rows > li + li .entity-row {
+  /* The rows share one hairline between them rather than stacking two. */
+  border-top: none;
 }
 
 .model-texture-select-row {
@@ -413,11 +410,11 @@ main-page-view hr {
     padding-inline: var(--lumo-space-s);
   }
 
-  .listing-grid {
+  .listing-body {
     padding-inline: var(--lumo-space-s);
   }
 
-  .entity-card-actions {
+  .entity-row-actions {
     justify-content: flex-start;
   }
 

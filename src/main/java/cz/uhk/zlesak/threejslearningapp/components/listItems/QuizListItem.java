@@ -1,13 +1,9 @@
 package cz.uhk.zlesak.threejslearningapp.components.listItems;
 
 import com.vaadin.flow.component.UI;
-import com.vaadin.flow.component.html.Span;
-import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
-import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.router.RouteParam;
 import com.vaadin.flow.router.RouteParameters;
-import com.vaadin.flow.theme.lumo.LumoUtility;
 import cz.uhk.zlesak.threejslearningapp.common.SpringContextUtils;
 import cz.uhk.zlesak.threejslearningapp.components.dialogs.ConfirmDialog;
 import cz.uhk.zlesak.threejslearningapp.components.notifications.ErrorNotification;
@@ -22,7 +18,7 @@ import lombok.extern.slf4j.Slf4j;
  * A list item representing a quiz for listing purposes.
  */
 @Slf4j
-public class QuizListItem extends AbstractListItem {
+public class QuizListItem extends EntityRow {
     /**
      * Constructs a QuizListItem for the given quiz.
      *
@@ -32,50 +28,18 @@ public class QuizListItem extends AbstractListItem {
     public QuizListItem(QuickQuizEntity quiz, boolean administrationView) {
         super(true, administrationView, VaadinIcon.LIGHTBULB);
 
-        titleSpan.setText(quiz.getName());
+        setRowTitle(quiz.getName());
 
         if (quiz.getTimeLimit() != null) {
-            HorizontalLayout timeLimitRow = new HorizontalLayout();
-            timeLimitRow.addClassNames(LumoUtility.Gap.XSMALL, LumoUtility.AlignItems.CENTER);
-
-            Icon clockIcon = VaadinIcon.CLOCK.create();
-            clockIcon.addClassNames(LumoUtility.IconSize.SMALL, LumoUtility.TextColor.SECONDARY);
-
-            Span label = new Span(text("quiz.timeLimit.label") + ":");
-            label.addClassNames(LumoUtility.TextColor.SECONDARY, LumoUtility.FontSize.SMALL);
-            String timeText = text("quiz.timeLimit.none");
-            if (quiz.getTimeLimit() > 0){
-                timeText = quiz.getTimeLimit() + " " + text(minutesKey(quiz.getTimeLimit()));
-            }
-            Span value = new Span(timeText);
-            value.addClassNames(LumoUtility.FontSize.SMALL, LumoUtility.FontWeight.SEMIBOLD);
-
-            timeLimitRow.add(clockIcon, label, value);
-            details.add(timeLimitRow);
+            String timeText = quiz.getTimeLimit() > 0
+                    ? quiz.getTimeLimit() + " " + text(minutesKey(quiz.getTimeLimit()))
+                    : text("quiz.timeLimit.none");
+            addMetadata(text("quiz.timeLimit.label"), timeText);
         }
 
         // The chapter's name, not a fragment of its id: eight hex characters told the reader nothing
-        // and looked like a defect. Quizzes stored before the name was recorded omit the row.
-        if (quiz.getChapterName() != null && !quiz.getChapterName().isBlank()) {
-            HorizontalLayout chapterRow = new HorizontalLayout();
-            chapterRow.addClassNames(LumoUtility.Gap.XSMALL, LumoUtility.AlignItems.CENTER);
-
-            Icon bookIcon = VaadinIcon.BOOK.create();
-            bookIcon.addClassNames(LumoUtility.IconSize.SMALL, LumoUtility.TextColor.SECONDARY);
-
-            Span label = new Span(text("quiz.chapter.label") + ":");
-            label.addClassNames(LumoUtility.TextColor.SECONDARY, LumoUtility.FontSize.SMALL);
-
-            Span value = new Span(quiz.getChapterName());
-            value.addClassNames(LumoUtility.FontSize.SMALL);
-            applyEllipsis(value);
-            value.getElement().setProperty("title", quiz.getChapterName());
-
-            chapterRow.setWidthFull();
-            chapterRow.add(bookIcon, label, value);
-            chapterRow.expand(value);
-            details.add(chapterRow);
-        }
+        // and looked like a defect. Quizzes stored before the name was recorded omit the entry.
+        addMetadata(text("quiz.chapter.label"), quiz.getChapterName());
 
         setOpenButtonClickListener(e -> UI.getCurrent().navigate(QuizDetailView.class, new RouteParameters(new RouteParam("quizId", quiz.getId()))));
         setEditButtonClickListener(e -> {

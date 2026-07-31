@@ -1,11 +1,11 @@
 package cz.uhk.zlesak.threejslearningapp.components.listItems;
 
-import com.github.mvysny.kaributesting.v10.ElementUtilsKt;
 import com.github.mvysny.kaributesting.v10.MockVaadin;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.html.Span;
-import com.vaadin.flow.dom.DomEvent;
+import com.vaadin.flow.router.RouterLink;
 import com.vaadin.flow.server.VaadinSession;
 import cz.uhk.zlesak.threejslearningapp.components.dialogs.ConfirmDialog;
 import cz.uhk.zlesak.threejslearningapp.domain.chapter.ChapterEntity;
@@ -23,7 +23,6 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import tools.jackson.databind.node.NullNode;
 
 import java.time.Instant;
 import java.util.List;
@@ -62,12 +61,14 @@ class ChapterListItemKaribuTest {
         ChapterListItem item = new ChapterListItem(chapter, true, true);
         UI.getCurrent().add(item);
 
+        // The name is a heading, so a screen reader user can jump between entries.
+        assertEquals("Kapitola anatomie", findAll(item, H2.class).getFirst().getText());
+
         List<String> texts = findAll(item, Span.class).stream().map(Span::getText).toList();
-        assertTrue(texts.contains("Kapitola anatomie"));
         // The author's name, never the Keycloak subject behind it.
         assertTrue(texts.contains("teacher"));
         assertTrue(texts.stream().noneMatch(t -> t.contains("2f1c9e0a")));
-        assertTrue(texts.contains("Lebka 3D"));
+        assertEquals(List.of("Lebka 3D"), modelLinkTexts(item));
 
         button(item, "Otevřít").click();
         assertSame(chapter, VaadinSession.getCurrent().getAttribute("chapterEntity"));
@@ -104,7 +105,7 @@ class ChapterListItemKaribuTest {
         ChapterEntity chapter = ChapterEntity.builder().id("ch-dup").name("Dup").models(List.of(model(), dup)).build();
         ChapterListItem item = new ChapterListItem(chapter, true, false);
         UI.getCurrent().add(item);
-        assertEquals(1, findAll(item, Span.class).stream().filter(s -> "Lebka 3D".equals(s.getText())).count());
+        assertEquals(List.of("Lebka 3D"), modelLinkTexts(item));
     }
 
     @Test
@@ -118,14 +119,16 @@ class ChapterListItemKaribuTest {
     }
 
     @Test
-    void modelBadgeClick_shouldStoreModelInSession() {
-        QuickModelEntity model = model();
-        ChapterListItem item = new ChapterListItem(chapter(model), true, false);
+    void aModelIsARealLinkAndNotAClickableSpan() {
+        // It used to be a Span with a click listener: no keyboard could reach it, no screen reader
+        // announced it as something to activate, and it could not be opened in a new tab.
+        ChapterListItem item = new ChapterListItem(chapter(model()), true, false);
         UI.getCurrent().add(item);
-        Span badge = findAll(item, Span.class).stream()
-                .filter(s -> s.getClassNames().contains("chapter-model-badge")).findFirst().orElseThrow();
-        ElementUtilsKt._fireDomEvent(badge.getElement(), new DomEvent(badge.getElement(), "click", NullNode.instance));
-        assertSame(model, VaadinSession.getCurrent().getAttribute("quickModelEntity"));
+
+        RouterLink link = findAll(item, RouterLink.class).getFirst();
+
+        assertEquals("Lebka 3D", link.getText());
+        assertTrue(link.getHref().contains("metadata-model-1"), link.getHref());
     }
 
     @Test
@@ -223,9 +226,7 @@ class ChapterListItemKaribuTest {
                 .models(List.of()).build();
         ChapterListItem item = new ChapterListItem(c, true, false);
         UI.getCurrent().add(item);
-        long badgeCount = findAll(item, Span.class).stream()
-                .filter(s -> s.getClassNames().contains("chapter-model-badge")).count();
-        assertEquals(0, badgeCount);
+        assertEquals(List.of(), modelLinkTexts(item));
     }
 
     @Test
@@ -255,9 +256,7 @@ class ChapterListItemKaribuTest {
         ChapterEntity c = ChapterEntity.builder().id("c-multi").name("Multi").models(List.of(m1, m2)).build();
         ChapterListItem item = new ChapterListItem(c, true, false);
         UI.getCurrent().add(item);
-        long badgeCount = findAll(item, Span.class).stream()
-                .filter(s -> s.getClassNames().contains("chapter-model-badge")).count();
-        assertEquals(2, badgeCount);
+        assertEquals(List.of("Model One", "Model Two"), modelLinkTexts(item));
     }
 
     @Test
@@ -278,9 +277,8 @@ class ChapterListItemKaribuTest {
         ChapterEntity c = ChapterEntity.builder().id("c-fb").name("Fallback").models(List.of(m)).build();
         ChapterListItem item = new ChapterListItem(c, true, false);
         UI.getCurrent().add(item);
-        long badgeCount = findAll(item, Span.class).stream()
-                .filter(s -> "Fallback Model".equals(s.getText())).count();
-        assertEquals(1, badgeCount);
+        assertEquals(List.of("Fallback Model"), modelLinkTexts(item));
+        assertTrue(findAll(item, RouterLink.class).getFirst().getHref().contains("model-fallback"));
     }
 
     @Test
@@ -290,6 +288,10 @@ class ChapterListItemKaribuTest {
         UI.getCurrent().add(item);
         button(item, "Upravit").click();
         assertSame(chapterEntity, VaadinSession.getCurrent().getAttribute("chapterEntity"));
+    }
+
+    private List<String> modelLinkTexts(ChapterListItem item) {
+        return findAll(item, RouterLink.class).stream().map(RouterLink::getText).toList();
     }
 
     private Button button(ChapterListItem item, String text) {

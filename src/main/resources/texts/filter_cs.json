@@ -8,5 +8,7 @@
   "filter.name.label": "Název",
   "filter.created.label": "Datum vytvoření",
   "filter.updated.label": "Naposledy upraveno",
-  "filter.description.label": "Filtrovat na základě textu"
+  "filter.description.label": "Filtrovat na základě textu",
+  "filter.toggle.show": "Filtry (zobrazit)",
+  "filter.toggle.hide": "Filtry (skrýt)"
 }

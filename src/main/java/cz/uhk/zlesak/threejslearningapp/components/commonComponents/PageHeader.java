@@ -114,6 +114,17 @@ public class PageHeader extends Header implements I18nAware {
     }
 
     /**
+     * Hides or shows the H1 while leaving the meta line in place. Used where this header is nested
+     * inside a screen that already has a title of its own — a second H1 leaves a screen reader user
+     * unable to tell which one names the page — but where the result count still needs announcing.
+     *
+     * @param visible whether to show the H1
+     */
+    public void setHeadingVisible(boolean visible) {
+        heading.setVisible(visible);
+    }
+
+    /**
      * Moves keyboard focus to the title. Used after an action replaces the screen contents — without
      * it focus stays on a button that no longer exists and the user hears nothing.
      */
