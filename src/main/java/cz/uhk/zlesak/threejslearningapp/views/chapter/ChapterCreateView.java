@@ -7,8 +7,10 @@ import com.vaadin.flow.component.UI;
 import com.vaadin.flow.router.*;
 import com.vaadin.flow.server.VaadinSession;
 import cz.uhk.zlesak.threejslearningapp.components.forms.CreateChapterForm;
+import cz.uhk.zlesak.threejslearningapp.common.LinkTextAudit;
 import cz.uhk.zlesak.threejslearningapp.components.notifications.ErrorNotification;
 import cz.uhk.zlesak.threejslearningapp.components.notifications.SuccessNotification;
+import cz.uhk.zlesak.threejslearningapp.components.notifications.WarningNotification;
 import cz.uhk.zlesak.threejslearningapp.domain.chapter.ChapterEntity;
 import cz.uhk.zlesak.threejslearningapp.domain.model.QuickModelEntity;
 import cz.uhk.zlesak.threejslearningapp.events.chapter.CreateChapterEvent;
@@ -132,7 +134,7 @@ public class ChapterCreateView extends AbstractChapterView {
                 },
                 editData -> {
                     loadedChapter = editData.chapter();
-                    nameTextField.setValue(loadedChapter.getName());
+                    setChapterName(loadedChapter.getName());
                     editorjs.setChapterContentData(editData.chapterContent());
 
                     editorjs.getElement().executeJs(
@@ -217,12 +219,30 @@ public class ChapterCreateView extends AbstractChapterView {
     }
 
     /**
+     * Points out links whose text does not say where they go, at the moment the author saves.
+     *
+     * <p>Advice, not a barrier: the wording of the chapter is the author's, and refusing to save would
+     * be the wrong way to make an editorial point. Links reading "ZDE" are content, so the only place
+     * this can be raised is here.
+     *
+     * @param bodyData the chapter content about to be saved
+     */
+    private void warnAboutNonDescriptiveLinks(String bodyData) {
+        var offenders = LinkTextAudit.nonDescriptiveLinkTexts(bodyData);
+        if (offenders.isEmpty()) {
+            return;
+        }
+        new WarningNotification(text("chapter.links.warning", String.join(", ", offenders)));
+    }
+
+    /**
      * Creates the chapter and navigates to it.
      *
      * @param bodyData  the chapter content
      * @param allModels map of all selected models
      */
     private void createChapterAndNavigate(String bodyData, Map<String, QuickModelEntity> allModels) {
+        warnAboutNonDescriptiveLinks(bodyData);
         runAsync(() -> service.saveChapter(
                         chapterId,
                         isEditMode,

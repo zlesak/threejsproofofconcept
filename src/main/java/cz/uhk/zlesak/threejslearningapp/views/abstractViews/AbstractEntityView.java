@@ -122,6 +122,8 @@ public abstract class AbstractEntityView<S extends AbstractService<?, ?, ?>> ext
      */
     protected void loadSingleModelWithTextures(QuickModelEntity quickModelEntity, String questionId, String key, boolean... showImmediately) {
         String modelId = quickModelEntity.getModel().getId();
+        // The scene is named after whatever it is showing, so it is not announced merely as a canvas.
+        modelDiv.renderer.setAccessibleModelName(quickModelEntity.getModel().getName());
         if (questionId != null) {
             ComponentUtil.fireEvent(
                     UI.getCurrent(),

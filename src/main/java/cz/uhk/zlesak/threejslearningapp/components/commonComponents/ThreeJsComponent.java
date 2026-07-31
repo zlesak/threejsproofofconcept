@@ -41,6 +41,9 @@ import java.util.function.Consumer;
 @org.springframework.stereotype.Component
 public class ThreeJsComponent extends Component {
 
+    /** What the scene is called before a model has been named. */
+    private static final String DEFAULT_ACCESSIBLE_NAME = "Interaktivní 3D scéna";
+
     private static final long PROGRESS_EVENT_MIN_INTERVAL_MS = 150;
     private static final long ACTION_EVENT_MIN_INTERVAL_MS = 200;
 
@@ -60,7 +63,27 @@ public class ThreeJsComponent extends Component {
      * Default constructor for ThreeJsComponent.
      */
     public ThreeJsComponent() {
+        // Set here rather than in the JS layer so the canvas is announced correctly even before the
+        // scene has finished initialising. role="application" is what makes a screen reader pass the
+        // arrow keys through to the scene instead of using them to move its own reading cursor.
+        getElement().setAttribute("role", "application");
+        getElement().setAttribute("tabindex", "0");
+        getElement().setAttribute("aria-label", DEFAULT_ACCESSIBLE_NAME);
         addAttachListener(e -> init());
+    }
+
+    /**
+     * Names the scene after the model it is showing, so a screen reader says which preparation this is
+     * rather than only that there is a canvas.
+     *
+     * @param modelName the model's name, ignored when blank
+     */
+    public void setAccessibleModelName(String modelName) {
+        if (modelName == null || modelName.isBlank()) {
+            getElement().setAttribute("aria-label", DEFAULT_ACCESSIBLE_NAME);
+            return;
+        }
+        getElement().setAttribute("aria-label", DEFAULT_ACCESSIBLE_NAME + ": " + modelName);
     }
 
     private synchronized ExecutorService ensureJsDispatchExecutor() {

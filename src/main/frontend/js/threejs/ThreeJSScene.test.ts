@@ -47,6 +47,7 @@ vi.mock('./core/GUIManager', () => ({
   GUIManager: class {
     createGUI = vi.fn(() => document.createElement('div'));
     attachToCanvas = vi.fn();
+    getCameraActions = vi.fn(() => null);
     dispose = vi.fn();
   },
 }));
@@ -115,6 +116,7 @@ describe('ThreeJSScene', () => {
       dispose: vi.fn(),
       createGUI: vi.fn(() => document.createElement('div')),
       attachToCanvas: vi.fn(),
+      getCameraActions: vi.fn(() => null),
     };
     const eventManager = { dispose: vi.fn(), registerClickHandler: vi.fn(), registerResizeObserver: vi.fn(() => null), createResizeHandler: vi.fn(() => vi.fn()) };
 

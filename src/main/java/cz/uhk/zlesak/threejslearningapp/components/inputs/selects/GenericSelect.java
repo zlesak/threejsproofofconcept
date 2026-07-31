@@ -48,7 +48,11 @@ public abstract class GenericSelect<T extends HasPrimarySecondaryMain, E extends
         super();
         this.itemLabelGenerator = itemLabelGenerator;
 
+        // Both, on purpose. The empty-selection caption is the "nothing chosen yet" entry inside the
+        // list; it is not the field's accessible name, so on its own it left every one of these selects
+        // announced as an unnamed combo box once a value had been picked.
         setEmptySelectionCaption(text(label));
+        setLabel(text(label));
         setWidthFull();
         setRenderer(new TextRenderer<>(itemLabelGenerator));
         if (itemType == TextureAreaForSelect.class) {

@@ -1,5 +1,11 @@
 import {expect, test} from '@playwright/test';
-import {acceptCookiesIfVisible, loginAsTeacher} from './helpers';
+import {
+  acceptCookiesIfVisible,
+  FIXTURE_CHAPTER,
+  FIXTURE_MODEL,
+  loginAsTeacher,
+  openEntityFromCurrentListing,
+} from './helpers';
 
 /**
  * Checks the structural accessibility properties that group G of the implementation brief
@@ -97,6 +103,65 @@ test('the showcase animations start stopped and can be stopped again', async ({p
   await stop.click();
   // Back to a still picture: either the frozen frame or the blank pixel, never the running GIF.
   await expect(firstAnimation).not.toHaveAttribute('src', /modelgif\.gif$/);
+});
+
+test('the 3D scene is reachable and operable from a keyboard', async ({page}) => {
+  test.setTimeout(120000);
+  await loginAsTeacher(page);
+  await page.goto('/chapters');
+  await openEntityFromCurrentListing(page, FIXTURE_CHAPTER);
+
+  // WCAG 2.4.1 and 1.3.1: the chapter's name existed only inside a read-only text field, so the
+  // detail had no heading at all.
+  await expect(page.getByRole('heading', {level: 1, name: FIXTURE_CHAPTER})).toBeVisible({timeout: 30000});
+
+  const canvas = page.locator('canvas').first();
+  await expect(canvas).toBeVisible({timeout: 60000});
+
+  // WCAG 2.1.1: the canvas was a bare drawing surface with no role, no tabindex and no key handling.
+  await expect(canvas).toHaveAttribute('role', 'application');
+  await expect(canvas).toHaveAttribute('tabindex', '0');
+  const label = await canvas.getAttribute('aria-label');
+  expect(label).toContain('3D');
+
+  await canvas.focus();
+  // Arrow keys reach the scene rather than scrolling the page: the position the scroller is at must
+  // not move while the model turns.
+  const scrollBefore = await page.evaluate(() => window.scrollY);
+  await canvas.press('ArrowLeft');
+  await canvas.press('ArrowRight');
+  await canvas.press('r');
+  expect(await page.evaluate(() => window.scrollY)).toBe(scrollBefore);
+
+  // Tab is deliberately not swallowed, so the scene is not a trap.
+  await canvas.press('Tab');
+  await expect(canvas).not.toBeFocused();
+});
+
+test('the model controls are named and can be operated by keyboard', async ({page}) => {
+  test.setTimeout(120000);
+  await loginAsTeacher(page);
+  await page.goto('/models');
+  await openEntityFromCurrentListing(page, FIXTURE_MODEL);
+
+  const group = page.locator('.scene-controls-gui');
+  await expect(group).toBeVisible({timeout: 60000});
+  await expect(group).toHaveAttribute('role', 'group');
+  await expect(group).toHaveAttribute('aria-label', 'Ovládání modelu');
+
+  // WCAG 4.1.2: the buttons carried a glyph in their text content and nothing else.
+  for (const name of ['Otočit nahoru', 'Otočit dolů', 'Otočit vlevo', 'Otočit vpravo', 'Přiblížit', 'Oddálit']) {
+    const button = group.getByRole('button', {name});
+    await expect(button).toBeVisible();
+    const box = await button.boundingBox();
+    // WCAG 2.5.8: the 3 x 3 grid was 122 px wide, which left every button under 40 px.
+    expect(box?.width ?? 0).toBeGreaterThanOrEqual(40);
+    expect(box?.height ?? 0).toBeGreaterThanOrEqual(40);
+  }
+
+  // Enter used to do nothing on these: only the centring button had a click listener.
+  await group.getByRole('button', {name: 'Otočit vlevo'}).press('Enter');
+  await expect(group.getByRole('button', {name: 'Otočit vlevo'})).toBeVisible();
 });
 
 test('the cookie bar offers refusing as plainly as agreeing', async ({page}) => {
