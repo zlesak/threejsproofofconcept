@@ -10,8 +10,8 @@ on:
         description: 'Frontend image to test'
         required: false
         default: 'ghcr.io/zlesak/mishappfrontend:latest'
-  schedule:
-    - cron: '0 3 * * *'
+  #schedule:
+  #  - cron: '0 3 * * *'
 
 permissions:
   contents: read
