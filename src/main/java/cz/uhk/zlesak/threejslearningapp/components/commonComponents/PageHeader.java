@@ -26,6 +26,7 @@ public class PageHeader extends Header implements I18nAware {
     private final H1 heading = new H1();
     private final Span meta = new Span();
     private final HorizontalLayout actionSlot = new HorizontalLayout();
+    private boolean metaVisuallyHidden = false;
 
     /**
      * Constructs the header with a title and no context line.
@@ -95,6 +96,9 @@ public class PageHeader extends Header implements I18nAware {
     public void setMeta(String metaText) {
         String safe = metaText == null ? "" : metaText.trim();
         meta.setText(safe);
+        if (metaVisuallyHidden) {
+            return;
+        }
         meta.getStyle().set("display", safe.isEmpty() ? "none" : "inline");
     }
 
@@ -111,6 +115,24 @@ public class PageHeader extends Header implements I18nAware {
         }
         actionSlot.add(components);
         actionSlot.setVisible(true);
+    }
+
+    /**
+     * Keeps the meta line as an announcement only, without showing it.
+     *
+     * <p>For screens where the same figure is already on display somewhere better — a listing states
+     * its range in the pagination bar — but where the change still has to be announced. Clipped rather
+     * than {@code display: none}, because a hidden element is not read out at all.
+     */
+    public void setMetaVisuallyHidden() {
+        meta.getStyle()
+                .set("position", "absolute")
+                .set("width", "1px")
+                .set("height", "1px")
+                .set("overflow", "hidden")
+                .set("clip-path", "inset(50%)")
+                .set("white-space", "nowrap");
+        metaVisuallyHidden = true;
     }
 
     /**

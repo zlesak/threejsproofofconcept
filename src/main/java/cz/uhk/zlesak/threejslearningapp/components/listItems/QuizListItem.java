@@ -29,6 +29,7 @@ public class QuizListItem extends EntityRow {
         super(true, administrationView, VaadinIcon.LIGHTBULB);
 
         setRowTitle(quiz.getName());
+        addCommonMetadata(quiz);
 
         if (quiz.getTimeLimit() != null) {
             String timeText = quiz.getTimeLimit() > 0

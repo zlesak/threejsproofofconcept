@@ -26,28 +26,30 @@ s „nevyžadovalo žádné kliknutí".
 
 ## Nálezy
 
-### 1. Nahrání modelu je nejdražší úkon aplikace — *vážné*
+### 1. Nahrání modelu je nejdražší úkon aplikace — *opraveno*
 
 T1 trvá **21 s a stojí 9 interakcí**, tedy zhruba tolik jako všech sedm zbývajících úloh dohromady.
 Příčina je v tom, že každý typ souboru má vlastní tlačítko a vlastní dialog: model, hlavní textura,
 další textura, CSV. Vyučující musí čtyřikrát projít výběrem souboru a pokaždé počkat na náhled.
 
-*Návrh:* jedna plocha pro přetažení všech souborů najednou s automatickým zařazením podle přípony
-(`.obj`/`.glb` → model, `.jpg` → textura, `.csv` → mapa oblastí) a s možností zařazení ručně
-opravit. Odhadem by to snížilo počet interakcí z devíti na dvě.
+*Oprava:* nad jednotlivými sekcemi je jedna plocha, kam se dá přetáhnout všechno najednou; soubory se
+zařadí podle přípony (`.obj`/`.glb` → model, `.jpg` → hlavní textura, pokud ještě žádná není, jinak
+další, `.csv` → mapa oblastí). Sekce zůstaly, aby se dalo zařazení opravit a jednotlivé soubory
+vyměnit; druhý model se odmítne se zprávou místo aby přepsal první.
 
-### 2. Výsledek kvízu nemá vlastní adresu — *vážné*
+### 2. Výsledek kvízu nemá vlastní adresu — *opraveno*
 
 Po odeslání se výsledek vykreslí na místě, na adrese `/playQuiz/{id}`. Student si výsledek nemůže
 uložit do záložek ani poslat odkaz, a tlačítko Zpět v prohlížeči jej vrátí do rozpracovaného kvízu,
 který už nelze odeslat. Route `/quiz-result/{id}` přitom existuje a používá ji výpis pokusů.
 
-*Návrh:* po odeslání přejít na `/quiz-result/{id}`. Chování bude konzistentní s výpisem pokusů
-a Zpět povede na seznam kvízů.
+*Oprava:* po odeslání se přejde na `/quiz-result/{id}`, tedy na tu samou adresu, kterou používá výpis
+pokusů. Pokud by výsledek přišel bez id, vykreslí se na místě — přijít o právě získaný výsledek by
+bylo horší než mít ho na nesdílitelné adrese.
 
 Tento nález vyšel najevo při opravě testu `student-access`, který na změnu adresy čekal.
 
-### 3. Prázdná aplikace nemá kudy začít — *vážné*
+### 3. Prázdná aplikace nemá kudy začít — *opraveno*
 
 Na čerstvé instalaci nelze vytvořit kapitolu: dialog „Vybrat model" je prázdný, bez vysvětlení
 a bez cesty dál. Uživatel musí sám uhodnout, že nejdřív musí do jiné sekce nahrát model.
@@ -55,8 +57,8 @@ a bez cesty dál. Uživatel musí sám uhodnout, že nejdřív musí do jiné se
 Dokládá to i testovací sada: dokud jsem nedoplnil `e2e/fixtures.setup.ts`, který si model a kapitolu
 předem vytvoří, polovina scénářů nad prázdnou databází spadla přesně na tomto místě.
 
-*Návrh:* v prázdném dialogu zobrazit vysvětlení a tlačítko „Nahrát nový model", které povede rovnou
-na formulář.
+*Oprava:* prázdný dialog vysvětlí, proč je prázdný, a nabídne tlačítko, které vede rovnou na
+příslušný formulář — „Nahrát nový model“ u modelů, „Vytvořit kapitolu“ u kapitol.
 
 ### 4. Odebraný model se občas vrátil do 3D scény — *opraveno*
 
@@ -99,7 +101,12 @@ odmítnuto se zprávou, která kapitoly vyjmenuje.
 ## Co automat neověří
 
 Čísla výše říkají, kolik kroků úloha stojí, ale ne, jestli uživatel ví, **který** krok udělat.
-Nálezy 1 a 3 jsou přesně toho druhu, kde měření jen potvrzuje podezření — skutečnou váhu jim dá až
-sezení s pěti vyučujícími podle plánu v [user-testing-plan.md](user-testing-plan.md). Doporučuji je
-uspořádat před obhajobou; každé sezení trvá 45 minut a odhalí i pojmy, které jsou pro uživatele
-nesrozumitelné (například „Pokročilý model").
+Nálezy 1 a 3 byly přesně toho druhu, kde měření jen potvrzuje podezření; opravy vycházejí z toho, co
+šlo z čísel odvodit, ale skutečnou váhu jim dá až sezení s pěti vyučujícími podle plánu
+v [user-testing-plan.md](user-testing-plan.md). Doporučuji je uspořádat před obhajobou; každé sezení
+trvá 45 minut a odhalí i pojmy, které jsou pro uživatele nesrozumitelné (například „Pokročilý
+model“).
+
+Zejména u nálezu 1 platí, že měření po opravě samo o sobě nestačí: automat přetáhne všechny soubory
+jedním voláním a naměří tak dvě interakce, ale jestli vyučující tu plochu najde a jestli mu zařazení
+podle přípony přijde srozumitelné, řekne jen člověk.

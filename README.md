@@ -32,9 +32,16 @@ For production deployment, secrets and running on a Raspberry Pi, see [docs/depl
 
 ## Screenshots
 
+Regenerate them with `E2E_SHOTS=1 npx playwright test --project=shots` against a running stack; the
+spec writes straight into `docs/screenshots`, so they no longer go stale the moment the interface
+changes. The environment variable is the guard — a plain test run must not rewrite files in the
+repository.
+
 ### Desktop
 
 ![Main page — desktop](docs/screenshots/main-pc.png)
+
+![Chapter listing — desktop](docs/screenshots/chapters-pc.png)
 
 ![3D model viewer — desktop](docs/screenshots/model-pc.png)
 
@@ -44,9 +51,9 @@ For production deployment, secrets and running on a Raspberry Pi, see [docs/depl
 
 ### Mobile
 
-| Main page | 3D Model viewer | Chapter detail | Quiz detail |
-|-----------|-----------------|----------------|-------------|
-| ![Main page — mobile](docs/screenshots/main-mobile.png) | ![3D model viewer — mobile](docs/screenshots/model-mobile.png) | ![Chapter detail — mobile](docs/screenshots/chapter-mobile.png) | ![Quiz detail — mobile](docs/screenshots/quiz-mobile.png) |
+| Main page | Chapter listing | 3D Model viewer | Chapter detail | Quiz detail |
+|-----------|-----------------|-----------------|----------------|-------------|
+| ![Main page — mobile](docs/screenshots/main-mobile.png) | ![Chapter listing — mobile](docs/screenshots/chapters-mobile.png) | ![3D model viewer — mobile](docs/screenshots/model-mobile.png) | ![Chapter detail — mobile](docs/screenshots/chapter-mobile.png) | ![Quiz detail — mobile](docs/screenshots/quiz-mobile.png) |
 
 ## Testing
 

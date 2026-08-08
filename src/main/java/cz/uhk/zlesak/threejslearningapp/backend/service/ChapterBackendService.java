@@ -151,6 +151,14 @@ public class ChapterBackendService {
                     : new Criteria().orOperator(byName, Criteria.where("_id").in(contentMatches)));
         }
 
+        // Filtering by a model the chapter contains. The chapter document holds only model ids, so the
+        // name is resolved to ids first; a name that matches nothing must yield no chapters rather than
+        // being quietly ignored.
+        if (filter != null && filter.getModelName() != null && !filter.getModelName().isBlank()) {
+            List<String> modelIds = modelBackendService.idsByName(filter.getModelName());
+            query.addCriteria(Criteria.where("modelIds").in(modelIds));
+        }
+
         query.fields().exclude("content");
         PageResult<QuickChapterEntity> page = listingQueries.page(query, filterParameters.getPageRequest(),
                 QuickChapterEntity.class, MongoCollections.CHAPTER);

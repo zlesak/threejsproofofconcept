@@ -67,6 +67,13 @@ public class ListingQueries {
             query.addCriteria(Criteria.where("creatorId").is(filter.getCreatorId()));
         }
 
+        // By name, and matched loosely: the user types what they remember of the author, not an exact
+        // account name and certainly not a subject id.
+        if (hasText(filter.getCreatorName())) {
+            query.addCriteria(Criteria.where("creatorName")
+                    .regex(Pattern.quote(filter.getCreatorName().trim()), "i"));
+        }
+
         String nameSearch = firstNonBlank(filter.getName(), searchTextOf(filter));
         if (includeName && nameSearch != null) {
             query.addCriteria(Criteria.where("name").regex(Pattern.quote(nameSearch), "i"));
@@ -81,6 +88,31 @@ public class ListingQueries {
         }
 
         return query;
+    }
+
+    /**
+     * Finds the ids of models whose name contains the given text.
+     *
+     * <p>A chapter document stores only model ids, so filtering chapters by the model they contain
+     * means turning the name the user typed into a set of ids first.
+     *
+     * @param namePart part of a model name, matched case-insensitively; blank means no lookup.
+     * @return ids of matching models, empty when nothing matches.
+     */
+    public List<String> modelIdsByName(String namePart) {
+        if (!hasText(namePart)) {
+            return List.of();
+        }
+        Query query = new Query(Criteria.where("name").regex(Pattern.quote(namePart.trim()), "i"));
+        query.fields().include("_id");
+        return mongoTemplate.find(query, IdOnly.class, MongoCollections.MODEL).stream()
+                .map(IdOnly::id)
+                .filter(id -> id != null && !id.isBlank())
+                .toList();
+    }
+
+    /** Just the identifier, for lookups whose only purpose is to feed an {@code in} criterion. */
+    private record IdOnly(String id) {
     }
 
     /**

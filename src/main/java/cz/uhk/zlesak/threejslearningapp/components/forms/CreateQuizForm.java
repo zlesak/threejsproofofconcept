@@ -62,7 +62,9 @@ public class CreateQuizForm extends VerticalLayout implements I18nAware {
         descriptionField.setWidthFull();
         descriptionField.setMaxLength(500);
 
-        timeLimitField = new IntegerField();
+        // Labels, not only helper texts. A helper renders under the field and is not its accessible
+        // name, so axe reported the time limit as a form element with no label at all.
+        timeLimitField = new IntegerField(text("quiz.timeLimit.label"));
         timeLimitField.setHelperText(text("quiz.timeLimit.helper"));
         timeLimitField.setStepButtonsVisible(true);
         timeLimitField.setValue(0);
@@ -71,7 +73,8 @@ public class CreateQuizForm extends VerticalLayout implements I18nAware {
 
         chapterSelect = new Select<>();
         chapterSelect.addClassName("create-quiz-chapter-select");
-        chapterSelect.setHelperText(text("quiz.chapterId.label"));
+        chapterSelect.setLabel(text("quiz.chapterId.label"));
+        chapterSelect.setHelperText(text("quiz.chapterId.helper"));
         chapterSelect.setItemLabelGenerator(ch -> ch == null ? "" : ch.getName());
         chapterSelect.setReadOnly(true);
         chapterSelect.setWidthFull();
@@ -82,7 +85,7 @@ public class CreateQuizForm extends VerticalLayout implements I18nAware {
 
         questionTypeSelect = new Select<>();
         questionTypeSelect.addClassName("create-quiz-question-type-select");
-        questionTypeSelect.setHelperText(text("quiz.questionType.label"));
+        questionTypeSelect.setLabel(text("quiz.questionType.label"));
         questionTypeSelect.setItems(QuestionTypeEnum.values());
         questionTypeSelect.setItemLabelGenerator(this::getQuestionTypeLabel);
         questionTypeSelect.setValue(QuestionTypeEnum.SINGLE_CHOICE);

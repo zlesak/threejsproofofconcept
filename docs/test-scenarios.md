@@ -7,12 +7,20 @@ identifikátor, takže se na něj dá odkázat z obhajoby i z hlášení chyby, 
 
 | Úroveň | Nástroj | Kde | Kolik |
 |---|---|---|---|
-| Jednotkové a komponentové (Java) | JUnit 5, Mockito, Karibu | `src/test/java` | 871 |
-| Jednotkové (TypeScript, 3D vrstva) | Vitest | `src/main/frontend/js/**/*.test.ts` | 65 |
-| End-to-end | Playwright | `e2e/*.spec.ts` | 10 |
-| Použitelnost (měření) | Playwright | `e2e/usability.spec.ts` | 8 úloh |
+| Jednotkové a komponentové (Java) | JUnit 5, Mockito, Karibu | `src/test/java` | 940 |
+| Jednotkové (TypeScript, 3D vrstva) | Vitest | `src/main/frontend/js/**/*.test.ts` | 78 |
+| End-to-end | Playwright, projekt `e2e` | `e2e/*.spec.ts` | 14 |
+| Přístupnost (axe) | Playwright, projekt `a11y` | `e2e/axe.spec.ts` | 10 rout × 2 režimy |
+| Použitelnost (měření) | Playwright, projekt `usability` | `e2e/usability.spec.ts` | 8 úloh |
 | Výkon (aplikace) | k6 | `perf/smoke.js` | 3 profily |
-| Výkon (3D scéna) | Playwright | `e2e/*perf*.spec.ts` | 5 |
+| Výkon (3D scéna) | Playwright, projekt `perf` | `e2e/*perf*.spec.ts` | 5 |
+| Snímky obrazovek | Playwright, projekt `shots` | `e2e/screenshots.spec.ts` | 5 obrazovek × 3 šířky |
+
+Projekty `a11y`, `usability`, `perf` a `shots` se pouštějí samostatně (`npx playwright test
+--project=…`). `a11y` proto, že axe hodnotí i vnitřek Vaadin komponent, takže jeho nález nemusí být
+vždy náš a neměl by zakrývat funkční regresi; `shots` proto, že zapisuje soubory do repozitáře, což
+běžný běh testů dělat nemá — je proto navíc podmíněný proměnnou `E2E_SHOTS=1`, protože Playwright
+nemá jak projekt z výchozího běhu vynechat.
 
 ## E2E scénáře
 
@@ -27,6 +35,13 @@ identifikátor, takže se na něj dá odkázat z obhajoby i z hlášení chyby, 
 | E-STUD-1 | Student vypíše, zobrazí a odehraje obsah | `student-access.spec.ts` | Fixture kapitola a kvíz |
 | E-STUD-2 | Student se nedostane na routy vyučujícího | `student-no-teacher-routes.spec.ts` | — |
 | E-PUB-1 | Veřejné routy jsou dostupné bez role vyučujícího | `public-routes.spec.ts` | — |
+| E-A11Y-1 | Každá routa má jazyk, jeden `<main>` a pojmenovanou navigaci | `accessibility.spec.ts` | — |
+| E-A11Y-2 | Skip link je první a vede na obsah | `accessibility.spec.ts` | — |
+| E-A11Y-3 | Žádná routa neroluje stránku samotnou, ve třech šířkách | `accessibility.spec.ts` | — |
+| E-A11Y-4 | Ukázky na úvodní stránce se stahují až při doscrollování a lze je zastavit | `accessibility.spec.ts` | — |
+| E-A11Y-5 | 3D scéna je dosažitelná a ovladatelná klávesnicí | `accessibility.spec.ts` | Fixture kapitola |
+| E-A11Y-6 | Ovládání modelu má jména, velikost cílů a funguje z klávesnice | `accessibility.spec.ts` | Fixture model |
+| E-A11Y-7 | Lišta cookies nabízí odmítnutí stejně zřetelně jako přijetí | `accessibility.spec.ts` | — |
 
 Fixtures zakládá `e2e/fixtures.setup.ts` (projekt `setup`), idempotentně — opakovaný běh je
 přeskočí. Sada běží na čtyřech workerech; každý scénář si své entity pojmenovává jednoznačně

@@ -16,6 +16,7 @@ import cz.uhk.zlesak.threejslearningapp.components.commonComponents.PaginationCo
 import cz.uhk.zlesak.threejslearningapp.components.dialogs.ErrorDialog;
 import cz.uhk.zlesak.threejslearningapp.components.inputs.ListingToolbar;
 import cz.uhk.zlesak.threejslearningapp.components.listItems.EntityRow;
+import cz.uhk.zlesak.threejslearningapp.domain.chapter.ChapterFilter;
 import cz.uhk.zlesak.threejslearningapp.domain.common.AbstractEntity;
 import cz.uhk.zlesak.threejslearningapp.domain.common.FilterBase;
 import cz.uhk.zlesak.threejslearningapp.domain.common.FilterParameters;
@@ -32,6 +33,7 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
 import java.util.function.LongConsumer;
+import java.util.function.Supplier;
 
 /**
  * AbstractListingView, abstract view for displaying a list of entities with filtering and pagination capabilities.
@@ -62,6 +64,16 @@ public abstract class AbstractListingView<Q extends AbstractEntity, F extends Fi
     /** Notified with the number of matching entities whenever the list is rendered. */
     @Setter
     private LongConsumer totalListener;
+    /**
+     * Builds the way out of an empty listing, shown under the "nothing found" message.
+     *
+     * <p>On a fresh installation the model picker was simply empty: no explanation and no route
+     * onwards, so the user had to work out for themselves that a model has to be uploaded in a
+     * different section first. Half the e2e scenarios failed at exactly this point until a fixture
+     * created one in advance.
+     */
+    @Setter
+    private Supplier<Component> emptyStateAction;
     protected FilterParameters<F> filterParameters;
     protected final S service;
     private final AtomicLong listRequestSequence = new AtomicLong(0);
@@ -115,6 +127,10 @@ public abstract class AbstractListingView<Q extends AbstractEntity, F extends Fi
         // dialog's own listing has no page title of its own, so it gets no second heading.
         this.pageHeader = new PageHeader(headingFor(pageTitleKey));
         pageHeader.setVisible(!pageHeader.getHeading().getText().isBlank());
+        // The pagination bar states the range in full — "Zobrazeno 1–10 z 31" — so printing a second
+        // count under the title would say the same thing twice. The live region stays, because the
+        // change still has to be announced.
+        pageHeader.setMetaVisuallyHidden();
 
         listingLayout.addClassName("listing-layout");
         paginationLayout.addClassName("listing-pagination");
@@ -142,19 +158,25 @@ public abstract class AbstractListingView<Q extends AbstractEntity, F extends Fi
         listMessages.getElement().setAttribute("role", "status");
         listMessages.getStyle().set("width", "100%");
 
+        // Contained rather than stretched edge to edge: a row of metadata spread across a 2560 px
+        // monitor is as hard to read as one squeezed into a card. The measure is generous enough for a
+        // long chapter name and its models, and the whole column is centred.
         Div listBody = new Div(listMessages, entityList);
         listBody.addClassName("listing-body");
         listBody.getStyle()
                 .set("width", "100%")
-                .set("padding", "var(--lumo-space-s) 0");
+                .set("max-width", "min(1100px, 100%)")
+                .set("margin", "0 auto")
+                .set("padding", "var(--lumo-space-s) var(--lumo-space-m) var(--lumo-space-l)");
 
         Scroller listScroller = new Scroller(listBody, Scroller.ScrollDirection.VERTICAL);
         listScroller.setSizeFull();
 
-        paginationLayout.addClassNames(
-                LumoUtility.AlignItems.CENTER,
-                LumoUtility.Padding.SMALL
-        );
+        paginationLayout.addClassNames(LumoUtility.Padding.SMALL);
+        paginationLayout.getStyle()
+                .set("max-width", "min(1100px, 100%)")
+                .set("margin", "0 auto")
+                .set("border-top", "1px solid var(--lumo-contrast-10pct)");
 
         listingLayout.setFlexGrow(1, listScroller);
         listingLayout.setSizeFull();
@@ -248,6 +270,12 @@ public abstract class AbstractListingView<Q extends AbstractEntity, F extends Fi
 
         if (entities.isEmpty()) {
             listMessages.add(new NoItemInfoComponent("page.info.noItemsFound"));
+            if (emptyStateAction != null) {
+                Component guidance = emptyStateAction.get();
+                if (guidance != null) {
+                    listMessages.add(guidance);
+                }
+            }
             pageHeader.setMeta(text("listing.meta.empty"));
             notifyTotal(0);
             return;
@@ -270,12 +298,20 @@ public abstract class AbstractListingView<Q extends AbstractEntity, F extends Fi
         // screen reader user with no way of knowing whether anything happened.
         pageHeader.setMeta(text("listing.meta.shown", entities.size(), total));
         notifyTotal(total);
-        paginationLayout.add(new PaginationComponent(filterParameters.getPageRequest().getPageNumber(), filterParameters.getPageRequest().getPageSize(), total,
+
+        PaginationComponent pagination = new PaginationComponent(
+                filterParameters.getPageRequest().getPageNumber(),
+                filterParameters.getPageRequest().getPageSize(),
+                total,
                 p -> {
                     filterParameters.setPageNumber(p);
                     listEntities();
-                }
-        ));
+                });
+        pagination.setOnPageSizeChange(size -> {
+            filterParameters.setPageSize(size);
+            listEntities();
+        });
+        paginationLayout.add(pagination);
     }
 
     private void notifyTotal(long total) {
@@ -314,7 +350,17 @@ public abstract class AbstractListingView<Q extends AbstractEntity, F extends Fi
      * @param event the search event containing the search value
      */
     protected void showFilteredEntities(SearchEvent event) {
-        filterParameters.setFilteredParameters(event, createFilter(event.getValue()));
+        F filter = createFilter(event.getValue());
+        // The entity-specific filter only knows about the search text; the narrower questions the
+        // toolbar can ask apply to every listing, so they are applied here rather than in each
+        // createFilter implementation.
+        filter.setCreatorName(event.getCreatorName());
+        filter.setCreatedFrom(event.getCreatedFrom());
+        filter.setCreatedTo(event.getCreatedTo());
+        if (filter instanceof ChapterFilter chapterFilter) {
+            chapterFilter.setModelName(event.getModelName());
+        }
+        filterParameters.setFilteredParameters(event, filter);
         listEntities();
     }
 

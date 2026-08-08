@@ -27,7 +27,7 @@ public class MultipleChoiceQuestionEditor extends QuestionEditorBase<QuestionOpt
         super(QuestionTypeEnum.MULTIPLE_CHOICE);
 
         correctAnswersGroup = new MultiSelectComboBox<>();
-        correctAnswersGroup.setHelperText(text("quiz.multipleChoice.correctOptions"));
+        correctAnswersGroup.setLabel(text("quiz.multipleChoice.correctOptions"));
         correctAnswersGroup.addThemeVariants(MultiSelectComboBoxVariant.LUMO_SMALL);
         correctAnswersGroup.setItemLabelGenerator(i ->  text("quiz.option.label") + " " + i);
 

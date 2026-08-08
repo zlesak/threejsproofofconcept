@@ -48,6 +48,40 @@ test('every route declares its language, one main landmark and a named navigatio
   }
 });
 
+test('no route scrolls the page itself, in any of the three widths', async ({page}) => {
+  test.setTimeout(240000);
+  await loginAsTeacher(page);
+  await acceptCookiesIfVisible(page);
+
+  // 1280 is the width WCAG 1.4.10 measures reflow at; the other two are the sizes the interface is
+  // built for. Horizontal scrolling hides content behind an edge nobody thinks to look past, and a
+  // page-level vertical scrollbar drags the application shell out of view with the content.
+  const widths = [
+    {name: 'desktop', width: 1280, height: 800},
+    {name: 'tablet', width: 768, height: 1024},
+    {name: 'mobile', width: 375, height: 812},
+  ];
+
+  for (const size of widths) {
+    await page.setViewportSize({width: size.width, height: size.height});
+    for (const route of TEACHER_ROUTES) {
+      await test.step(`${size.name} ${route}`, async () => {
+        await page.goto(route);
+        await page.waitForTimeout(1200);
+
+        const overflow = await page.evaluate(() => ({
+          horizontal: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+          vertical: document.documentElement.scrollHeight - document.documentElement.clientHeight,
+        }));
+
+        // A pixel or two is sub-pixel rounding, not a layout that has burst its container.
+        expect(overflow.horizontal, `horizontal scroll on ${route} at ${size.name}`).toBeLessThanOrEqual(2);
+        expect(overflow.vertical, `page scroll on ${route} at ${size.name}`).toBeLessThanOrEqual(2);
+      });
+    }
+  }
+});
+
 test('the skip link comes first and moves the user to the content', async ({page}) => {
   await loginAsTeacher(page);
   await page.goto('/chapters');
@@ -82,27 +116,48 @@ test('the skip link comes first and moves the user to the content', async ({page
   await expect(page).toHaveURL(/#obsah$/);
 });
 
-test('the showcase animations start stopped and can be stopped again', async ({page}) => {
+test('the showcase recordings load only when reached and can be paused', async ({page}) => {
   await page.goto('/');
   await acceptCookiesIfVisible(page);
 
-  const playButtons = page.getByRole('button', {name: 'Přehrát ukázku'});
-  await expect(playButtons).toHaveCount(3);
+  const recordings = page.locator('video.main-showcase-video');
+  await expect(recordings).toHaveCount(3);
 
-  const firstAnimation = page.locator('img[data-gif-src]').first();
-  // WCAG 2.2.2: the three GIFs used to loop from the moment the section scrolled into view, for far
-  // longer than five seconds, with nothing to stop them. Nothing runs until asked.
-  await expect(firstAnimation).toHaveAttribute('src', /^data:image\/gif;base64,/);
+  const first = recordings.first();
+  // WCAG 2.2.2: as GIFs these looped from the moment the section scrolled into view, for far longer
+  // than five seconds, with nothing to stop them. A video element brings its own pause control.
+  await expect(first).toHaveAttribute('controls', '');
+  await expect(first).toHaveAttribute('preload', 'none');
 
-  const firstPlay = playButtons.first();
-  await firstPlay.click();
-  await expect(firstAnimation).toHaveAttribute('src', /modelgif\.gif$/);
+  // Nothing but the poster is on the wire until the visitor gets there.
+  expect(await first.evaluate((video: HTMLVideoElement) => video.currentSrc)).toBe('');
 
-  const stop = page.getByRole('button', {name: 'Zastavit ukázku'}).first();
-  await expect(stop).toBeVisible();
-  await stop.click();
-  // Back to a still picture: either the frozen frame or the blank pixel, never the running GIF.
-  await expect(firstAnimation).not.toHaveAttribute('src', /modelgif\.gif$/);
+  await first.scrollIntoViewIfNeeded();
+  // Whichever of the two formats this browser can decode; the WebM exists because Chromium builds
+  // without proprietary codecs cannot play H.264 at all.
+  await expect
+    .poll(async () => first.evaluate((video: HTMLVideoElement) => video.currentSrc), {timeout: 20000})
+    .toMatch(/modelgif\.(webm|mp4)$/);
+
+  // Muted and looping, and marked for autoplay — the three conditions a browser wants before it will
+  // start a video without being asked. Whether it then does is the browser's decision (a headless run
+  // and iOS both often decline), so what is asserted here is that we asked, not that it obeyed.
+  expect(await first.evaluate((video: HTMLVideoElement) => video.muted)).toBe(true);
+  expect(await first.evaluate((video: HTMLVideoElement) => video.loop)).toBe(true);
+  expect(await first.evaluate((video: HTMLVideoElement) => video.autoplay)).toBe(true);
+
+  // And that the visitor is in charge either way. The play promise is deliberately not awaited: it
+  // settles only once playback has actually begun, so awaiting it inside evaluate hangs the step
+  // rather than telling us anything. What matters is whether the element ends up playing.
+  await first.evaluate((video: HTMLVideoElement) => {
+    void video.play().catch(() => {});
+  });
+  await expect
+    .poll(async () => first.evaluate((video: HTMLVideoElement) => !video.paused), {timeout: 15000})
+    .toBe(true);
+
+  await first.evaluate((video: HTMLVideoElement) => video.pause());
+  expect(await first.evaluate((video: HTMLVideoElement) => video.paused)).toBe(true);
 });
 
 test('the 3D scene is reachable and operable from a keyboard', async ({page}) => {

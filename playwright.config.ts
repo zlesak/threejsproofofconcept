@@ -42,7 +42,28 @@ export default defineConfig({
     {name: 'setup', testMatch: /.*\.setup\.ts/},
     {
       name: 'e2e',
-      testIgnore: [/.*\.setup\.ts/, /perf.*\.spec\.ts/, /usability\.spec\.ts/],
+      testIgnore: [
+        /.*\.setup\.ts/,
+        /perf.*\.spec\.ts/,
+        /usability\.spec\.ts/,
+        /axe\.spec\.ts/,
+        /screenshots\.spec\.ts/,
+      ],
+      dependencies: ['setup'],
+    },
+    // Regenerates docs/screenshots. Invoked on its own when the interface changes; it writes files into
+    // the repository, which is not something a test run should do by default.
+    {
+      name: 'shots',
+      testMatch: /screenshots\.spec\.ts/,
+      dependencies: ['setup'],
+    },
+    // The axe sweep, separate from the functional suite: axe grades the whole rendered page including
+    // the internals of the Vaadin components, so a finding here is not always ours to fix, and mixing
+    // the two would let one hide a functional regression.
+    {
+      name: 'a11y',
+      testMatch: /axe\.spec\.ts/,
       dependencies: ['setup'],
     },
     // Invoked on its own (see the workflow), not alongside the functional suite: it reports how long

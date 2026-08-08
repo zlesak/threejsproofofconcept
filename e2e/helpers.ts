@@ -128,11 +128,11 @@ export function entityRowByName(page: Page, entityName: string) {
 }
 
 export async function entityExistsInCurrentListing(page: Page, query: string): Promise<boolean> {
-  const field = page.locator('input[placeholder="Hledat..."]:visible, textarea[placeholder="Hledat..."]:visible').first();
+  const field = page.locator('input[placeholder="např. mozek"]:visible, textarea[placeholder="např. mozek"]:visible').first();
   const hasSearchField = await field.isVisible().catch(() => false);
   const isSearchFieldEnabled = hasSearchField ? await field.isEnabled().catch(() => false) : false;
   if (hasSearchField && isSearchFieldEnabled) {
-    await fillByPlaceholder(page, 'Hledat...', query);
+    await fillByPlaceholder(page, 'např. mozek', query);
     await page.getByRole('button', {name: 'Hledat'}).click();
   }
   return entityRowByName(page, query).isVisible().catch(() => false);
@@ -354,7 +354,7 @@ async function selectFixtureFromDialog(page: Page, entityName: string): Promise<
     .poll(async () => countVisibleButtonsByTextDeep(page, 'Vybrat'), {timeout: 60000})
     .toBeGreaterThan(0);
 
-  const search = page.locator('vaadin-dialog-overlay input[placeholder="Hledat..."]:visible').first();
+  const search = page.locator('vaadin-dialog-overlay input[placeholder="např. mozek"]:visible').first();
   if (await search.isVisible().catch(() => false)) {
     await search.fill(entityName);
     await page.getByRole('button', {name: 'Hledat'}).last().click();

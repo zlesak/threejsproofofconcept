@@ -28,6 +28,8 @@ public class QuizResultListItem extends EntityRow {
         // distinguish them.
         setRowTitle(headingFor(result));
 
+        // The attempt's own date is already the heading, so only the score, the percentage and the
+        // chapter are added here; repeating the date would say the same thing twice.
         addMetadata(text("quiz.result.totalScore.label"), scoreOf(result));
         addMetadata(text("quiz.result.percentage.label"), result.getPercentage() == null
                 ? null

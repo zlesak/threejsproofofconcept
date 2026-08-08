@@ -36,6 +36,8 @@ public class ChapterListingView extends AbstractListingView<QuickChapterEntity, 
     @Autowired
     public ChapterListingView(ChapterService chapterService) {
         super(true, "page.title.chapterListView", chapterService);
+        // Only chapters contain models, so only this listing offers the filter.
+        filter.setModelFilterVisible(true);
     }
 
     /**
@@ -66,6 +68,6 @@ public class ChapterListingView extends AbstractListingView<QuickChapterEntity, 
      */
     @Override
     protected ChapterFilter createFilter(String searchText) {
-        return new ChapterFilter(searchText);
+        return ChapterFilter.builder().SearchText(searchText).build();
     }
 }

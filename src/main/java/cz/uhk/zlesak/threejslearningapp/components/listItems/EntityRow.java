@@ -14,7 +14,9 @@ import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.theme.lumo.LumoUtility;
+import cz.uhk.zlesak.threejslearningapp.common.DateFormater;
 import cz.uhk.zlesak.threejslearningapp.common.SpringContextUtils;
+import cz.uhk.zlesak.threejslearningapp.domain.common.AbstractEntity;
 import cz.uhk.zlesak.threejslearningapp.i18n.I18nAware;
 import cz.uhk.zlesak.threejslearningapp.views.abstractViews.AbstractListingView;
 import cz.uhk.zlesak.threejslearningapp.views.abstractViews.AbstractView;
@@ -158,6 +160,29 @@ public class EntityRow extends HorizontalLayout implements I18nAware {
      */
     protected void addMetadata(Component... items) {
         metadata.add(items);
+    }
+
+    /**
+     * Adds the three facts every entity has: who made it, when, and when it last changed.
+     *
+     * <p>Only chapters used to show them. A model or a quiz gave no clue whose it was or how old it
+     * was, which is precisely what a teacher looking through someone else's material needs to know.
+     *
+     * @param entity the entity being listed
+     */
+    protected void addCommonMetadata(AbstractEntity entity) {
+        if (entity == null) {
+            return;
+        }
+        // The author's name, never their id: the id is a Keycloak subject, which means nothing to a
+        // reader and gives away who else uses the system.
+        addMetadata(text("chapter.creator"), entity.displayCreator());
+        addMetadata(text("chapter.creationDate"), entity.getCreated() == null
+                ? null
+                : DateFormater.formatDate(entity.getCreated()));
+        addMetadata(text("chapter.lastModified"), entity.getUpdated() == null
+                ? null
+                : DateFormater.formatDate(entity.getUpdated()));
     }
 
     /**

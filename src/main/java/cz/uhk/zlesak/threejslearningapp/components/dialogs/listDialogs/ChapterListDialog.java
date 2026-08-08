@@ -18,6 +18,7 @@ public class ChapterListDialog extends AbstractListDialog<QuickChapterEntity> {
      */
     public ChapterListDialog(ChapterListingView chapterListingView) {
         super(chapterListingView);
+        chapterListingView.setEmptyStateAction(EmptyListingGuidance::forChapters);
     }
 
     /**

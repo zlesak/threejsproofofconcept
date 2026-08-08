@@ -37,6 +37,7 @@ public class ModelListItem extends EntityRow {
         super(listView, administrationView, VaadinIcon.CUBES);
 
         setRowTitle(model.getModel().getName());
+        addCommonMetadata(model);
         addThumbnail(model);
 
         setOpenButtonClickListener(e -> {

@@ -10,12 +10,14 @@ import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.FlexLayout;
+import com.vaadin.flow.component.orderedlayout.Scroller;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
 import com.vaadin.flow.theme.lumo.LumoUtility;
 import cz.uhk.zlesak.threejslearningapp.components.commonComponents.DividerComponent;
+import cz.uhk.zlesak.threejslearningapp.components.commonComponents.ShowcaseVideo;
 import cz.uhk.zlesak.threejslearningapp.views.abstractViews.IView;
 import cz.uhk.zlesak.threejslearningapp.views.chapter.ChapterListingView;
 import cz.uhk.zlesak.threejslearningapp.views.model.ModelListingView;
@@ -29,18 +31,19 @@ import cz.uhk.zlesak.threejslearningapp.views.model.ModelListingView;
 @Tag("main-page-view")
 @AnonymousAllowed
 public class MainPageView extends Composite<VerticalLayout> implements IView {
-    private static final String TRANSPARENT_GIF_PLACEHOLDER = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==";
     /**
      * Constructor for MainPageView.
      * Initializes the main layout and adds sections to the page.
      */
     public MainPageView() {
-        VerticalLayout mainLayout = getContent();
-        mainLayout.setJustifyContentMode(FlexComponent.JustifyContentMode.CENTER);
-        mainLayout.setAlignItems(FlexComponent.Alignment.CENTER);
-        mainLayout.getStyle().set("margin", "0 auto");
-        mainLayout.addAttachListener(event -> initGifLazyLoading());
-        mainLayout.add(
+        // The window itself does not scroll — the shell has to stay put — so this long page scrolls
+        // inside its own scroller. Without it the sections below the hero would be unreachable.
+        VerticalLayout sections = new VerticalLayout();
+        sections.setJustifyContentMode(FlexComponent.JustifyContentMode.CENTER);
+        sections.setAlignItems(FlexComponent.Alignment.CENTER);
+        sections.setPadding(false);
+        sections.setWidthFull();
+        sections.add(
                 createHeroSection(),
                 new DividerComponent(),
                 createAboutSection(),
@@ -52,6 +55,18 @@ public class MainPageView extends Composite<VerticalLayout> implements IView {
                 createCollaborationSection(),
                 createFooterSection()
         );
+
+        Scroller scroller = new Scroller(sections, Scroller.ScrollDirection.VERTICAL);
+        scroller.setSizeFull();
+        // The recordings are found and observed once the page is on screen; the observer needs the
+        // scroller as its root, which is why it runs after attach rather than during construction.
+        scroller.addAttachListener(event -> initGifLazyLoading());
+
+        VerticalLayout mainLayout = getContent();
+        mainLayout.setPadding(false);
+        mainLayout.setSpacing(false);
+        mainLayout.setSizeFull();
+        mainLayout.add(scroller);
     }
 
     /**
@@ -198,9 +213,9 @@ public class MainPageView extends Composite<VerticalLayout> implements IView {
         showcaseGrid.setWidthFull();
         showcaseGrid.setMaxWidth("1200px");
 
-        showcaseGrid.add(createGifPlaceholder("showcase.gif1.title", "/img/modelgif.gif"));
-        showcaseGrid.add(createGifPlaceholder("showcase.gif2.title", "/img/kapitolagif.gif"));
-        showcaseGrid.add(createGifPlaceholder("showcase.gif3.title", "/img/quizgif.gif"));
+        showcaseGrid.add(createShowcaseItem("showcase.gif1.title", "modelgif"));
+        showcaseGrid.add(createShowcaseItem("showcase.gif2.title", "kapitolagif"));
+        showcaseGrid.add(createShowcaseItem("showcase.gif3.title", "quizgif"));
 
         section.add(title, desc, showcaseGrid);
         return section;
@@ -212,21 +227,21 @@ public class MainPageView extends Composite<VerticalLayout> implements IView {
      * @param gifPath The path to the GIF image.
      * @return The VerticalLayout containing the GIF/Image and title.
      */
-    private VerticalLayout createGifPlaceholder(String titleKey, String gifPath) {
+    private VerticalLayout createShowcaseItem(String titleKey, String baseName) {
         VerticalLayout container = new VerticalLayout();
         container.addClassName("main-showcase-item");
         container.setAlignItems(FlexComponent.Alignment.CENTER);
         container.setWidthFull();
         container.setPadding(false);
 
-        Image gifImage = new Image(TRANSPARENT_GIF_PLACEHOLDER, text(titleKey));
-        gifImage.addClassName("main-showcase-gif");
-        gifImage.getElement().setAttribute("data-gif-src", gifPath);
-        gifImage.getElement().setAttribute("decoding", "async");
-        gifImage.getElement().setAttribute("fetchpriority", "low");
-        gifImage.setWidthFull();
-        gifImage.setHeight("400px");
-        gifImage.getStyle()
+        ShowcaseVideo video = new ShowcaseVideo(
+                "/img/" + baseName,
+                "/img/" + baseName + "-poster.jpg",
+                text(titleKey));
+        video.setWidthFull();
+        video.getStyle()
+                .set("aspect-ratio", "16 / 10")
+                .set("height", "auto")
                 .set("object-fit", "contain")
                 .set("border-radius", "var(--lumo-border-radius-m)")
                 .set("background", "var(--lumo-contrast-5pct)");
@@ -235,111 +250,83 @@ public class MainPageView extends Composite<VerticalLayout> implements IView {
         H3 title = new H3(text(titleKey));
         title.addClassNames(LumoUtility.Margin.Top.SMALL);
 
-        // The animations ran in a loop, for far longer than five seconds, with no way of stopping them.
-        // Nothing plays until this is pressed, and pressing it again freezes the frame on screen.
-        Button playToggle = new Button(text("showcase.play"), new Icon(VaadinIcon.PLAY));
-        playToggle.addClassName("main-showcase-play");
-        playToggle.getElement().setAttribute("data-play-label", text("showcase.play"));
-        playToggle.getElement().setAttribute("data-stop-label", text("showcase.stop"));
-        playToggle.getElement().setAttribute("aria-pressed", "false");
-        playToggle.addClassNames(LumoUtility.Margin.Top.XSMALL);
-
-        container.add(gifImage, title, playToggle);
+        container.add(video, title);
         return container;
     }
 
     /**
-     * Wires the play controls and preloads the animations without starting them.
+     * Fetches and starts each recording only once it has been scrolled to.
      *
-     * <p>The preload goes into the browser cache rather than into the visible element, so scrolling the
-     * section into view no longer sets an animation running. Stopping draws the frame that is on screen
-     * onto a canvas and shows that instead, which leaves a still picture rather than an empty box.
+     * <p>The page itself downloads three poster frames and nothing more; the video files, which are the
+     * bulk of the weight, are fetched when the visitor actually reaches them. Playback then starts on
+     * its own — muted, which is what browsers insist on — and stops again when the recording leaves the
+     * screen, so three videos never run at once.
+     *
+     * <p>A visitor who has asked for reduced motion gets the poster and the controls, and nothing moves
+     * until they press play.
      */
     private void initGifLazyLoading() {
         getContent().getElement().executeJs(
                 """
                 const root = this;
-                const blank = $0;
-                const items = root.querySelectorAll('.main-showcase-item:not([data-gif-bound])');
-                if (!items.length) {
+                const scrollRoot = root.querySelector('vaadin-scroller') || null;
+                const videos = root.querySelectorAll('video.main-showcase-video:not([data-video-bound])');
+                if (!videos.length) {
                   return;
                 }
 
-                const preload = (src) => {
-                  const warm = new Image();
-                  warm.decoding = 'async';
-                  warm.src = src;
-                };
+                const reduceMotion = window.matchMedia
+                  && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-                const freeze = (img) => {
-                  try {
-                    const canvas = document.createElement('canvas');
-                    canvas.width = img.naturalWidth || img.clientWidth;
-                    canvas.height = img.naturalHeight || img.clientHeight;
-                    if (!canvas.width || !canvas.height) {
-                      return null;
-                    }
-                    canvas.getContext('2d').drawImage(img, 0, 0);
-                    return canvas.toDataURL('image/png');
-                  } catch (e) {
-                    return null;
-                  }
-                };
-
-                items.forEach((item) => {
-                  const img = item.querySelector('img[data-gif-src]');
-                  const button = item.querySelector('.main-showcase-play');
-                  if (!img || !button) {
+                const attach = (video) => {
+                  if (video.dataset.videoLoaded) {
                     return;
                   }
-                  item.setAttribute('data-gif-bound', 'true');
-
-                  const src = img.getAttribute('data-gif-src');
-                  let playing = false;
-                  let stillFrame = null;
-
-                  const setLabel = () => {
-                    const label = playing
-                      ? button.getAttribute('data-stop-label')
-                      : button.getAttribute('data-play-label');
-                    button.setAttribute('aria-pressed', playing ? 'true' : 'false');
-                    const textNode = Array.from(button.childNodes)
-                      .find((node) => node.nodeType === Node.TEXT_NODE);
-                    if (textNode) {
-                      textNode.textContent = label;
-                    } else {
-                      button.setAttribute('aria-label', label);
-                    }
-                  };
-
-                  button.addEventListener('click', () => {
-                    if (playing) {
-                      stillFrame = freeze(img) || stillFrame;
-                      img.src = stillFrame || blank;
-                      playing = false;
-                    } else {
-                      img.src = src;
-                      playing = true;
-                    }
-                    setLabel();
-                  });
-
-                  if ('IntersectionObserver' in window) {
-                    const observer = new IntersectionObserver((entries) => {
-                      entries.forEach((entry) => {
-                        if (entry.isIntersecting || entry.intersectionRatio > 0) {
-                          preload(src);
-                          observer.unobserve(entry.target);
-                        }
-                      });
-                    }, { root: null, rootMargin: '300px 0px', threshold: 0.01 });
-                    observer.observe(item);
-                  } else {
-                    preload(src);
+                  video.dataset.videoLoaded = 'true';
+                  // Both: the attribute lets the browser start playback as soon as it has enough data,
+                  // and the explicit play() below covers the case where the element was already loaded.
+                  if (!reduceMotion) {
+                    video.autoplay = true;
                   }
+                  // Promoting data-src to src is what starts the download. The browser then picks the
+                  // first of the two formats it can actually decode.
+                  video.querySelectorAll('source[data-src]').forEach((source) => {
+                    source.src = source.getAttribute('data-src');
+                    source.removeAttribute('data-src');
+                  });
+                  video.load();
+                };
+
+                videos.forEach((video) => {
+                  video.setAttribute('data-video-bound', 'true');
+                  // The muted attribute alone is not always enough for autoplay; the property is.
+                  video.muted = true;
                 });
-                """,
-                TRANSPARENT_GIF_PLACEHOLDER
+
+                if (!('IntersectionObserver' in window)) {
+                  videos.forEach(attach);
+                  return;
+                }
+
+                const observer = new IntersectionObserver((entries) => {
+                  entries.forEach((entry) => {
+                    const video = entry.target;
+                    if (entry.isIntersecting) {
+                      attach(video);
+                      if (!reduceMotion) {
+                        const started = video.play();
+                        if (started && typeof started.catch === 'function') {
+                          started.catch(() => {});
+                        }
+                      }
+                    } else if (!video.paused) {
+                      video.pause();
+                    }
+                  });
+                }, { root: scrollRoot, rootMargin: '200px 0px', threshold: 0.25 });
+
+                videos.forEach((video) => observer.observe(video));
+                """
         );
     }
 
@@ -431,13 +418,27 @@ public class MainPageView extends Composite<VerticalLayout> implements IView {
         footer.setWidthFull();
         footer.addClassNames(LumoUtility.TextAlignment.CENTER, LumoUtility.FontSize.MEDIUM);
         int currentYear = java.time.Year.now().getValue();
-        footer.add(new Span("© " + currentYear + " MISH | " + text("footer.rights")));
 
-        // Required by the European Accessibility Act. The statement's wording is the operator's to
-        // write; it belongs in the documentation, which is where this points.
-        Anchor statement = new Anchor("/documentation", text("footer.accessibility"));
-        statement.addClassNames(LumoUtility.Display.BLOCK, LumoUtility.Margin.Top.XSMALL);
-        footer.add(statement);
+        // Required by the European Accessibility Act, and on its own public route rather than in the
+        // documentation: the documentation sits behind the login, and someone who cannot use the login
+        // screen is exactly the person most likely to need this page.
+        Anchor statement = new Anchor("/accessibility", text("footer.accessibility"));
+
+        Span copyright = new Span("© " + currentYear + " MISH | " + text("footer.rights"));
+
+        Span separator = new Span("|");
+        separator.addClassName(LumoUtility.TextColor.SECONDARY);
+        separator.getElement().setAttribute("aria-hidden", "true");
+
+        // One line, wrapping only when it has to.
+        footer.getStyle()
+                .set("display", "flex")
+                .set("flex-wrap", "wrap")
+                .set("justify-content", "center")
+                .set("align-items", "baseline")
+                .set("gap", "var(--lumo-space-xs) var(--lumo-space-s)")
+                .set("padding", "var(--lumo-space-m) 0");
+        footer.add(copyright, separator, statement);
         return footer;
     }
 
@@ -453,7 +454,9 @@ public class MainPageView extends Composite<VerticalLayout> implements IView {
      */
     private void applyReadableMeasure(Paragraph paragraph) {
         paragraph.getStyle()
-                .set("max-width", "34em")
+                // Wide enough not to look like a column in a newspaper, capped before the line grows
+                // long enough that the eye loses its place coming back to the next one.
+                .set("max-width", "min(80ch, 100%)")
                 .set("text-align", "start");
     }
 

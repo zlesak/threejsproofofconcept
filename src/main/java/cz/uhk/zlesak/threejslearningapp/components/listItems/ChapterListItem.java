@@ -9,7 +9,7 @@ import com.vaadin.flow.router.RouteParameters;
 import com.vaadin.flow.router.RouterLink;
 import com.vaadin.flow.server.VaadinSession;
 import com.vaadin.flow.theme.lumo.LumoUtility;
-import cz.uhk.zlesak.threejslearningapp.common.DateFormater;
+import com.vaadin.flow.component.html.Image;
 import cz.uhk.zlesak.threejslearningapp.common.SpringContextUtils;
 import cz.uhk.zlesak.threejslearningapp.components.dialogs.ConfirmDialog;
 import cz.uhk.zlesak.threejslearningapp.components.notifications.ErrorNotification;
@@ -17,6 +17,7 @@ import cz.uhk.zlesak.threejslearningapp.components.notifications.SuccessNotifica
 import cz.uhk.zlesak.threejslearningapp.domain.chapter.QuickChapterEntity;
 import cz.uhk.zlesak.threejslearningapp.domain.model.QuickModelEntity;
 import cz.uhk.zlesak.threejslearningapp.services.ChapterService;
+import cz.uhk.zlesak.threejslearningapp.services.ModelService;
 import cz.uhk.zlesak.threejslearningapp.views.chapter.ChapterCreateView;
 import cz.uhk.zlesak.threejslearningapp.views.chapter.ChapterDetailView;
 import cz.uhk.zlesak.threejslearningapp.views.model.ModelDetailView;
@@ -31,6 +32,9 @@ import java.util.Map;
 @Slf4j
 public class ChapterListItem extends EntityRow {
 
+    /** Big enough to recognise the preparation, small enough to keep the row one line tall. */
+    private static final String THUMBNAIL_SIZE = "56px";
+
     /**
      * Constructs the chapter list item.
      *
@@ -42,19 +46,9 @@ public class ChapterListItem extends EntityRow {
         super(listView, administrationView, VaadinIcon.OPEN_BOOK);
 
         setRowTitle(chapter.getName());
-
-        // The author's name, never their id: the id is a Keycloak subject, which means nothing to a
-        // reader and gives away who else uses the system. Chapters written before names were
-        // recorded simply omit the entry.
-        addMetadata(text("chapter.creator"), chapter.displayCreator());
-        addMetadata(text("chapter.creationDate"), chapter.getCreated() == null
-                ? null
-                : DateFormater.formatDate(chapter.getCreated()));
-        addMetadata(text("chapter.lastModified"), chapter.getUpdated() == null
-                ? null
-                : DateFormater.formatDate(chapter.getUpdated()));
-
+        addCommonMetadata(chapter);
         addModelLinks(chapter);
+        addMainModelThumbnail(chapter);
 
         setOpenButtonClickListener(e -> {
             VaadinSession.getCurrent().setAttribute("chapterEntity", chapter);
@@ -136,6 +130,45 @@ public class ChapterListItem extends EntityRow {
         }
 
         addMetadata(models);
+    }
+
+    /**
+     * Shows the chapter's first model instead of the generic book icon.
+     *
+     * <p>A row of identical icons distinguishes nothing. The thumbnail is the picture the teacher
+     * recognises the chapter by, and it is already stored with the model, so nothing extra is loaded.
+     * Chapters whose model has no thumbnail keep the icon.
+     *
+     * @param chapter the chapter being listed
+     */
+    private void addMainModelThumbnail(QuickChapterEntity chapter) {
+        if (chapter.getModels() == null || chapter.getModels().isEmpty()) {
+            return;
+        }
+        try {
+            ModelService modelService = SpringContextUtils.getBean(ModelService.class);
+            for (QuickModelEntity model : chapter.getModels()) {
+                if (model == null) {
+                    continue;
+                }
+                String thumbnailUrl = modelService.extractThumbnailDataUrl(model.getDescription());
+                if (thumbnailUrl == null || thumbnailUrl.isBlank()) {
+                    continue;
+                }
+                // Decorative: the chapter's name is the heading right beside it.
+                Image thumbnail = new Image(thumbnailUrl, "");
+                thumbnail.setWidth(THUMBNAIL_SIZE);
+                thumbnail.setHeight(THUMBNAIL_SIZE);
+                thumbnail.getStyle()
+                        .set("object-fit", "cover")
+                        .set("border-radius", "var(--lumo-border-radius-m)")
+                        .set("flex", "0 0 auto");
+                setLeadingVisual(thumbnail);
+                return;
+            }
+        } catch (Exception ex) {
+            log.warn("Failed to extract a chapter thumbnail: {}", ex.getMessage());
+        }
     }
 
     private void deleteChapter(String chapterId) {

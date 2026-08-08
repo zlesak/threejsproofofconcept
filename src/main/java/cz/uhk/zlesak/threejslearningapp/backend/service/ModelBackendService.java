@@ -185,6 +185,19 @@ public class ModelBackendService {
                 MongoCollections.MODEL);
     }
 
+    /**
+     * Finds the models whose name contains the given text.
+     *
+     * <p>Used to filter chapters by the model they contain: a chapter document stores only model ids,
+     * so the name the user typed has to become a set of ids before the chapter query can run.
+     *
+     * @param namePart part of a model name, matched case-insensitively.
+     * @return ids of the matching models, empty when nothing matches or nothing was asked for.
+     */
+    public List<String> idsByName(String namePart) {
+        return listingQueries.modelIdsByName(namePart);
+    }
+
     private void requireModelRoot(InputFileDesc metadata) {
         if (metadata == null || metadata.getFileSenseType() != FileSenseType.MODEL) {
             throw new BackendException.Validation("Kořenový soubor musí být 3D model.");

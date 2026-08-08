@@ -4,31 +4,49 @@ import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Nav;
+import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
+import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.component.select.Select;
+import com.vaadin.flow.theme.lumo.LumoUtility;
 import cz.uhk.zlesak.threejslearningapp.i18n.I18nAware;
 import lombok.Getter;
+import lombok.Setter;
 
+import java.util.List;
 import java.util.function.Consumer;
+import java.util.function.IntConsumer;
 
 /**
- * Pagination component for navigating between pages of a result set.
- * Renders previous/next buttons and numbered page buttons with ellipsis for large page counts.
+ * The foot of a listing: how much of the result set is on screen and how to reach the rest.
+ *
+ * <p>Left: the count, and how many items to show at a time. Right: the pages. The two belong at
+ * opposite ends because they answer different questions — where am I, and where can I go.
  */
 public class PaginationComponent extends Nav implements I18nAware {
 
     /** WCAG 2.5.8 asks for at least 24 × 24 CSS px; touch guidance asks for more. */
     private static final String MIN_TARGET = "44px";
 
+    /** Offered page sizes. Ten is the default the listing starts with. */
+    private static final List<Integer> PAGE_SIZES = List.of(10, 20, 50, 100);
+
     private int currentPage;
     @Getter
     private int totalPages;
+    private final int pageSize;
+    private final long totalItems;
     private final Consumer<Integer> onPageChange;
+    /** Notified when the user chooses a different page size. */
+    @Setter
+    private IntConsumer onPageSizeChange;
 
     private final Button prevButton = new Button(new Icon(VaadinIcon.CHEVRON_LEFT));
     private final Button nextButton = new Button(new Icon(VaadinIcon.CHEVRON_RIGHT));
-    private final HorizontalLayout layout = new HorizontalLayout();
+    private final HorizontalLayout pageButtons = new HorizontalLayout();
+    private final Span rangeLabel = new Span();
 
     /**
      * Constructs the pagination component.
@@ -40,15 +58,22 @@ public class PaginationComponent extends Nav implements I18nAware {
      */
     public PaginationComponent(int page, int limit, long totalItems, Consumer<Integer> onPageChange) {
         this.currentPage = page + 1;
+        this.pageSize = limit;
+        this.totalItems = totalItems;
         this.onPageChange = onPageChange;
         this.totalPages = (int) Math.ceil((double) totalItems / limit);
 
         // A run of numbered links is a navigation region; without a name a screen reader lists it as
         // one anonymous "navigation" among the others.
         getElement().setAttribute("aria-label", text("pagination.label"));
-
-        layout.setSpacing(true);
-        layout.setPadding(false);
+        addClassName("listing-pagination-bar");
+        getStyle()
+                .set("display", "flex")
+                .set("flex-wrap", "wrap")
+                .set("align-items", "center")
+                .set("justify-content", "space-between")
+                .set("gap", "var(--lumo-space-s) var(--lumo-space-m)")
+                .set("width", "100%");
 
         prevButton.setAriaLabel(text("pagination.previous"));
         nextButton.setAriaLabel(text("pagination.next"));
@@ -58,38 +83,85 @@ public class PaginationComponent extends Nav implements I18nAware {
         prevButton.addClickListener(e -> goToPage(currentPage - 1));
         nextButton.addClickListener(e -> goToPage(currentPage + 1));
 
+        pageButtons.setSpacing(true);
+        pageButtons.setPadding(false);
+        pageButtons.setWrap(true);
+        pageButtons.setAlignItems(FlexComponent.Alignment.CENTER);
+
         updateButtons();
         updatePageNumbers();
 
-        add(layout);
+        add(createStatusSide(), pageButtons);
+    }
+
+    /**
+     * The left-hand side: what is on screen, and how much of it to show.
+     *
+     * @return the layout
+     */
+    private HorizontalLayout createStatusSide() {
+        rangeLabel.addClassNames(LumoUtility.FontSize.SMALL, LumoUtility.TextColor.SECONDARY);
+        rangeLabel.setText(rangeText());
+
+        Select<Integer> pageSizeSelect = new Select<>();
+        pageSizeSelect.setItems(PAGE_SIZES);
+        pageSizeSelect.setValue(PAGE_SIZES.contains(pageSize) ? pageSize : PAGE_SIZES.getFirst());
+        pageSizeSelect.setLabel(text("pagination.pageSize"));
+        pageSizeSelect.addClassName("listing-page-size");
+        pageSizeSelect.setWidth("7.5rem");
+        pageSizeSelect.addValueChangeListener(event -> {
+            if (event.isFromClient() && event.getValue() != null && onPageSizeChange != null) {
+                onPageSizeChange.accept(event.getValue());
+            }
+        });
+
+        HorizontalLayout side = new HorizontalLayout(pageSizeSelect, rangeLabel);
+        side.setPadding(false);
+        side.setSpacing(true);
+        side.setAlignItems(FlexComponent.Alignment.CENTER);
+        side.setWrap(true);
+        return side;
+    }
+
+    /**
+     * @return "Zobrazeno 11–20 z 42", or the empty-result wording when there is nothing to show.
+     */
+    private String rangeText() {
+        if (totalItems <= 0) {
+            return text("listing.meta.empty");
+        }
+        long first = (long) (currentPage - 1) * pageSize + 1;
+        long last = Math.min((long) currentPage * pageSize, totalItems);
+        return text("pagination.range", first, last, totalItems);
     }
 
     private void updatePageNumbers() {
-        layout.removeAll();
-        layout.add(prevButton);
+        pageButtons.removeAll();
+        pageButtons.add(prevButton);
 
         if (totalPages <= 1) {
-            layout.add(createPageButton(1));
+            pageButtons.add(createPageButton(1));
         } else if (totalPages == 2) {
-            layout.add(createPageButton(1));
-            layout.add(createPageButton(2));
+            pageButtons.add(createPageButton(1));
+            pageButtons.add(createPageButton(2));
         } else {
-            layout.add(createPageButton(1));
+            pageButtons.add(createPageButton(1));
             if (currentPage > 3) {
-                layout.add(createEllipsis());
+                pageButtons.add(createEllipsis());
             }
             int start = Math.max(2, currentPage - 1);
             int end = Math.min(totalPages - 1, currentPage + 1);
             for (int i = start; i <= end; i++) {
                 if (i == 1 || i == totalPages) continue;
-                layout.add(createPageButton(i));
+                pageButtons.add(createPageButton(i));
             }
             if (currentPage < totalPages - 2) {
-                layout.add(createEllipsis());
+                pageButtons.add(createEllipsis());
             }
-            layout.add(createPageButton(totalPages));
+            pageButtons.add(createPageButton(totalPages));
         }
-        layout.add(nextButton);
+        pageButtons.add(nextButton);
+        rangeLabel.setText(rangeText());
     }
 
     private Div createEllipsis() {

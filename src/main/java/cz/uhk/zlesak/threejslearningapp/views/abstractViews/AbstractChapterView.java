@@ -55,6 +55,8 @@ public abstract class AbstractChapterView extends AbstractEntityView<ChapterServ
     protected final PageHeader chapterHeader = new PageHeader("");
     protected ChapterTabSheetContainer secondaryNavigation = null;
     private Button chapterNavigationToggleButton;
+    private Button searchToggleButton;
+    private boolean searchExpanded = false;
     private VerticalLayout chapterNavigationContent;
     private String chapterNavigationStateKey = "";
     private boolean chapterNavigationExpanded = true;
@@ -98,19 +100,43 @@ public abstract class AbstractChapterView extends AbstractEntityView<ChapterServ
             // A search field whose only description was a placeholder: once the user typed, nothing
             // said what the field was for.
             searchTextField.setLabel(text("chapter.search.label"));
-            HorizontalLayout horizontalLayout = new HorizontalLayout(nameTextField, searchTextField);
-            horizontalLayout.setWidthFull();
-            horizontalLayout.addClassName("chapter-nav-search-row");
+            searchTextField.setClearButtonVisible(true);
+            searchTextField.setVisible(false);
+            searchTextField.getStyle().set("flex", "1 1 14rem");
+
+            // Two rows instead of four controls stacked. The title line carries a search icon; the
+            // field appears only when it is wanted, and the cross on it clears the term. The second row
+            // is the sub-chapter and heading selects, and it disappears entirely when the chapter has
+            // neither, rather than showing two empty boxes.
+            searchToggleButton = new Button(VaadinIcon.SEARCH.create());
+            searchToggleButton.addClassName("chapter-search-toggle");
+            searchToggleButton.setAriaLabel(text("chapter.search.label"));
+            searchToggleButton.setTooltipText(text("chapter.search.label"));
+            searchToggleButton.getElement().setAttribute("aria-expanded", "false");
+            searchToggleButton.getStyle().set("min-width", "44px").set("min-height", "44px").set("flex", "0 0 auto");
+            searchToggleButton.addClickListener(e -> setSearchExpanded(!searchExpanded));
+
+            HorizontalLayout titleRow = new HorizontalLayout(nameTextField, searchTextField, searchToggleButton);
+            titleRow.setWidthFull();
+            titleRow.setPadding(false);
+            titleRow.setWrap(true);
+            titleRow.setAlignItems(com.vaadin.flow.component.orderedlayout.FlexComponent.Alignment.END);
+            titleRow.addClassName("chapter-nav-search-row");
+            titleRow.expand(nameTextField);
 
             chapterNavigationToggleButton = new Button("Navigace kapitoly", VaadinIcon.ANGLE_DOWN.create());
             chapterNavigationToggleButton.addClassName("chapter-nav-toggle");
             chapterNavigationToggleButton.addClickListener(e -> setChapterNavigationExpanded(!chapterNavigationExpanded, true));
 
-            chapterNavigationContent = new VerticalLayout(horizontalLayout, subchapterSelectContainer);
+            chapterNavigationContent = new VerticalLayout(titleRow, subchapterSelectContainer);
             chapterNavigationContent.addClassName("chapter-nav-content");
             chapterNavigationContent.setWidthFull();
             chapterNavigationContent.setPadding(false);
-            chapterNavigationContent.setSpacing(true);
+            chapterNavigationContent.setSpacing(false);
+            chapterNavigationContent.getStyle().set("gap", "var(--lumo-space-xs)");
+
+            // Nothing to navigate to until the chapter's structure arrives.
+            subchapterSelectContainer.setVisible(false);
 
             // Before the navigation, so the screen has a name before it has controls. Hidden until read
             // mode replaces the name field with it.
@@ -301,6 +327,26 @@ public abstract class AbstractChapterView extends AbstractEntityView<ChapterServ
     protected void setChapterName(String chapterName) {
         nameTextField.setValue(chapterName == null ? "" : chapterName);
         chapterHeader.setTitleText(chapterName);
+    }
+
+    /**
+     * Opens or closes the in-chapter search.
+     *
+     * <p>Closing leaves the term in force and the matches highlighted — someone who opened the search to
+     * find a word does not want it undone by tidying the toolbar away. The cross inside the field is
+     * what clears it.
+     *
+     * @param expanded whether the field should be shown
+     */
+    private void setSearchExpanded(boolean expanded) {
+        searchExpanded = expanded;
+        searchTextField.setVisible(expanded);
+        if (searchToggleButton != null) {
+            searchToggleButton.getElement().setAttribute("aria-expanded", String.valueOf(expanded));
+        }
+        if (expanded) {
+            searchTextField.focus();
+        }
     }
 
     private void setChapterNavigationExpanded(boolean expanded, boolean persist) {

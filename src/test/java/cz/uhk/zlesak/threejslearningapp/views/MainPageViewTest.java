@@ -1,6 +1,5 @@
 package cz.uhk.zlesak.threejslearningapp.views;
 
-import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.html.Anchor;
 import com.vaadin.flow.component.html.Footer;
 import com.vaadin.flow.component.html.H1;
@@ -11,6 +10,7 @@ import com.vaadin.flow.component.html.Image;
 import com.vaadin.flow.component.html.Paragraph;
 import com.vaadin.flow.component.html.Span;
 import cz.uhk.zlesak.threejslearningapp.components.commonComponents.DividerComponent;
+import cz.uhk.zlesak.threejslearningapp.components.commonComponents.ShowcaseVideo;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -20,6 +20,7 @@ import java.util.List;
 
 import static cz.uhk.zlesak.threejslearningapp.testsupport.VaadinTestSupport.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -74,24 +75,36 @@ class MainPageViewTest {
     }
 
     @Test
-    void eachAnimationHasAControlAndStartsStopped() {
-        // Three GIFs looped for longer than five seconds with no way of stopping them, which is the
-        // most serious finding on this page.
+    void theRecordingsAreVideosThatCanBePausedAndFetchNothingUpFront() {
+        // Three GIFs, thirteen megabytes of them, looped for longer than five seconds with no way to
+        // stop them. As video the same three come to under three megabytes and bring their own controls.
         MainPageView view = new MainPageView();
 
-        List<Button> playButtons = findAll(view.getContent(), Button.class).stream()
-                .filter(button -> "Přehrát ukázku".equals(button.getText()))
-                .toList();
-        assertEquals(3, playButtons.size());
-        playButtons.forEach(button ->
-                assertEquals("false", button.getElement().getAttribute("aria-pressed")));
+        List<ShowcaseVideo> recordings = findAll(view.getContent(), ShowcaseVideo.class);
+        assertEquals(3, recordings.size());
 
-        List<Image> animations = findAll(view.getContent(), Image.class).stream()
-                .filter(image -> image.getElement().getAttribute("data-gif-src") != null)
-                .toList();
-        assertEquals(3, animations.size());
-        // Nothing is animating until the user asks for it: the element holds a blank pixel.
-        animations.forEach(image -> assertTrue(image.getSrc().startsWith("data:image/gif;base64,")));
+        recordings.forEach(video -> {
+            assertEquals("video", video.getElement().getTag());
+            // WCAG 2.2.2: pausing is possible because the element brings the control itself.
+            assertEquals("", video.getElement().getAttribute("controls"));
+            assertEquals("", video.getElement().getAttribute("muted"));
+            assertEquals("", video.getElement().getAttribute("loop"));
+            // Nothing but the poster is fetched until the visitor scrolls to it; the source is applied
+            // from the observer, so it is not on the element yet.
+            assertEquals("none", video.getElement().getAttribute("preload"));
+            assertNull(video.getElement().getAttribute("src"));
+            assertNotNull(video.getElement().getAttribute("poster"));
+            assertNotNull(video.getElement().getAttribute("aria-label"));
+
+            // Two formats. H.264 is what mainstream browsers play; Chromium builds without proprietary
+            // codecs cannot decode it and would sit on the poster forever, so VP9 is offered first.
+            List<String> sources = video.getElement().getChildren()
+                    .map(child -> child.getAttribute("data-src"))
+                    .toList();
+            assertEquals(2, sources.size());
+            assertTrue(sources.getFirst().endsWith(".webm"), sources.toString());
+            assertTrue(sources.get(1).endsWith(".mp4"), sources.toString());
+        });
     }
 
     @Test
@@ -132,7 +145,12 @@ class MainPageViewTest {
                 .filter(anchor -> "Prohlášení o přístupnosti".equals(anchor.getText()))
                 .findFirst()
                 .orElseThrow(() -> new AssertionError("The statement required by the EAA is not linked"));
-        assertEquals("/documentation", statement.getHref());
+        // Its own public route, not the documentation: that sits behind the login, and someone who
+        // cannot use the login screen is the person most likely to need the statement.
+        assertEquals("/accessibility", statement.getHref());
         assertNull(statement.getElement().getAttribute("target"));
+
+        // On the same line as the copyright rather than under it.
+        assertEquals("flex", footer.getStyle().get("display"));
     }
 }

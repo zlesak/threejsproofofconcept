@@ -27,6 +27,8 @@
   "listing.meta.shown": "Zobrazeno {0} z {1}",
   "listing.meta.empty": "Nenalezena žádná položka",
   "pagination.label": "Stránkování",
+  "pagination.pageSize": "Na stránku",
+  "pagination.range": "Zobrazeno {0}–{1} z {2}",
   "pagination.previous": "Předchozí stránka",
   "pagination.next": "Následující stránka",
   "pagination.page": "Stránka {0}",

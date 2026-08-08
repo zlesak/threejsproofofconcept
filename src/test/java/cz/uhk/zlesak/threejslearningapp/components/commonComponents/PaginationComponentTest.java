@@ -2,6 +2,8 @@ package cz.uhk.zlesak.threejslearningapp.components.commonComponents;
 
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.html.Span;
+import com.vaadin.flow.component.select.Select;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -120,6 +122,51 @@ class PaginationComponentTest {
 
         assertEquals("true", ellipsis.getElement().getAttribute("aria-hidden"));
         assertNull(ellipsis.getElement().getAttribute("role"));
+    }
+
+    @Test
+    void itSaysHowMuchOfTheResultSetIsOnScreen() {
+        PaginationComponent component = new PaginationComponent(1, 10, 42, ignored -> {
+        });
+
+        assertTrue(rangeTexts(component).contains("Zobrazeno 11–20 z 42"), rangeTexts(component).toString());
+    }
+
+    @Test
+    void theLastPageDoesNotClaimMoreItemsThanExist() {
+        PaginationComponent component = new PaginationComponent(4, 10, 42, ignored -> {
+        });
+
+        assertTrue(rangeTexts(component).contains("Zobrazeno 41–42 z 42"), rangeTexts(component).toString());
+    }
+
+    @Test
+    void anEmptyResultSaysSoRatherThanCountingFromOne() {
+        PaginationComponent component = new PaginationComponent(0, 10, 0, ignored -> {
+        });
+
+        assertTrue(rangeTexts(component).contains("Nenalezena žádná položka"), rangeTexts(component).toString());
+    }
+
+    @Test
+    void theUserChoosesHowManyItemsAPageHolds() {
+        PaginationComponent component = new PaginationComponent(0, 10, 42, ignored -> {
+        });
+        List<Integer> chosen = new ArrayList<>();
+        component.setOnPageSizeChange(chosen::add);
+
+        @SuppressWarnings("unchecked")
+        Select<Integer> pageSize = (Select<Integer>) findAll(component, Select.class).getFirst();
+        assertEquals("Na stránku", pageSize.getLabel());
+        assertEquals(10, pageSize.getValue());
+
+        pageSize.setValue(50);
+        // Only a change the user made counts; the listing sets the value itself when it re-renders.
+        assertTrue(chosen.isEmpty());
+    }
+
+    private List<String> rangeTexts(PaginationComponent component) {
+        return findAll(component, Span.class).stream().map(Span::getText).toList();
     }
 
     private Button pageButton(PaginationComponent component, String label) {

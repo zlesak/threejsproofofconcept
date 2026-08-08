@@ -209,7 +209,7 @@ async function findModelByPrefix(page: Page, prefix: string): Promise<string | n
 
 
   try {
-    const searchField = page.locator('input[placeholder="Hledat..."]').first();
+    const searchField = page.locator('input[placeholder="např. mozek"]').first();
     if (await searchField.isVisible({timeout: 3000}) && await searchField.isEnabled({timeout: 3000})) {
       await searchField.fill(prefix);
       await page.getByRole('button', {name: 'Hledat'}).click();

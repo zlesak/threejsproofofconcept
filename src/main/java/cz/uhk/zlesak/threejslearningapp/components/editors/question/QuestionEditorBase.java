@@ -59,8 +59,7 @@ public abstract class QuestionEditorBase<QO extends AbstractOption> extends Vert
         questionTextField.setWidthFull();
         questionTextField.setRequired(true);
 
-        pointsField = new IntegerField();
-        pointsField.setHelperText(text("quiz.question.points"));
+        pointsField = new IntegerField(text("quiz.question.points"));
         pointsField.setValue(1);
         pointsField.setMin(1);
         pointsField.setStepButtonsVisible(true);

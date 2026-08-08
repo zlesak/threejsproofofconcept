@@ -26,14 +26,14 @@ class ListingQueriesTest {
 
     @Test
     void matchesNamesAnywhereAndRegardlessOfCase() {
-        Query query = listingQueries.baseQuery(new ChapterFilter("mozek"));
+        Query query = listingQueries.baseQuery(ChapterFilter.builder().SearchText("mozek").build());
 
         assertThat(query.getQueryObject().toJson()).contains("name").contains("mozek");
     }
 
     @Test
     void treatsCharactersWithMeaningInPatternsAsPlainText() {
-        Query query = listingQueries.baseQuery(new ChapterFilter("a.b*c"));
+        Query query = listingQueries.baseQuery(ChapterFilter.builder().SearchText("a.b*c").build());
 
         assertThat(query.getQueryObject().toJson()).contains("\\\\Qa.b*c\\\\E");
     }
@@ -62,8 +62,8 @@ class ListingQueriesTest {
 
     @Test
     void reportsTheFreeTextTermTheUserTyped() {
-        assertThat(listingQueries.searchTerm(new ChapterFilter("  mozek  "))).isEqualTo("mozek");
-        assertThat(listingQueries.searchTerm(new ChapterFilter("   "))).isNull();
+        assertThat(listingQueries.searchTerm(ChapterFilter.builder().SearchText("  mozek  ").build())).isEqualTo("mozek");
+        assertThat(listingQueries.searchTerm(ChapterFilter.builder().SearchText("   ").build())).isNull();
         assertThat(listingQueries.searchTerm(null)).isNull();
     }
 }

@@ -6,10 +6,12 @@ import com.vaadin.flow.component.orderedlayout.Scroller;
 import com.vaadin.flow.router.AfterNavigationEvent;
 import com.vaadin.flow.router.BeforeEnterEvent;
 import com.vaadin.flow.router.Route;
+import com.vaadin.flow.router.RouteParam;
 import com.vaadin.flow.router.RouteParameters;
 import com.vaadin.flow.theme.lumo.LumoUtility;
 import cz.uhk.zlesak.threejslearningapp.components.quizComponents.QuizPlayerComponent;
 import cz.uhk.zlesak.threejslearningapp.domain.quiz.QuizEntity;
+import cz.uhk.zlesak.threejslearningapp.domain.quiz.QuizValidationResult;
 import cz.uhk.zlesak.threejslearningapp.domain.quiz.question.AbstractQuestionData;
 import cz.uhk.zlesak.threejslearningapp.views.abstractViews.AbstractQuizView;
 import jakarta.annotation.security.PermitAll;
@@ -98,13 +100,40 @@ public class QuizPlayerView extends AbstractQuizView {
                         throw new RuntimeException(e);
                     }
                 },
-                result -> displayQuizResultDetails(result, loadedQuiz, loadedQuizPossibleScore),
+                this::showResult,
                 error -> {
                     log.error("Error při odeslání odpovědí kvízu", error);
                     showErrorNotification(text("quiz.error.submit"), error);
                     playerComponent.enable();
                 }
         );
+    }
+
+    /**
+     * Shows the graded attempt at its own address.
+     *
+     * <p>The result used to be drawn in place, still at {@code /playQuiz/{id}}. A student could not
+     * bookmark it or send anyone the link, and the browser's Back button returned them to a
+     * half-finished quiz that could no longer be submitted. The {@code /quiz-result} route already
+     * existed and the attempt listing already used it.
+     *
+     * <p>If the attempt came back without an id there is nothing to address, so it is drawn in place
+     * rather than losing the result the student has just earned.
+     *
+     * @param result the graded attempt
+     */
+    private void showResult(QuizValidationResult result) {
+        String resultId = result == null ? null : result.getId();
+        if (resultId == null || resultId.isBlank()) {
+            log.warn("Quiz result for quiz {} has no id, showing it in place", quizId);
+            displayQuizResultDetails(result, loadedQuiz, loadedQuizPossibleScore);
+            return;
+        }
+
+        skipBeforeLeaveDialog = true;
+        getUI().ifPresent(ui -> ui.navigate(QuizResultView.class, new RouteParameters(
+                new RouteParam("quizId", resultId),
+                new RouteParam("back", quizId))));
     }
 
     @Override
